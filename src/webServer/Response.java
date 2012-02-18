@@ -32,7 +32,7 @@ public class Response {
 	public static final int NOT_IMPLEMENTED_STATUS_CODE = 501;
 
 	private static HashMap<Integer, String> responsePhrase = new HashMap<Integer, String>();
-	public static final String ERROR_FILE_PATH = "src/ErrorFiles/400.html";
+	public static final String ERROR_FILE_PATH = "C:/MyWebserver/error/";
 	public static String DEFAULT_HTTP_VERSION = "HTTP/1.1";
 	
 	static {
@@ -122,7 +122,9 @@ public class Response {
 	public void writeErrorMessage(OutputStream out, int statusCode)
 			throws IOException {
 		try {
-			File errorFile = new File(ERROR_FILE_PATH);
+			String errorFilePath = ERROR_FILE_PATH+Integer.toString(statusCode)+".html";
+			Log.log("Error file", errorFilePath);
+			File errorFile = new File(errorFilePath);
 			String headerMessage = createHeaderMessage(DEFAULT_HTTP_VERSION, errorFile,
 					statusCode);
 			writeHeaderMessage(out, headerMessage);

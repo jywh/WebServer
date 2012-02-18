@@ -74,7 +74,7 @@ public class RequestParser {
 		}
 		String beforeResolve = tokens[1];
 		tokens[1] = resolveAlias(tokens[1]);
-		if(beforeResolve.equals(tokens[1]))
+		if(beforeResolve.equals(tokens[1])) // there is no alias
 			tokens[1] = addDocumentRoot(tokens[1]);
 		return tokens;
 
@@ -129,6 +129,7 @@ public class RequestParser {
 			return URI;
 		}
 
+		Log.log("URI is",URI);
 		if (!uri.exists())
 			throw new ServerException(Response.NOT_FOUND_STATUS_CODE,
 					"RequestParser: addDocumentRoot");
