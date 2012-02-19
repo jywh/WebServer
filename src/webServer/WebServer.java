@@ -6,7 +6,6 @@ import java.net.Socket;
 
 import webServer.request.Request;
 import webServer.request.RequestParser;
-import webServer.ulti.Log;
 import webServer.ulti.ServerException;
 
 public class WebServer {
@@ -24,10 +23,10 @@ public class WebServer {
 
 		try {
 
-			setup();
+			initialize();
 			
 			ding = new ServerSocket(HttpdConf.LISTEN);
-			Log.log("Opened socket ", HttpdConf.LISTEN);
+			System.out.println("Opened socket "+HttpdConf.LISTEN);
 
 			while (true) {
 				try {
@@ -67,7 +66,7 @@ public class WebServer {
 		}
 	}
 	
-	public static void setup() throws IOException{
+	public static void initialize() throws IOException{
 		// Read httpd.conf and mime file
 		HttpdConfReader reader = new HttpdConfReader(HTTPDD_CONF_PATH+HTTPD_CONF_FILE);
 		reader.readHttpdConfFile();

@@ -23,40 +23,30 @@ import webServer.ulti.ServerException;
 public class RequestParser {
 
 	public static final String URI_SEPARATOR = "/";
+	private BufferedReader incommingMessage;
 
 	public Request parseRequest(InputStream inputStream) throws ServerException {
-		String currentLine;
-		HashMap<String, String> requestFields, variables;
-		int method;
+		HashMap<String, String> requestFields;
 		String[] parameters;
 
 		try {
 
-			BufferedReader incommingMessage = new BufferedReader(
-					new InputStreamReader(inputStream));
+			incommingMessage = new BufferedReader(new InputStreamReader(
+					inputStream));
 
-			currentLine = incommingMessage.readLine();
-			// Here should throws exception
-			if (currentLine == null) {
-				throw new ServerException(Response.BAD_REQUEST_STATUS_CODE,
-						"RequestParser: empty header message");
-			}
+			// Parse first line of request message
+			parameters = parseFirstLine(incommingMessage.readLine());
 
-			parameters = parseFirstLine(currentLine);
-			method = getRequestMethodCode(parameters[0]);
-			variables = getVariablesFromURI(parameters[1]);
-
-			// save all the request fields to HashMap
-			requestFields = getRequestFields(incommingMessage);
+			requestFields = getRequestFields();
 
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
-			throw new ServerException(Response.BAD_REQUEST_STATUS_CODE,
+			throw new ServerException(Response.BAD_REQUEST,
 					"RequestParser: parseRequest");
 		}
 
-		return new Request(method, parameters[1], parameters[2], variables,
-				requestFields);
+		return new Request(getRequestMethodCode(parameters[0]), parameters[1],
+				parameters[2], parameters[3], requestFields);
 	}
 
 	/*****************************************************************
@@ -67,16 +57,28 @@ public class RequestParser {
 
 	protected String[] parseFirstLine(String firstLine) throws ServerException {
 
+		if (firstLine == null || firstLine.isEmpty())
+			throw new ServerException(Response.BAD_REQUEST,
+					"RequestParser: parseFirstLine");
+
 		String[] tokens = firstLine.split(" ");
-		if (tokens.length == 0 || tokens.length < 3) {
-			throw new ServerException(Response.BAD_REQUEST_STATUS_CODE,
+
+		if (tokens.length != 3) {
+			throw new ServerException(Response.BAD_REQUEST,
 					"RequestParser: parseFirstLine");
 		}
 
-		tokens[1] = resolveAlias(tokens[1]);
-		if (!(new File(tokens[1]).isAbsolute())) // there is no alias
-			tokens[1] = addDocumentRoot(tokens[1]);
-		return tokens;
+		String methos = tokens[0],  URI = tokens[1],  httpVersion = tokens[2], parameterString;
+
+		tokens = extractParameterString(URI);
+		URI = tokens[0];
+		parameterString = tokens[1];
+
+		URI = resolveAlias(URI);
+		if (!(new File(URI).isAbsolute())) // there is no alias
+			URI = addDocumentRoot(URI);
+
+		return new String[] { methos, URI, httpVersion, parameterString };
 
 	}
 
@@ -97,7 +99,7 @@ public class RequestParser {
 		else if (method.equals("PUT"))
 			return Request.PUT;
 		else
-			throw new ServerException(Response.NOT_IMPLEMENTED_STATUS_CODE);
+			throw new ServerException(Response.NOT_IMPLEMENTED);
 	}
 
 	/**
@@ -111,7 +113,7 @@ public class RequestParser {
 			return URI;
 
 		String alias = URI_SEPARATOR + tokens[1];
-		
+
 		if (HttpdConf.SCRIPT_ALIAS.containsKey(alias)) {
 			URI = URI.replace(alias, HttpdConf.SCRIPT_ALIAS.get(alias));
 		} else if (HttpdConf.ALIAS.containsKey(alias)) {
@@ -124,24 +126,26 @@ public class RequestParser {
 	protected String addDocumentRoot(String URI) throws ServerException {
 
 		URI = HttpdConf.DOCUMENT_ROOT + URI;
-		File uri = new File(URI);
+		File path = new File(URI);
 
-		if (!uri.isDirectory() && uri.exists()) {
+		if (!path.isDirectory() && path.exists()) {
 			return URI;
 		}
 
 		Log.log("URI is", URI);
-		if (!uri.exists())
-			throw new ServerException(Response.NOT_FOUND_STATUS_CODE,
+		if (!path.exists())
+			throw new ServerException(Response.NOT_FOUND,
 					"RequestParser: addDocumentRoot");
-
+		
+		URI = path.getAbsolutePath() + File.separator;
+		
 		for (String indexFile : HttpdConf.DIRECTORY_INDEX) {
-			URI = uri.getAbsolutePath() + File.separator + indexFile;
-			if (new File(URI).exists())
-				return URI;
+			indexFile = URI + indexFile;
+			if (new File(indexFile).exists())
+				return indexFile;
 		}
 
-		throw new ServerException(Response.NOT_FOUND_STATUS_CODE,
+		throw new ServerException(Response.NOT_FOUND,
 				"RequestParse: addDocumentRoot");
 
 	}
@@ -151,20 +155,14 @@ public class RequestParser {
 	 * 
 	 * @param parameters
 	 */
-	private HashMap<String, String> getVariablesFromURI(String URI) {
+	private String[] extractParameterString(String URI) {
 
-		HashMap<String, String> variables = new HashMap<String, String>(20);
-		String[] tokens = URI.split("\\?");
-		if (tokens.length > 1) {
-			String[] variablePairs = tokens[1].split("&");
-			String[] pairs;
-
-			for (String variable : variablePairs) {
-				pairs = variable.split("=");
-				variables.put(pairs[0], pairs[1]);
-			}
+		int index = URI.indexOf('?');
+		if (index > 0) {
+			// there is parameters
+			return URI.split("\\?");
 		}
-		return variables;
+		return new String[] { URI, null };
 
 	}
 
@@ -174,26 +172,25 @@ public class RequestParser {
 	 * 
 	 *************************************************************/
 
-	private HashMap<String, String> getRequestFields(BufferedReader body)
-			throws ServerException {
+	private HashMap<String, String> getRequestFields() throws ServerException {
 		try {
-			String currentLine = body.readLine();
+			String currentLine = incommingMessage.readLine();
 			HashMap<String, String> requestFields = new HashMap<String, String>(
 					40);
 			while (currentLine.trim().length() != 0) {
 				try {
 					String[] tokens = currentLine.split(":");
 					requestFields.put(tokens[0], tokens[1].trim());
-					currentLine = body.readLine();
+					currentLine = incommingMessage.readLine();
 				} catch (NullPointerException npe) {
 					npe.printStackTrace();
-					throw new ServerException(Response.BAD_REQUEST_STATUS_CODE,
+					throw new ServerException(Response.BAD_REQUEST,
 							"Request: getRequestFields");
 				}
 			}
 			return requestFields;
 		} catch (IOException ioe) {
-			throw new ServerException(Response.BAD_REQUEST_STATUS_CODE,
+			throw new ServerException(Response.BAD_REQUEST,
 					"Request: getRequestFields");
 		}
 	}

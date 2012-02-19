@@ -12,8 +12,8 @@ public class Request {
 	public static final int HEAD = 2;
 	public static final int PUT = 3;
 	
-	private HashMap<String, String> variables, requestFields;
-	private String httpVersion,URI;
+	private HashMap<String, String> requestFields;
+	private String httpVersion,URI, parameterString;
 	private int method;
 
 	/**
@@ -22,24 +22,15 @@ public class Request {
 	protected Request(){}
 	
 	protected Request(int method, String URI, String httpVersion,
-			HashMap<String, String> variables,
+			String parameterString,
 			HashMap<String, String> requestFields){
 		this.method = method;
 		this.URI = URI;
 		this.httpVersion = httpVersion;
-		this.variables = variables;
+		this.parameterString = parameterString;
 		this.requestFields = requestFields;
 	}
 	
-	protected void setRequestParameters(int method, String URI, String httpVersion,
-			HashMap<String, String> variables,
-			HashMap<String, String> requestFields) {
-		this.method = method;
-		this.URI = URI;
-		this.httpVersion = httpVersion;
-		this.variables = variables;
-		this.requestFields = requestFields;
-	}
 
 	public int getMethod() {
 		return method;
@@ -49,8 +40,8 @@ public class Request {
 		return URI;
 	}
 
-	public String getVariables(String var) {
-		return variables.get(var);
+	public String getParameterString() {
+		return parameterString;
 	}
 
 	public String getHttpVersion() {

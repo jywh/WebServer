@@ -20,33 +20,33 @@ import webServer.ulti.ServerException;
 
 public class Response {
 
-	public static final int OK_STATUS_CODE = 200;
-	public static final int NO_CONTENT_STATUS_CODE = 204;
-	public static final int FOUND_STATUS_CODE = 302;
-	public static final int NOT_MODIFIED_STATUS_CODE = 304;
-	public static final int BAD_REQUEST_STATUS_CODE = 400;
-	public static final int UNAUTHORIZED_STATUS_CODE = 401;
-	public static final int FORBIDDEN_STATUS_CODE = 403;
-	public static final int NOT_FOUND_STATUS_CODE = 404;
-	public static final int INTERNAL_SERVER_ERROR_STATUS_CODE = 500;
-	public static final int NOT_IMPLEMENTED_STATUS_CODE = 501;
+	public static final int OK = 200;
+	public static final int NO_CONTENT = 204;
+	public static final int FOUND = 302;
+	public static final int NOT_MODIFIED = 304;
+	public static final int BAD_REQUEST = 400;
+	public static final int UNAUTHORIZED = 401;
+	public static final int FORBIDDEN = 403;
+	public static final int NOT_FOUND = 404;
+	public static final int INTERNAL_SERVER_ERROR = 500;
+	public static final int NOT_IMPLEMENTED = 501;
 
 	private static HashMap<Integer, String> responsePhrase = new HashMap<Integer, String>();
 	public static final String ERROR_FILE_PATH = "C:/MyWebserver/error/";
 	public static String DEFAULT_HTTP_VERSION = "HTTP/1.1";
 	
 	static {
-		responsePhrase.put(OK_STATUS_CODE, "200 OK");
-		responsePhrase.put(NO_CONTENT_STATUS_CODE, "204 No Content");
-		responsePhrase.put(FOUND_STATUS_CODE, "302 Found");
-		responsePhrase.put(NOT_MODIFIED_STATUS_CODE, "304 Not Modified");
-		responsePhrase.put(BAD_REQUEST_STATUS_CODE, "400 Bad Request");
-		responsePhrase.put(UNAUTHORIZED_STATUS_CODE, "401 Unauthorized");
-		responsePhrase.put(FORBIDDEN_STATUS_CODE, "403 Fobidden");
-		responsePhrase.put(NOT_FOUND_STATUS_CODE, "404 Not Found");
-		responsePhrase.put(INTERNAL_SERVER_ERROR_STATUS_CODE,
+		responsePhrase.put(OK, "200 OK");
+		responsePhrase.put(NO_CONTENT, "204 No Content");
+		responsePhrase.put(FOUND, "302 Found");
+		responsePhrase.put(NOT_MODIFIED, "304 Not Modified");
+		responsePhrase.put(BAD_REQUEST, "400 Bad Request");
+		responsePhrase.put(UNAUTHORIZED, "401 Unauthorized");
+		responsePhrase.put(FORBIDDEN, "403 Fobidden");
+		responsePhrase.put(NOT_FOUND, "404 Not Found");
+		responsePhrase.put(INTERNAL_SERVER_ERROR,
 				"500 Internal Server Error");
-		responsePhrase.put(NOT_IMPLEMENTED_STATUS_CODE, "501 Not Implemented");
+		responsePhrase.put(NOT_IMPLEMENTED, "501 Not Implemented");
 	}
 
 	public void processRequest(Request request, OutputStream out)
@@ -56,7 +56,7 @@ public class Response {
 		File document = new File(request.getURI());
 		
 		String headerMessage = createHeaderMessage(request.getHttpVersion(),
-				document, Response.OK_STATUS_CODE);
+				document, Response.OK);
 		writeHeaderMessage(out, headerMessage);
 		
 		if(request.getMethod() != Request.HEAD)
@@ -74,7 +74,7 @@ public class Response {
 		if( phrase != null )
 			return phrase;
 		else
-			return responsePhrase.get(Response.OK_STATUS_CODE);
+			return responsePhrase.get(Response.OK);
 	}
 
 	private String createHeaderMessage(String httpVersion, File document,
@@ -114,7 +114,7 @@ public class Response {
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			throw new ServerException(
-					Response.INTERNAL_SERVER_ERROR_STATUS_CODE,
+					Response.INTERNAL_SERVER_ERROR,
 					"Response: WriteFile");
 		}
 	}
