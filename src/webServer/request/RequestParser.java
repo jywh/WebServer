@@ -34,9 +34,9 @@ public class RequestParser {
 
 			BufferedReader incommingMessage = new BufferedReader(
 					new InputStreamReader(inputStream));
-			
+
 			currentLine = incommingMessage.readLine();
-			// Here should throws exception 
+			// Here should throws exception
 			if (currentLine == null) {
 				throw new ServerException(Response.BAD_REQUEST_STATUS_CODE,
 						"RequestParser: empty header message");
@@ -65,16 +65,16 @@ public class RequestParser {
 	 * 
 	 *****************************************************************/
 
-	private String[] parseFirstLine(String firstLine) throws ServerException {
+	protected String[] parseFirstLine(String firstLine) throws ServerException {
 
 		String[] tokens = firstLine.split(" ");
 		if (tokens.length == 0 || tokens.length < 3) {
 			throw new ServerException(Response.BAD_REQUEST_STATUS_CODE,
 					"RequestParser: parseFirstLine");
 		}
-		String beforeResolve = tokens[1];
+
 		tokens[1] = resolveAlias(tokens[1]);
-		if(beforeResolve.equals(tokens[1])) // there is no alias
+		if (!(new File(tokens[1]).isAbsolute())) // there is no alias
 			tokens[1] = addDocumentRoot(tokens[1]);
 		return tokens;
 
@@ -87,7 +87,7 @@ public class RequestParser {
 	 * @return
 	 * @throws ServerException
 	 */
-	private int getRequestMethodCode(String method) throws ServerException {
+	protected int getRequestMethodCode(String method) throws ServerException {
 		if (method.equals("GET"))
 			return Request.GET;
 		else if (method.equals("POST"))
@@ -103,13 +103,13 @@ public class RequestParser {
 	/**
 	 * This will resolve alias that contains in the URI
 	 */
-	private String resolveAlias(String URI) {
+	protected String resolveAlias(String URI) {
 
 		String[] tokens = URI.split(URI_SEPARATOR);
-		
+
 		if (tokens.length < 1)
 			return URI;
-		
+
 		String alias = URI_SEPARATOR + tokens[1];
 		
 		if (HttpdConf.SCRIPT_ALIAS.containsKey(alias)) {
@@ -117,11 +117,12 @@ public class RequestParser {
 		} else if (HttpdConf.ALIAS.containsKey(alias)) {
 			URI = URI.replace(alias, HttpdConf.ALIAS.get(alias));
 		}
+
 		return URI;
 	}
 
-	private String addDocumentRoot(String URI) throws ServerException {
-		
+	protected String addDocumentRoot(String URI) throws ServerException {
+
 		URI = HttpdConf.DOCUMENT_ROOT + URI;
 		File uri = new File(URI);
 
@@ -129,7 +130,7 @@ public class RequestParser {
 			return URI;
 		}
 
-		Log.log("URI is",URI);
+		Log.log("URI is", URI);
 		if (!uri.exists())
 			throw new ServerException(Response.NOT_FOUND_STATUS_CODE,
 					"RequestParser: addDocumentRoot");
@@ -140,7 +141,7 @@ public class RequestParser {
 				return URI;
 		}
 
-		throw new ServerException(Response.BAD_REQUEST_STATUS_CODE,
+		throw new ServerException(Response.NOT_FOUND_STATUS_CODE,
 				"RequestParse: addDocumentRoot");
 
 	}
@@ -151,7 +152,7 @@ public class RequestParser {
 	 * @param parameters
 	 */
 	private HashMap<String, String> getVariablesFromURI(String URI) {
-		
+
 		HashMap<String, String> variables = new HashMap<String, String>(20);
 		String[] tokens = URI.split("\\?");
 		if (tokens.length > 1) {
@@ -164,7 +165,7 @@ public class RequestParser {
 			}
 		}
 		return variables;
-		
+
 	}
 
 	/*************************************************************
@@ -177,7 +178,8 @@ public class RequestParser {
 			throws ServerException {
 		try {
 			String currentLine = body.readLine();
-			HashMap<String, String> requestFields = new HashMap<String, String>(40);
+			HashMap<String, String> requestFields = new HashMap<String, String>(
+					40);
 			while (currentLine.trim().length() != 0) {
 				try {
 					String[] tokens = currentLine.split(":");
@@ -195,12 +197,11 @@ public class RequestParser {
 					"Request: getRequestFields");
 		}
 	}
-	
+
 	/*************************************************************
 	 * 
 	 * Parsing body
 	 * 
 	 *************************************************************/
-	
 
 }
