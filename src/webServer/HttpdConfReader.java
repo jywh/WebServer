@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 import webServer.httpdconfSetter.HttpdConfSetter;
 import webServer.httpdconfSetter.SetHttpdConf;
-import webServer.httpdconfSetter.WrongTypeException;
+import webServer.ulti.ConfigurationException;
 
 public class HttpdConfReader {
 
@@ -20,59 +20,48 @@ public class HttpdConfReader {
 
 	public HttpdConfReader(String path) throws IOException {
 		reader = new BufferedReader(new FileReader(path));
-		
+
+	}
+
+	public HttpdConfReader(File confFile) throws IOException {
+		reader = new BufferedReader(new FileReader(confFile));
 	}
 
 	/**
 	 * 
 	 * @param path
 	 */
-	public void readHttpdConfFile() {
-		try {
-			
-			SetHttpdConf.init();
+	public void readHttpdConfFile() throws IOException, ConfigurationException {
+
+		SetHttpdConf.init();
+		currentLine = reader.readLine();
+
+		while (currentLine != null) {
+
+			// trim white space at the beginning, middle and end
+			currentLine = currentLine.trim().replaceAll(" +", " ");
+
+			// skip comment and blink line
+			if (isCommentOrEmtpryLine(currentLine)) {
+				currentLine = reader.readLine();
+				continue;
+			}
+
+			// Check tag which start with <>
+			if (currentLine.charAt(0) == '<') {
+				processTag();
+				currentLine = reader.readLine();
+				continue;
+			}
+
+			tokens = currentLine.split(" ", 2);
+			httpdConfSetter = SetHttpdConf.getSetter(tokens[0]);
+
+			if (httpdConfSetter != null)
+				httpdConfSetter.process(tokens[1]);
+
 			currentLine = reader.readLine();
 
-			while (currentLine != null) {
-
-				// trim white space at the beginning, middle and end
-				currentLine = currentLine.trim().replaceAll(" +", " ");
-
-				// skip comment and blink line
-				if (isCommentOrEmtpryLine(currentLine)) {
-					currentLine = reader.readLine();
-					continue;
-				}
-
-				// Check tag which start with <>
-				if (currentLine.charAt(0) == '<') {
-					processTag();
-					currentLine = reader.readLine();
-					continue;
-				}
-
-				tokens = currentLine.split(" ", 2);
-				httpdConfSetter = SetHttpdConf.getSetter(tokens[0]);
-				
-				if (httpdConfSetter != null)
-					httpdConfSetter.process(tokens[1]);
-				
-				currentLine = reader.readLine();
-			}
-		} catch (WrongTypeException wte) {
-			wte.printMessage();
-			System.exit(1);
-		} catch (IOException ioe) {
-			System.out.println("HttpdConfReader: " + ioe.getMessage());
-			ioe.printStackTrace();
-			System.exit(1);
-		} catch (NullPointerException ne) {
-			ne.printStackTrace();
-			System.exit(1);
-		} catch (Exception e) {
-			e.getMessage();
-			e.printStackTrace();
-			System.exit(1);
 		}
 	}
 
@@ -86,29 +75,31 @@ public class HttpdConfReader {
 	/**
 	 * Processing any line with <> and </>
 	 * 
+	 * @throws ConfigurationException
+	 * 
 	 * @throws Exception
 	 */
-	private void processTag() throws Exception {
+	private void processTag() throws IOException, ConfigurationException {
 
 		if (!currentLine.endsWith(">")) {
-			throw new Exception("<> not paired");
+			throw new ConfigurationException("<> not paired");
 		}
 
 		// Error: close tag before open it
 		if (currentLine.charAt(1) == '/') {
-			throw new Exception("<> close tag before open");
+			throw new ConfigurationException("<> close tag before open");
 		}
 
 		currentLine = currentLine.substring(1, currentLine.length() - 1).trim();
 		tokens = currentLine.split(" ", 2);
-		
+
 		httpdConfSetter = SetHttpdConf.getSetter(tokens[0]);
 		lines.clear();
 		lines.add(tokens[1]);
 		currentLine = reader.readLine().trim();
-		
+
 		while (currentLine != null) {
-			
+
 			if (isCommentOrEmtpryLine(currentLine)) {
 				currentLine = reader.readLine().trim();
 				continue;
@@ -121,15 +112,15 @@ public class HttpdConfReader {
 			lines.add(currentLine);
 			currentLine = reader.readLine().trim();
 		}
-		
+
 		if (currentLine == null) {
-			throw new Exception("Tag is not closed");
+			throw new ConfigurationException("Tag is not closed");
 		}
 
-		currentLine=currentLine.replaceAll(" +", "");
+		currentLine = currentLine.replaceAll(" +", "");
 
 		if (!currentLine.equals("</" + tokens[0] + ">")) {
-			throw new Exception("Close tag not match open tag");
+			throw new ConfigurationException("Close tag not match open tag");
 		}
 
 		httpdConfSetter.process(lines);
@@ -154,6 +145,9 @@ public class HttpdConfReader {
 			reader.testPrint();
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
+			System.exit(1);
+		} catch (Exception e){
+			
 		}
 
 	}

@@ -1,10 +1,17 @@
 package webServer.ulti;
 
+
+/**
+ * 
+ * Signal that various errors happen during server request and reponse. 
+ * 
+ * statusCode refers to http error code.
+ * 
+ * @author Wenhui
+ *
+ */
 public class ServerException extends Exception{
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	
 	private int statusCode;

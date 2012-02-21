@@ -1,12 +1,19 @@
 package webServer.ulti;
 
+/**
+ * 
+ * This class is used for debugging.
+ * 
+ * @author Wenhui
+ *
+ */
 public class Log {
 
 	public static boolean LOG_ON = true;
 	
-	public static void log(String field, String message){
+	public static void log(String tag, String message){
 		if( LOG_ON )
-			System.out.printf("%-35s %-15s %s\n",getCallingClass(), field, message);
+			System.out.printf("%-35s %-15s %s\n",getCallingClass(), tag, message);
 	}
 	
 	public static void log(String field, Integer number){
@@ -27,4 +34,5 @@ public class Log {
 	private static String getCallingClass(){
 		return new Throwable().getStackTrace()[2].getClassName();
 	}
+	
 }

@@ -1,6 +1,12 @@
-package webServer.httpdconfSetter;
+package webServer.ulti;
 
-public class WrongTypeException extends Exception {
+/**
+ * Fatal exception. It is used in HttpdSetter, and HttpdConfReader
+ * 
+ * @author Wenhui
+ *
+ */
+public class ConfigurationException extends Exception {
 
 	/**
 	 * 
@@ -8,11 +14,11 @@ public class WrongTypeException extends Exception {
 	private static final long serialVersionUID = -1190103348936763303L;
 	private String message="";
 	
-	public WrongTypeException(String message){
+	public ConfigurationException(String message){
 		this.message = message;
 	}
 	
-	public WrongTypeException(){}
+	public ConfigurationException(){}
 	
 	public String getMessage(){
 		return message;

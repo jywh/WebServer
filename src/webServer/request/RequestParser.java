@@ -12,6 +12,7 @@ import webServer.ulti.Log;
 import webServer.ulti.ServerException;
 
 /**
+ * 
  * RequestParser is responsiable to parse the incomming request message, and
  * create a request object. All the incomming message must go through
  * RequestParser.
@@ -24,26 +25,26 @@ public class RequestParser {
 	public static final String URI_SEPARATOR = "/";
 	private static final String HTTP_PREFIX = "HTTP_";
 
-	private String[] tempStringArray;
 	private BufferedReader incommingMessage;
 
 	public Request parseRequest(InputStream inputStream) throws ServerException {
+
 		String requestFields;
 		String[] parameters;
 		int methodCode;
 
-		try {
+		incommingMessage = new BufferedReader(
+				new InputStreamReader(inputStream));
 
-			incommingMessage = new BufferedReader(new InputStreamReader(
-					inputStream));
+		try {
 
 			// Parse first line of request message
 			parameters = parseFirstLine(incommingMessage.readLine());
 			methodCode = getMethodCode(parameters[0]);
-			
-			if ( methodCode == Request.POST || methodCode == Request.PUT )
-					parameters[3] = extractParameterStringFromBody();
-			
+
+			if (methodCode == Request.POST || methodCode == Request.PUT)
+				parameters[3] = extractParameterStringFromBody();
+
 			requestFields = extractRequestFields();
 
 			Log.log("request field:", requestFields);
@@ -54,8 +55,8 @@ public class RequestParser {
 					"RequestParser: parseRequest");
 		}
 
-		return new Request(methodCode, parameters[1],
-				parameters[2], parameters[3], requestFields);
+		return new Request(methodCode, parameters[1], parameters[2],
+				parameters[3], requestFields);
 	}
 
 	/*****************************************************************
@@ -70,25 +71,23 @@ public class RequestParser {
 			throw new ServerException(Response.BAD_REQUEST,
 					"RequestParser: parseFirstLine");
 
-		tempStringArray = firstLine.split(" ");
+		String[] tokens = firstLine.split(" ");
 
-		if (tempStringArray.length != 3) {
+		if (tokens.length != 3) {
 			throw new ServerException(Response.BAD_REQUEST,
 					"RequestParser: parseFirstLine");
 		}
 
-		String methos = tempStringArray[0], URI = tempStringArray[1], httpVersion = tempStringArray[2], parameterString;
+		String methos = tokens[0], URI = tokens[1], httpVersion = tokens[2], parameterString;
 
-		tempStringArray = extractParameterStringFromURI(URI);
-		URI = tempStringArray[0];
-		parameterString = tempStringArray[1];
+		tokens = extractParameterStringFromURI(URI);
+		URI = tokens[0];
+		parameterString = tokens[1];
 
 		URI = resolveAlias(URI);
 		if (!(new File(URI).isAbsolute())) // there is no alias
 			URI = addDocumentRoot(URI);
 
-		tempStringArray = null;
-		
 		return new String[] { methos, URI, httpVersion, parameterString };
 
 	}
@@ -115,12 +114,12 @@ public class RequestParser {
 	 */
 	protected String resolveAlias(String URI) {
 
-		tempStringArray = URI.split(URI_SEPARATOR);
+		String[] tokens = URI.split(URI_SEPARATOR);
 
-		if (tempStringArray.length < 1)
+		if (tokens.length < 1)
 			return URI;
 
-		String alias = URI_SEPARATOR + tempStringArray[1];
+		String alias = URI_SEPARATOR + tokens[1];
 
 		if (HttpdConf.SCRIPT_ALIAS.containsKey(alias)) {
 			URI = URI.replace(alias, HttpdConf.SCRIPT_ALIAS.get(alias));
@@ -128,8 +127,6 @@ public class RequestParser {
 			URI = URI.replace(alias, HttpdConf.ALIAS.get(alias));
 		}
 
-		tempStringArray = null;
-		
 		return URI;
 	}
 
@@ -172,7 +169,7 @@ public class RequestParser {
 			// there is parameters
 			return URI.split("\\?");
 		}
-		return new String[] { URI, null };
+		return new String[] { URI, "" };
 
 	}
 
@@ -196,9 +193,9 @@ public class RequestParser {
 				currentLine = incommingMessage.readLine();
 
 			}
-			
-			return ( !builder.toString().isEmpty() ) ? builder.toString().substring(0,
-					builder.toString().length() - 1) : "";
+
+			return (!builder.toString().isEmpty()) ? builder.toString()
+					.substring(0, builder.toString().length() - 1) : "";
 
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
@@ -209,10 +206,10 @@ public class RequestParser {
 
 	protected String convertStringToEnvironmentVaraible(String line) {
 
-		tempStringArray = line.split(":", 2);
-		tempStringArray[1] = tempStringArray[1] != null ? tempStringArray[1].trim() : "";
-		tempStringArray[0] = HTTP_PREFIX + tempStringArray[0].replace('-', '_').toUpperCase();
-		return tempStringArray[0] + "=" + tempStringArray[1];
+		String[] tokens = line.split(":", 2);
+		tokens[1] = tokens[1] != null ? tokens[1].trim() : "";
+		tokens[0] = HTTP_PREFIX + tokens[0].replace('-', '_').toUpperCase();
+		return tokens[0] + "=" + tokens[1];
 
 	}
 
@@ -223,16 +220,20 @@ public class RequestParser {
 	 *************************************************************/
 
 	protected String extractParameterStringFromBody() throws ServerException {
-
+		
 		try {
-			
+			Log.log("request body", "parsing request body");
+			String currentLine = incommingMessage.readLine();
+			if (currentLine == null)
+				return "";
+
 			StringBuilder builder = new StringBuilder();
-			
+
 			while (incommingMessage.ready())
 				builder.append((char) incommingMessage.read());
-			
+
 			return builder.toString();
-			
+
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			throw new ServerException(Response.BAD_REQUEST,

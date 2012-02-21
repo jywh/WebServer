@@ -1,14 +1,15 @@
 package webServer.httpdconfSetter;
 
 import webServer.HttpdConf;
+import webServer.ulti.ConfigurationException;
 
 public class ScriptAliasSetter extends HttpdConfSetter{
 
 	@Override
-	public void process(Object line) throws WrongTypeException{
+	public void process(Object line) throws ConfigurationException{
 		
 		if(!(line instanceof String ))
-			throw new WrongTypeException("ScriptAliasSetter: String");
+			throw new ConfigurationException("ScriptAliasSetter: String");
 		
 		String[] keywords = ((String)line).split(" ", 2);
 		if(keywords.length < 2) return;

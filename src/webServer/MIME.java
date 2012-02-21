@@ -1,6 +1,7 @@
 package webServer;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
@@ -19,6 +20,10 @@ public class MIME {
 
 	public MIME(String path) throws IOException {
 		reader = new BufferedReader(new FileReader(path));
+	}
+	
+	public MIME(File mimeFile) throws IOException {
+		reader = new BufferedReader(new FileReader(mimeFile));
 	}
 
 	public void readMIMEType() {
@@ -46,8 +51,10 @@ public class MIME {
 
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
+			System.exit(1);
 		} catch (NullPointerException npe) {
 			npe.printStackTrace();
+			System.exit(1);
 		}
 	}
 
