@@ -9,7 +9,7 @@ public class AliasSetter extends HttpdConfSetter{
 	public void process(Object line) throws ConfigurationException{
 		
 		if( !(line instanceof String)) 
-			throw new ConfigurationException("AliasSetter: String");
+			throw new ConfigurationException("AliasSetter: type String expected");
 		
 		String[] keywords = ((String)line).split(" ");
 		

@@ -9,7 +9,7 @@ public class CacheSetter extends HttpdConfSetter{
 	public void process(Object line) throws ConfigurationException{
 		
 		if( !(line instanceof String ))
-			throw new ConfigurationException("CacheSetter: String");
+			throw new ConfigurationException("CacheSetter: type String expected");
 		
 		if(((String)line).equals("ON"))
 			HttpdConf.CACHE_ENABLE = true;

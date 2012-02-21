@@ -9,7 +9,7 @@ public class PersistentConnectionSetter extends HttpdConfSetter {
 	public void process(Object line) throws ConfigurationException {
 		
 		if(!(line instanceof String))
-			throw new ConfigurationException("PersistenConnectionSetter: String");
+			throw new ConfigurationException("PersistenConnectionSetter: type String expected");
 		
 		if(line.equals("ON"))
 			HttpdConf.PERSISTENT_CONNECTION = true;

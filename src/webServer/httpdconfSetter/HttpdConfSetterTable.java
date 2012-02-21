@@ -2,7 +2,7 @@ package webServer.httpdconfSetter;
 
 import java.util.HashMap;
 
-public class SetHttpdConf {
+public class HttpdConfSetterTable {
 
 	private static HashMap<String,HttpdConfSetter> setter = new HashMap<String, HttpdConfSetter>(20);
 	

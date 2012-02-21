@@ -9,11 +9,11 @@ public class MaxThreadSetter extends HttpdConfSetter{
 	public void process(Object line) throws ConfigurationException{
 		try {
 			if( !(line instanceof String ))
-				throw new ConfigurationException("MaxThreadSetter: String");
+				throw new ConfigurationException("MaxThreadSetter: type String expected");
 			
 			HttpdConf.MAX_THREAD = Integer.parseInt((String)line);
 		} catch (NumberFormatException ne) {
-			HttpdConf.MAX_THREAD = 100;
+			throw new ConfigurationException("MaxThreadSetter: number format excepton occurs");
 		}
 	}
 

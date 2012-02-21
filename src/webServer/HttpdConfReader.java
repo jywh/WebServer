@@ -5,18 +5,15 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import webServer.httpdconfSetter.HttpdConfSetter;
-import webServer.httpdconfSetter.SetHttpdConf;
+import webServer.httpdconfSetter.HttpdConfSetterTable;
 import webServer.ulti.ConfigurationException;
 
 public class HttpdConfReader {
 
 	private BufferedReader reader;
-	private String currentLine;
-	private String[] tokens;
-	private ArrayList<String> lines = new ArrayList<String>();
-	private HttpdConfSetter httpdConfSetter;
 
 	public HttpdConfReader(String path) throws IOException {
 		reader = new BufferedReader(new FileReader(path));
@@ -33,9 +30,11 @@ public class HttpdConfReader {
 	 */
 	public void readHttpdConfFile() throws IOException, ConfigurationException {
 
-		SetHttpdConf.init();
-		currentLine = reader.readLine();
-
+		HttpdConfSetterTable.init();
+		String currentLine = reader.readLine();
+		String[] tokens;
+		HttpdConfSetter httpdConfSetter;
+		
 		while (currentLine != null) {
 
 			// trim white space at the beginning, middle and end
@@ -49,13 +48,13 @@ public class HttpdConfReader {
 
 			// Check tag which start with <>
 			if (currentLine.charAt(0) == '<') {
-				processTag();
+				parseTag(currentLine);
 				currentLine = reader.readLine();
 				continue;
 			}
 
 			tokens = currentLine.split(" ", 2);
-			httpdConfSetter = SetHttpdConf.getSetter(tokens[0]);
+			httpdConfSetter = HttpdConfSetterTable.getSetter(tokens[0]);
 
 			if (httpdConfSetter != null)
 				httpdConfSetter.process(tokens[1]);
@@ -79,24 +78,77 @@ public class HttpdConfReader {
 	 * 
 	 * @throws Exception
 	 */
-	private void processTag() throws IOException, ConfigurationException {
+	private void parseTag(String currentLine) throws IOException, ConfigurationException {
 
-		if (!currentLine.endsWith(">")) {
-			throw new ConfigurationException("<> not paired");
-		}
+		if( !checkOpenTag(currentLine))
+			throw new ConfigurationException("Illegal open tag: "+currentLine);
 
-		// Error: close tag before open it
-		if (currentLine.charAt(1) == '/') {
-			throw new ConfigurationException("<> close tag before open");
-		}
+		String[] tokens = parseOpenTag(currentLine);
 
-		currentLine = currentLine.substring(1, currentLine.length() - 1).trim();
-		tokens = currentLine.split(" ", 2);
-
-		httpdConfSetter = SetHttpdConf.getSetter(tokens[0]);
-		lines.clear();
+		HttpdConfSetter httpdConfSetter = HttpdConfSetterTable.getSetter(tokens[0]);
+		
+		if( httpdConfSetter == null ) return;
+		
+		List<String> lines = new ArrayList<String>();
 		lines.add(tokens[1]);
-		currentLine = reader.readLine().trim();
+		currentLine = readTagContent(lines);
+
+		if(!checkCloseTag(tokens[0], currentLine)){
+			throw new ConfigurationException("Illegal close tag: "+currentLine);
+		}
+
+		httpdConfSetter.process(lines);
+	}
+
+	/**
+	 * Check the open tag. It should be HTML/XML style.
+	 * 
+	 * @param line
+	 * @return
+	 */
+	public static boolean checkOpenTag(String line) {
+		
+		String regex = "^<[a-zA-Z][a-zA-Z1-9]* .+>$";
+		
+		if ( line != null && line.trim().matches(regex) ) 
+			return true;
+		
+		return false;
+	
+	}
+	
+	/**
+	 * Check close tag. It should be HTML/XML style
+	 * 
+	 * @param tag
+	 * @param line
+	 * @return
+	 */
+	public static boolean checkCloseTag(String tag, String line){
+		
+		String regex = "^</"+tag+" *>$";
+		
+		if ( line != null && line.trim().matches(regex) ) 
+			return true;
+
+		return false;
+	}
+	
+	private String[] parseOpenTag(String line){
+		// Eliminate <>
+		line = line.substring(1, line.length() - 1).trim();
+		return line.split(" ", 2);
+	}
+	
+	/**
+	 * 
+	 * 
+	 * @param list The list to store each tag content
+	 * @return The last line being read
+	 */
+	private String readTagContent(List<String> list) throws IOException {
+		
+		String currentLine = reader.readLine().trim();
 
 		while (currentLine != null) {
 
@@ -109,46 +161,11 @@ public class HttpdConfReader {
 				break;
 			}
 
-			lines.add(currentLine);
+			list.add(currentLine);
 			currentLine = reader.readLine().trim();
 		}
-
-		if (currentLine == null) {
-			throw new ConfigurationException("Tag is not closed");
-		}
-
-		currentLine = currentLine.replaceAll(" +", "");
-
-		if (!currentLine.equals("</" + tokens[0] + ">")) {
-			throw new ConfigurationException("Close tag not match open tag");
-		}
-
-		httpdConfSetter.process(lines);
+		
+		return currentLine;
 	}
-
-	public void testPrint() {
-		System.out.println("ServerRoot: " + HttpdConf.SERVER_ROOT);
-		System.out.println("DocumentRoot: " + HttpdConf.DOCUMENT_ROOT);
-		System.out.println("ListenPort: " + HttpdConf.LISTEN);
-		System.out.println("LogFile: " + HttpdConf.LOG_FILE);
-		System.out.println("ScriptAlias: " + HttpdConf.SCRIPT_ALIAS + " "
-				+ HttpdConf.ALIAS.get(HttpdConf.SCRIPT_ALIAS));
-	}
-
-	public static void main(String[] args) {
-		try {
-			File file = new File(".");
-			System.out.println(file.getAbsolutePath());
-			HttpdConfReader reader = new HttpdConfReader(
-					"src/Sample Files/httpd.conf");
-			reader.readHttpdConfFile();
-			reader.testPrint();
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-			System.exit(1);
-		} catch (Exception e){
-			
-		}
-
-	}
+	
 }

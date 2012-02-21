@@ -21,33 +21,45 @@ public class WebServer {
 	private ServerSocket server;
 	private Socket client;
 
-	public WebServer() throws FileNotFoundException, IOException, ConfigurationException {
-		
-		this.configure();
-		this.prepareMIMETypes();
+	/**
+	 * 
+	 * Web server needs to be configured before start running, so user must
+	 * provide path to configuration directory, where web server will look for
+	 * httpd.conf and mime.types files.
+	 * 
+	 * @param confDiretory The path to web server configuration directory.
+	 * 
+	 */
+	public WebServer(String confDiretory) throws FileNotFoundException,
+			IOException, ConfigurationException {
+
+		this.configure(confDiretory);
+		this.prepareMIMETypes(confDiretory);
 		server = new ServerSocket(HttpdConf.LISTEN);
 		System.out.println("Opened socket " + HttpdConf.LISTEN);
-	
+
 	}
 
-	protected void configure() throws FileNotFoundException, IOException, ConfigurationException {
-		
-		File confFile = new File(HTTPDD_CONF_PATH, HTTPD_CONF_FILE);
+	protected void configure(String confDirectory)
+			throws FileNotFoundException, IOException, ConfigurationException {
+
+		File confFile = new File(confDirectory, HTTPD_CONF_FILE);
 		if (!confFile.exists())
 			throw new FileNotFoundException("File not found: "
 					+ confFile.getAbsolutePath());
 		new HttpdConfReader(confFile).readHttpdConfFile();
-	
+
 	}
 
-	protected void prepareMIMETypes() throws FileNotFoundException, IOException {
-		
-		File mimeFile = new File(HTTPDD_CONF_PATH, MIME_TYPES_FILE);
+	protected void prepareMIMETypes(String confDirectory)
+			throws FileNotFoundException, IOException {
+
+		File mimeFile = new File(confDirectory, MIME_TYPES_FILE);
 		if (!mimeFile.exists())
 			throw new FileNotFoundException("File not found: "
 					+ mimeFile.getAbsolutePath());
 		new MIME(mimeFile).readMIMEType();
-	
+
 	}
 
 	/**
@@ -56,7 +68,7 @@ public class WebServer {
 	 * request.
 	 * 
 	 */
-	public void start() throws FileNotFoundException, IOException {
+	public void start() throws IOException {
 
 		Response response = new Response();
 		Request request;
@@ -77,9 +89,9 @@ public class WebServer {
 
 			} catch (ServerException se) {
 
-				se.printStackTrace();
 				response.sendErrorMessage(client.getOutputStream(),
 						se.getStatusCode());
+				se.printStackTrace();
 
 			} finally {
 				client.close();
@@ -88,11 +100,18 @@ public class WebServer {
 
 	}
 
+	/**
+	 * 
+	 * @param args The path to web server configurateion directory.
+	 */
 	public static void main(String[] args) {
 
 		try {
-
-			new WebServer().start();
+			if (args.length != 1){
+				System.out.println("Exact one argument: path of web server configuration directory");
+				return;
+			}
+			new WebServer(args[0]).start();
 
 		} catch (FileNotFoundException fne) {
 

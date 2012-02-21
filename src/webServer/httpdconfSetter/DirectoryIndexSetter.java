@@ -9,7 +9,7 @@ public class DirectoryIndexSetter extends HttpdConfSetter {
 	public void process(Object line) throws ConfigurationException{
 		
 		if( !(line instanceof String ))
-			throw new ConfigurationException("DirectoryIndexSetter: String");
+			throw new ConfigurationException("DirectoryIndexSetter: type String expected");
 		
 		String[] indexes = ((String)line).trim().split(" ");
 		HttpdConf.DIRECTORY_INDEX = indexes;

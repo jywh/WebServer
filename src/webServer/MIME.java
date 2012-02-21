@@ -13,8 +13,7 @@ public class MIME {
 	public static final String DEFAULT_MIME_TYPE = "text/html";
 
 	private BufferedReader reader;
-	private String line;
-	private String[] tokens;
+
 	private static HashMap<String, String> MIMETable = new HashMap<String, String>(
 			1200, 0.9f);
 
@@ -27,6 +26,9 @@ public class MIME {
 	}
 
 	public void readMIMEType() {
+		String line;
+		String[] tokens;
+		
 		try {
 			int size = 0;
 			line = reader.readLine();
@@ -66,7 +68,7 @@ public class MIME {
 			return DEFAULT_MIME_TYPE;
 	}
 
-	public void testMIME() {
+	public void print() {
 		Set<String> keys = MIMETable.keySet();
 		String[] keyArray=keys.toArray(new String[keys.size()]);
 		Arrays.sort(keyArray);
@@ -78,18 +80,6 @@ public class MIME {
 
 	public int length() {
 		return MIMETable.size();
-	}
-
-	public static void main(String[] args) {
-		try {
-			MIME mime = new MIME("src/Sample Files/mime.types");
-			mime.readMIMEType();
-			mime.testMIME();
-			System.out.println(mime.length());
-		} catch (IOException ioe) {
-			System.out.println("MIME main error");
-		}
-
 	}
 
 }
