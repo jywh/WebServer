@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.HashMap;
 
 import webServer.HttpdConf;
 import webServer.Response;
@@ -23,11 +22,15 @@ import webServer.ulti.ServerException;
 public class RequestParser {
 
 	public static final String URI_SEPARATOR = "/";
+	private static final String HTTP_PREFIX = "HTTP_";
+
+	private String[] tempStringArray;
 	private BufferedReader incommingMessage;
 
 	public Request parseRequest(InputStream inputStream) throws ServerException {
-		HashMap<String, String> requestFields;
+		String requestFields;
 		String[] parameters;
+		int methodCode;
 
 		try {
 
@@ -36,8 +39,14 @@ public class RequestParser {
 
 			// Parse first line of request message
 			parameters = parseFirstLine(incommingMessage.readLine());
+			methodCode = getMethodCode(parameters[0]);
+			
+			if ( methodCode == Request.POST || methodCode == Request.PUT )
+					parameters[3] = extractParameterStringFromBody();
+			
+			requestFields = extractRequestFields();
 
-			requestFields = getRequestFields();
+			Log.log("request field:", requestFields);
 
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
@@ -45,13 +54,13 @@ public class RequestParser {
 					"RequestParser: parseRequest");
 		}
 
-		return new Request(getRequestMethodCode(parameters[0]), parameters[1],
+		return new Request(methodCode, parameters[1],
 				parameters[2], parameters[3], requestFields);
 	}
 
 	/*****************************************************************
 	 * 
-	 * Parsing the first line of request message
+	 * Parsing the first line
 	 * 
 	 *****************************************************************/
 
@@ -61,23 +70,25 @@ public class RequestParser {
 			throw new ServerException(Response.BAD_REQUEST,
 					"RequestParser: parseFirstLine");
 
-		String[] tokens = firstLine.split(" ");
+		tempStringArray = firstLine.split(" ");
 
-		if (tokens.length != 3) {
+		if (tempStringArray.length != 3) {
 			throw new ServerException(Response.BAD_REQUEST,
 					"RequestParser: parseFirstLine");
 		}
 
-		String methos = tokens[0],  URI = tokens[1],  httpVersion = tokens[2], parameterString;
+		String methos = tempStringArray[0], URI = tempStringArray[1], httpVersion = tempStringArray[2], parameterString;
 
-		tokens = extractParameterString(URI);
-		URI = tokens[0];
-		parameterString = tokens[1];
+		tempStringArray = extractParameterStringFromURI(URI);
+		URI = tempStringArray[0];
+		parameterString = tempStringArray[1];
 
 		URI = resolveAlias(URI);
 		if (!(new File(URI).isAbsolute())) // there is no alias
 			URI = addDocumentRoot(URI);
 
+		tempStringArray = null;
+		
 		return new String[] { methos, URI, httpVersion, parameterString };
 
 	}
@@ -89,17 +100,14 @@ public class RequestParser {
 	 * @return
 	 * @throws ServerException
 	 */
-	protected int getRequestMethodCode(String method) throws ServerException {
-		if (method.equals("GET"))
-			return Request.GET;
-		else if (method.equals("POST"))
-			return Request.POST;
-		else if (method.equals("HEAD"))
-			return Request.HEAD;
-		else if (method.equals("PUT"))
-			return Request.PUT;
-		else
-			throw new ServerException(Response.NOT_IMPLEMENTED);
+	protected int getMethodCode(String method) throws ServerException {
+
+		Integer methodCode = Request.getMethodCode(method);
+
+		if (methodCode != null)
+			return methodCode;
+
+		throw new ServerException(Response.NOT_IMPLEMENTED);
 	}
 
 	/**
@@ -107,12 +115,12 @@ public class RequestParser {
 	 */
 	protected String resolveAlias(String URI) {
 
-		String[] tokens = URI.split(URI_SEPARATOR);
+		tempStringArray = URI.split(URI_SEPARATOR);
 
-		if (tokens.length < 1)
+		if (tempStringArray.length < 1)
 			return URI;
 
-		String alias = URI_SEPARATOR + tokens[1];
+		String alias = URI_SEPARATOR + tempStringArray[1];
 
 		if (HttpdConf.SCRIPT_ALIAS.containsKey(alias)) {
 			URI = URI.replace(alias, HttpdConf.SCRIPT_ALIAS.get(alias));
@@ -120,6 +128,8 @@ public class RequestParser {
 			URI = URI.replace(alias, HttpdConf.ALIAS.get(alias));
 		}
 
+		tempStringArray = null;
+		
 		return URI;
 	}
 
@@ -136,9 +146,9 @@ public class RequestParser {
 		if (!path.exists())
 			throw new ServerException(Response.NOT_FOUND,
 					"RequestParser: addDocumentRoot");
-		
+
 		URI = path.getAbsolutePath() + File.separator;
-		
+
 		for (String indexFile : HttpdConf.DIRECTORY_INDEX) {
 			indexFile = URI + indexFile;
 			if (new File(indexFile).exists())
@@ -155,7 +165,7 @@ public class RequestParser {
 	 * 
 	 * @param parameters
 	 */
-	private String[] extractParameterString(String URI) {
+	private String[] extractParameterStringFromURI(String URI) {
 
 		int index = URI.indexOf('?');
 		if (index > 0) {
@@ -172,27 +182,38 @@ public class RequestParser {
 	 * 
 	 *************************************************************/
 
-	private HashMap<String, String> getRequestFields() throws ServerException {
+	private String extractRequestFields() throws ServerException {
+
 		try {
+
+			StringBuilder builder = new StringBuilder();
 			String currentLine = incommingMessage.readLine();
-			HashMap<String, String> requestFields = new HashMap<String, String>(
-					40);
-			while (currentLine.trim().length() != 0) {
-				try {
-					String[] tokens = currentLine.split(":");
-					requestFields.put(tokens[0], tokens[1].trim());
-					currentLine = incommingMessage.readLine();
-				} catch (NullPointerException npe) {
-					npe.printStackTrace();
-					throw new ServerException(Response.BAD_REQUEST,
-							"Request: getRequestFields");
-				}
+
+			while (currentLine != null && !currentLine.trim().isEmpty()) {
+
+				builder.append(convertStringToEnvironmentVaraible(currentLine))
+						.append("&");
+				currentLine = incommingMessage.readLine();
+
 			}
-			return requestFields;
+			
+			return ( !builder.toString().isEmpty() ) ? builder.toString().substring(0,
+					builder.toString().length() - 1) : "";
+
 		} catch (IOException ioe) {
+			ioe.printStackTrace();
 			throw new ServerException(Response.BAD_REQUEST,
 					"Request: getRequestFields");
 		}
+	}
+
+	protected String convertStringToEnvironmentVaraible(String line) {
+
+		tempStringArray = line.split(":", 2);
+		tempStringArray[1] = tempStringArray[1] != null ? tempStringArray[1].trim() : "";
+		tempStringArray[0] = HTTP_PREFIX + tempStringArray[0].replace('-', '_').toUpperCase();
+		return tempStringArray[0] + "=" + tempStringArray[1];
+
 	}
 
 	/*************************************************************
@@ -201,4 +222,22 @@ public class RequestParser {
 	 * 
 	 *************************************************************/
 
+	protected String extractParameterStringFromBody() throws ServerException {
+
+		try {
+			
+			StringBuilder builder = new StringBuilder();
+			
+			while (incommingMessage.ready())
+				builder.append((char) incommingMessage.read());
+			
+			return builder.toString();
+			
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+			throw new ServerException(Response.BAD_REQUEST,
+					"Request: extractParameterStringFromBody");
+		}
+
+	}
 }

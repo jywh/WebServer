@@ -60,7 +60,7 @@ public class Response {
 		writeHeaderMessage(out, headerMessage);
 		
 		if(request.getMethod() != Request.HEAD)
-			writeFile(out, document);
+			serveFile(out, document);
 
 	}
 
@@ -98,7 +98,7 @@ public class Response {
 
 	}
 
-	protected void writeFile(OutputStream out, File document)
+	protected void serveFile(OutputStream out, File document)
 			throws ServerException {
 		
 		Log.log("document path:", document.getAbsolutePath());
@@ -119,7 +119,7 @@ public class Response {
 		}
 	}
 
-	public void writeErrorMessage(OutputStream out, int statusCode)
+	public void sendErrorMessage(OutputStream out, int statusCode)
 			throws IOException {
 		try {
 			String errorFilePath = ERROR_FILE_PATH+Integer.toString(statusCode)+".html";
@@ -128,21 +128,21 @@ public class Response {
 			String headerMessage = createHeaderMessage(DEFAULT_HTTP_VERSION, errorFile,
 					statusCode);
 			writeHeaderMessage(out, headerMessage);
-			writeFile(out, errorFile);
+			serveFile(out, errorFile);
 		} catch (ServerException se) {
 			se.printStackTrace();
 		}
 
 	}
 
-	public String getCurrentTimeFull() {
+	public static String getCurrentTimeFull() {
 		Calendar calendar = Calendar.getInstance();
 		DateFormat dateFormat = new SimpleDateFormat(
 				" EEE, d MMM yyy HH:mm:ss z", Locale.US);
 		return dateFormat.format(calendar.getTime());
 	}
 
-	public String getMIMEType(File document) {
+	public static String getMIMEType(File document) {
 		String extension = document.getName();
 		int index = extension.lastIndexOf('.');
 		if (index > 0) {

@@ -47,7 +47,7 @@ public class WebServer {
 				} catch (ServerException se) {
 					
 					se.printStackTrace();
-					response.writeErrorMessage(dong.getOutputStream(), se.getStatusCode());
+					response.sendErrorMessage(dong.getOutputStream(), se.getStatusCode());
 
 				} catch(Exception e){
 				

@@ -2,7 +2,7 @@ package webServer.ulti;
 
 public class Log {
 
-	public static boolean LOG_ON = false;
+	public static boolean LOG_ON = true;
 	
 	public static void log(String field, String message){
 		if( LOG_ON )

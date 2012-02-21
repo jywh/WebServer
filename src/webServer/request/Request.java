@@ -1,7 +1,6 @@
  package webServer.request;
 
 import java.util.HashMap;
-import java.util.Set;
 
 import webServer.HttpdConf;
 
@@ -12,10 +11,20 @@ public class Request {
 	public static final int HEAD = 2;
 	public static final int PUT = 3;
 	
-	private HashMap<String, String> requestFields;
+	private String requestFields;
 	private String httpVersion,URI, parameterString;
 	private int method;
-
+	private static HashMap<String, Integer> methodCodeTable = new HashMap<String, Integer>(8);
+	
+	static {
+		
+		methodCodeTable.put("GET", GET);
+		methodCodeTable.put("POST", POST);
+		methodCodeTable.put("HEAD", HEAD);
+		methodCodeTable.put("PUT", PUT);
+		
+	}
+	
 	/**
 	 * This prevent direct instaniate of Request object. Request can only be created by RequestParser.
 	 */
@@ -23,7 +32,7 @@ public class Request {
 	
 	protected Request(int method, String URI, String httpVersion,
 			String parameterString,
-			HashMap<String, String> requestFields){
+			String requestFields){
 		this.method = method;
 		this.URI = URI;
 		this.httpVersion = httpVersion;
@@ -36,6 +45,10 @@ public class Request {
 		return method;
 	}
 
+	public static int getMethodCode(String method){
+		return methodCodeTable.get(method);
+	}
+	
 	public String getURI() {
 		return URI;
 	}
@@ -48,12 +61,8 @@ public class Request {
 		return httpVersion;
 	}
 	
-	public Set<String> getAllRequestFieldNames(){
-		return requestFields.keySet();
-	}
-	
 	public String getRequestFieldContent(String fieldName){
-		return requestFields.get(fieldName);
+		return requestFields;
 	}
 	
 	public String replaceWithDocumentRoot(String URI) {
