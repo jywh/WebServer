@@ -17,11 +17,13 @@ public class HttpdConfReader {
 
 	public HttpdConfReader(String path) throws IOException {
 		reader = new BufferedReader(new FileReader(path));
+		HttpdConfSetterTable.init();
 
 	}
 
 	public HttpdConfReader(File confFile) throws IOException {
 		reader = new BufferedReader(new FileReader(confFile));
+		HttpdConfSetterTable.init();
 	}
 
 	/**
@@ -30,47 +32,57 @@ public class HttpdConfReader {
 	 */
 	public void readHttpdConfFile() throws IOException, ConfigurationException {
 
-		HttpdConfSetterTable.init();
 		String currentLine = reader.readLine();
-		String[] tokens;
-		HttpdConfSetter httpdConfSetter;
 		
-		while (currentLine != null) {
+		while ( ( currentLine = reader.readLine()) != null) {
 
-			// trim white space at the beginning, middle and end
+			// trim white space at the beginning, the middle and the end
 			currentLine = currentLine.trim().replaceAll(" +", " ");
 
 			// skip comment and blink line
-			if (isCommentOrEmtpryLine(currentLine)) {
-				currentLine = reader.readLine();
+			if (isCommentOrEmptyLine(currentLine)) {
 				continue;
 			}
 
-			// Check tag which start with <>
+			// Check tag which starts with <>
 			if (currentLine.charAt(0) == '<') {
 				parseTag(currentLine);
-				currentLine = reader.readLine();
 				continue;
 			}
-
-			tokens = currentLine.split(" ", 2);
-			httpdConfSetter = HttpdConfSetterTable.getSetter(tokens[0]);
-
-			if (httpdConfSetter != null)
-				httpdConfSetter.process(tokens[1]);
-
-			currentLine = reader.readLine();
+			
+			parseLine(currentLine);
 
 		}
 	}
 
-	private boolean isCommentOrEmtpryLine(String line) {
+	private boolean isCommentOrEmptyLine(String line) {
 		if (line.length() == 0 || line.charAt(0) == '#') {
 			return true;
 		}
 		return false;
 	}
+	
 
+	/*****************************************************************
+	 * 
+	 * Parsing single line
+	 * 
+	 *****************************************************************/
+	
+	protected void parseLine(String currentLine) throws ConfigurationException{
+		String[] tokens = currentLine.split(" ", 2);
+		HttpdConfSetter httpdConfSetter = HttpdConfSetterTable.getSetter(tokens[0]);
+
+		if (httpdConfSetter != null)
+			httpdConfSetter.process(tokens[1]);
+	}
+	
+	/*****************************************************************
+	 * 
+	 * Parsing tag <>
+	 * 
+	 *****************************************************************/
+	
 	/**
 	 * Processing any line with <> and </>
 	 * 
@@ -152,7 +164,7 @@ public class HttpdConfReader {
 
 		while (currentLine != null) {
 
-			if (isCommentOrEmtpryLine(currentLine)) {
+			if (isCommentOrEmptyLine(currentLine)) {
 				currentLine = reader.readLine().trim();
 				continue;
 			}

@@ -15,6 +15,7 @@ import java.util.Locale;
 
 import webServer.request.Request;
 import webServer.ulti.Log;
+import webServer.ulti.LogContent;
 import webServer.ulti.ServerException;
 
 public class Response {
@@ -33,6 +34,8 @@ public class Response {
 	private static HashMap<Integer, String> responsePhrase = new HashMap<Integer, String>();
 	public static final String ERROR_FILE_PATH = "C:/MyWebserver/error/";
 	public static String DEFAULT_HTTP_VERSION = "HTTP/1.1";
+	
+	private LogContent logContent;
 
 	static {
 		responsePhrase.put(OK, "200 OK");
@@ -52,16 +55,19 @@ public class Response {
 
 		// Retrieve document
 		File document = new File(request.getURI());
-
+		logContent = request.getLogContent();
+		
 		String headerMessage = createHeaderMessage(request.getHttpVersion(),
 				document, Response.OK);
 		writeHeaderMessage(out, headerMessage);
 
+		
 		if (request.getMethod() != Request.HEAD)
 			serveFile(out, document);
-
+		log();
 	}
 
+	
 	protected void writeHeaderMessage(OutputStream out, String headerMessage) {
 		PrintWriter writer = new PrintWriter(out, true);
 		writer.println(headerMessage);
@@ -80,14 +86,17 @@ public class Response {
 
 		String mime = getMIMEType(document);
 		long length = document.length();
-
+		
+		logContent.setStatusCode(statusCode);
+		logContent.setLength(length);
+		
 		StringBuilder builder = new StringBuilder();
 		builder.append(httpVersion).append(" ")
 				.append(getStatusPhrase(statusCode)).append("\n")
 				.append("Date: ").append(getCurrentTimeFull()).append("\n")
 				.append("Server: ")
 				.append(WebServer.WEB_SERVER_NAME)
-				// .append("\n").append("Connection: ").append("close")
+				 .append("\n").append("Connection: ").append("close")
 				.append("\n").append("Content-length: ").append(length)
 				.append("\n").append("Content-type: ").append(mime)
 				.append("\n");
@@ -100,7 +109,7 @@ public class Response {
 	protected void serveFile(OutputStream out, File document)
 			throws ServerException {
 
-		Log.log("document path:", document.getAbsolutePath());
+		Log.debug("document path:", document.getAbsolutePath());
 
 		try {
 			byte[] bytes = new byte[(int) document.length()];
@@ -121,12 +130,11 @@ public class Response {
 		}
 	}
 
-	public void sendErrorMessage(OutputStream out, int statusCode)
-			throws IOException {
+	public void sendErrorMessage(OutputStream out, int statusCode) {
+		
 		try {
 			String errorFilePath = ERROR_FILE_PATH
 					+ Integer.toString(statusCode) + ".html";
-			Log.log("Error file", errorFilePath);
 			File errorFile = new File(errorFilePath);
 			String headerMessage = createHeaderMessage(DEFAULT_HTTP_VERSION,
 					errorFile, statusCode);
@@ -153,5 +161,12 @@ public class Response {
 			return MIME.getMIMEType(extension);
 		}
 		return MIME.DEFAULT_MIME_TYPE;
+	}
+	
+	private void log(){
+		logContent.setRfc1413("-");
+		logContent.setUserId("-");
+		logContent.setTime(Log.time());
+		Log.access(logContent.getLogContent());
 	}
 }

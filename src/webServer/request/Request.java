@@ -1,28 +1,20 @@
 package webServer.request;
 
-import java.util.HashMap;
-
 import webServer.HttpdConf;
+import webServer.ulti.LogContent;
 
 public class Request {
 
-	public static final int GET = 0;
-	public static final int POST = 1;
-	public static final int HEAD = 2;
-	public static final int PUT = 3;
+	public static final String GET = "GET";
+	public static final String POST = "POST";
+	public static final String HEAD = "HEAD";
+	public static final String PUT = "PUT";
 
-	private String requestFields;
+	private String[] requestFields;
 	private String httpVersion, URI, parameterString;
-	private int method;
-	private static HashMap<String, Integer> methodCodeTable = new HashMap<String, Integer>(
-			8);
+	private String method;
+	private LogContent logContent;
 
-	static {
-		methodCodeTable.put("GET", GET);
-		methodCodeTable.put("POST", POST);
-		methodCodeTable.put("HEAD", HEAD);
-		methodCodeTable.put("PUT", PUT);
-	}
 
 	/**
 	 * This prevent direct instaniate of Request object. Request can only be
@@ -31,21 +23,18 @@ public class Request {
 	protected Request() {
 	}
 
-	protected Request(int method, String URI, String httpVersion,
-			String parameterString, String requestFields) {
+	protected Request(String method, String URI, String httpVersion,
+			String parameterString, String[] requestFields, LogContent logContent) {
 		this.method = method;
 		this.URI = URI;
 		this.httpVersion = httpVersion;
 		this.parameterString = parameterString;
 		this.requestFields = requestFields;
+		this.logContent = logContent;
 	}
 
-	public int getMethod() {
+	public String getMethod() {
 		return method;
-	}
-
-	public static int getMethodCode(String method) {
-		return methodCodeTable.get(method);
 	}
 
 	public String getURI() {
@@ -60,12 +49,16 @@ public class Request {
 		return httpVersion;
 	}
 
-	public String getRequestField() {
+	public String[] getRequestField() {
 		return requestFields;
 	}
 
 	public String replaceWithDocumentRoot(String URI) {
 		return HttpdConf.DOCUMENT_ROOT + URI;
+	}
+	
+	public LogContent getLogContent(){
+		return logContent;
 	}
 
 }

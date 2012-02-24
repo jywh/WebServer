@@ -5,10 +5,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import webServer.HttpdConf;
 import webServer.Response;
+import webServer.WebServer;
 import webServer.ulti.Log;
+import webServer.ulti.LogContent;
 import webServer.ulti.ServerException;
 
 /**
@@ -17,37 +21,48 @@ import webServer.ulti.ServerException;
  * create a request object. All the incomming message must go through
  * RequestParser.
  * 
- * @author Wenhui
  * 
  */
 public class RequestParser {
 
 	public static final String URI_SEPARATOR = "/";
 	private static final String HTTP_PREFIX = "HTTP_";
-
+	private static final String REMOTE_ADDR = "HTTP_REMOTE_ADDR";
+	private static final String SERVER_NAME = "HTTP_SERVER_NAME";
+	private static final String SERVER_SOFTWARE = "HTTP_SERVER_SOFTWARE";
+	private static final String SERVER_PROTOCOL = "HTTP_SERVER_PROTOCOL";
+	private static final String SERVER_PORT = "HTTP_SERVER_PORT";
+	private static final String REQUEST_METHOD = "HTTP_REQUEST_METHOD";
+	
 	private BufferedReader incommingMessage;
-
-	public Request parseRequest(InputStream inputStream) throws ServerException {
-
-		String requestFields;
-		String[] parameters;
-		int methodCode;
-
+	private LogContent logContent;
+	private String IP;
+	
+	public RequestParser(InputStream inputStream, String IP) throws ServerException{
+		
+		if (inputStream == null)
+			throw new ServerException(Response.BAD_REQUEST);
+		
 		incommingMessage = new BufferedReader(
 				new InputStreamReader(inputStream));
-
+		this.IP = IP;
+		logContent = new LogContent();
+	}
+	
+	public Request parseRequest() throws ServerException {
+		
 		try {
 
 			// Parse first line of request message
-			parameters = parseFirstLine(incommingMessage.readLine());
-			methodCode = getMethodCode(parameters[0]);
-
-			if (methodCode == Request.POST || methodCode == Request.PUT)
+			String[] parameters = parseFirstLine(incommingMessage.readLine());
+			String[] requestFields = extractRequestFields(parameters[0], parameters[2]);
+			
+			if (parameters[0].equals(Request.POST) || parameters[0].equals(Request.PUT))
 				parameters[3] = extractParameterStringFromBody();
 
-			requestFields = extractRequestFields();
-
-			Log.log("request field:", requestFields);
+			logContent.setIP(IP);
+			return new Request(parameters[0], parameters[1], parameters[2],
+					parameters[3], requestFields, logContent);
 
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
@@ -55,8 +70,6 @@ public class RequestParser {
 					"RequestParser: parseRequest");
 		}
 
-		return new Request(methodCode, parameters[1], parameters[2],
-				parameters[3], requestFields);
 	}
 
 	/*****************************************************************
@@ -70,7 +83,8 @@ public class RequestParser {
 		if (firstLine == null || firstLine.isEmpty())
 			throw new ServerException(Response.BAD_REQUEST,
 					"RequestParser: parseFirstLine");
-
+		
+		logContent.setRequestLine(firstLine);
 		String[] tokens = firstLine.split(" ");
 
 		if (tokens.length != 3) {
@@ -90,23 +104,6 @@ public class RequestParser {
 
 		return new String[] { methos, URI, httpVersion, parameterString };
 
-	}
-
-	/**
-	 * 
-	 * 
-	 * @param method
-	 * @return
-	 * @throws ServerException
-	 */
-	protected int getMethodCode(String method) throws ServerException {
-
-		Integer methodCode = Request.getMethodCode(method);
-
-		if (methodCode != null)
-			return methodCode;
-
-		throw new ServerException(Response.NOT_IMPLEMENTED);
 	}
 
 	/**
@@ -139,7 +136,7 @@ public class RequestParser {
 			return URI;
 		}
 
-		Log.log("URI is", URI);
+		Log.debug("URI is", URI);
 		if (!path.exists())
 			throw new ServerException(Response.NOT_FOUND,
 					"RequestParser: addDocumentRoot");
@@ -179,24 +176,34 @@ public class RequestParser {
 	 * 
 	 *************************************************************/
 
-	private String extractRequestFields() throws ServerException {
+	private String[] extractRequestFields(String method, String protocol) throws ServerException {
 
 		try {
 
-			StringBuilder builder = new StringBuilder();
+//			StringBuilder builder = new StringBuilder();
+//			String currentLine = incommingMessage.readLine();
+//
+//			while (currentLine != null && !currentLine.trim().isEmpty()) {
+//
+//				builder.append(convertStringToEnvironmentVaraible(currentLine))
+//						.append("&");
+//				currentLine = incommingMessage.readLine();
+//
+//			}
+//			
+//			return (!builder.toString().isEmpty()) ? builder.toString()
+//					.substring(0, builder.toString().length() - 1) : "";
+
 			String currentLine = incommingMessage.readLine();
-
-			while (currentLine != null && !currentLine.trim().isEmpty()) {
-
-				builder.append(convertStringToEnvironmentVaraible(currentLine))
-						.append("&");
+			List<String> requestHeaders = createPrefilledRequestHeaderList(method, protocol);
+			while( currentLine != null && !currentLine.trim().isEmpty()){
+				requestHeaders.add(convertStringToEnvironmentVaraible(currentLine));
 				currentLine = incommingMessage.readLine();
-
 			}
-
-			return (!builder.toString().isEmpty()) ? builder.toString()
-					.substring(0, builder.toString().length() - 1) : "";
-
+			
+			Log.debug("request field", currentLine);
+			return requestHeaders.toArray(new String[requestHeaders.size()]);
+			
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			throw new ServerException(Response.BAD_REQUEST,
@@ -213,24 +220,41 @@ public class RequestParser {
 
 	}
 
+	/**
+	 * Prefilled not-request specific and filed not in request header for environment variables
+	 * 
+	 * @return
+	 */
+	protected ArrayList<String> createPrefilledRequestHeaderList(String method, String protocol){
+		
+		ArrayList<String> headers = new ArrayList<String>();
+		headers.add(SERVER_NAME+"="+WebServer.WEB_SERVER_NAME);
+		headers.add(SERVER_SOFTWARE+"="+WebServer.SERVER_SOFTWARE);
+		headers.add(REMOTE_ADDR+"="+IP);
+		headers.add(SERVER_PORT+"="+Integer.toString(HttpdConf.LISTEN));
+		headers.add(SERVER_PROTOCOL+"="+protocol);
+		headers.add(REQUEST_METHOD+"="+method);
+		return headers;
+		
+	}
+	
 	/*************************************************************
 	 * 
 	 * Parsing body
 	 * 
 	 *************************************************************/
 
+	/**
+	 * 
+	 */
 	protected String extractParameterStringFromBody() throws ServerException {
-		
+
 		try {
-			Log.log("request body", "parsing request body");
-			String currentLine = incommingMessage.readLine();
-			if (currentLine == null)
-				return "";
-
+			
 			StringBuilder builder = new StringBuilder();
-
-			while (incommingMessage.ready())
-				builder.append((char) incommingMessage.read());
+			while ( incommingMessage.ready() ){
+				builder.append((char)incommingMessage.read());
+			}
 
 			return builder.toString();
 

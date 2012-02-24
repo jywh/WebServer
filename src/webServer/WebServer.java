@@ -6,17 +6,20 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import webServer.request.Request;
-import webServer.request.RequestParser;
 import webServer.ulti.ConfigurationException;
-import webServer.ulti.ServerException;
+import webServer.ulti.Log;
 
 public class WebServer {
 
 	public static final String WEB_SERVER_NAME = "MyServer";
+	public static final String SERVER_SOFTWARE = "MyJava";
+	public static final String GATEWAY_INTERFACE = "";
+
 	public static final String HTTPDD_CONF_PATH = "C:/MyWebServer/conf/";
 	public static final String HTTPD_CONF_FILE = "httpd.conf";
 	public static final String MIME_TYPES_FILE = "mime.types";
+
+	private static int threadCount = 0;
 
 	private ServerSocket server;
 	private Socket client;
@@ -27,7 +30,8 @@ public class WebServer {
 	 * provide path to configuration directory, where web server will look for
 	 * httpd.conf and mime.types files.
 	 * 
-	 * @param confDiretory The path to web server configuration directory.
+	 * @param confDiretory
+	 *            The path to web server configuration directory.
 	 * 
 	 */
 	public WebServer(String confDiretory) throws FileNotFoundException,
@@ -36,6 +40,7 @@ public class WebServer {
 		this.configure(confDiretory);
 		this.prepareMIMETypes(confDiretory);
 		server = new ServerSocket(HttpdConf.LISTEN);
+		Log.initialize();
 		System.out.println("Opened socket " + HttpdConf.LISTEN);
 
 	}
@@ -62,6 +67,18 @@ public class WebServer {
 
 	}
 
+	public synchronized static void addThread() {
+		threadCount++;
+	}
+
+	public synchronized static void removeThread() {
+		threadCount--;
+	}
+
+	public boolean allowMoreThread() {
+		return threadCount <= 100;
+	}
+
 	/**
 	 * 
 	 * Start the server. This will be infinite loop for listening to client's
@@ -70,8 +87,8 @@ public class WebServer {
 	 */
 	public void start() throws IOException {
 
-		Response response = new Response();
-		Request request;
+		// Response response = new Response();
+		// Request request;
 
 		while (true) {
 			try {
@@ -81,34 +98,28 @@ public class WebServer {
 				ioe.printStackTrace();
 			}
 
-			try {
-
-				request = new RequestParser().parseRequest(client
-						.getInputStream());
-				response.processRequest(request, client.getOutputStream());
-
-			} catch (ServerException se) {
-
-				response.sendErrorMessage(client.getOutputStream(),
-						se.getStatusCode());
-				se.printStackTrace();
-
-			} finally {
-				client.close();
+			if (allowMoreThread()) {
+				ClientThread.instantiate(client.getInputStream(),
+						client.getOutputStream(),
+						client.getInetAddress().getHostAddress()).start();
+				addThread();
 			}
+			
 		}
 
 	}
 
 	/**
 	 * 
-	 * @param args The path to web server configurateion directory.
+	 * @param args
+	 *            The path to web server configurateion directory.
 	 */
 	public static void main(String[] args) {
 
 		try {
-			if (args.length != 1){
-				System.out.println("Exact one argument: path of web server configuration directory");
+			if (args.length != 1) {
+				System.out
+						.println("Exact one argument: path of web server configuration directory");
 				return;
 			}
 			new WebServer(args[0]).start();
