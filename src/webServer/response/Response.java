@@ -1,22 +1,20 @@
-package webServer;
+package webServer.response;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Locale;
 
+import webServer.MIME;
+import webServer.WebServer;
 import webServer.request.Request;
 import webServer.ulti.Log;
 import webServer.ulti.LogContent;
@@ -62,33 +60,18 @@ public class Response {
 		File document = new File(request.getURI());
 		logContent = request.getLogContent();
 
-		if (isPythonScript(document)) {
+		if (isCGIScript(document)) {
 			System.out.println(document.getAbsolutePath());
-			CountableInputStream cin = new PythonScript().execute(document, "");
-
-			// BufferedInputStream bis = new BufferedInputStream(inputStream);
-			// Log.debug("", str[0]);
-			// Log.debug("temp file name: ", str[1]);
-			try {
-				int size = cin.size();
-				int offset = cin.getOffset('\n');
-				String contentType = extractContentType(cin, offset);
-				Log.debug("content type", contentType);
-				// String contentType = readFirstLineOfInputStream(inputStream);
-				// Log.debug("First line of return", reader.readLine());
-				String headerMessage = createHeaderMessage(
-						request.getHttpVersion(), size, contentType,
-						Response.OK);
-				writeHeaderMessage(out, headerMessage);
-//				writeToFile(cin, size-offset);
-//				File test = new File(HttpdConf.TEMP_DIRECTORY, "1330240737041");
-//				serveFile(out, test);
-				writeStreamFromScriptToBrowser(out, cin, size-offset);
-			} catch (IOException ioe) {
-				ioe.printStackTrace();
-				throw new ServerException(Response.INTERNAL_SERVER_ERROR);
-			}
-
+			String[] tokens = new CGI().execute(document,
+					request.getParameterString(), request.getRequestField());
+			document = new File(tokens[1]);
+			Log.debug("content type", tokens[0]);
+			String headerMessage = createHeaderMessage(
+					request.getHttpVersion(), document.length(), tokens[0],
+					Response.OK);
+			writeHeaderMessage(out, headerMessage);
+			serveFile(out, document);
+			 document.delete();
 		} else {
 
 			String headerMessage = createHeaderMessage(
@@ -97,7 +80,7 @@ public class Response {
 
 			if (request.getMethod() != Request.HEAD)
 				serveFile(out, document);
-			log();
+//			log();
 		}
 	}
 
@@ -117,23 +100,22 @@ public class Response {
 	private String createHeaderMessage(String httpVersion, File document,
 			int statusCode) {
 
-		String mime = getMIMEType(document);
+		String mime = MIME.getMIMEType(getFileExtension(document));
 		long length = document.length();
-
-		logContent.setStatusCode(statusCode);
-		logContent.setLength(length);
+//
+//		logContent.setStatusCode(statusCode);
+//		logContent.setLength(length);
 
 		StringBuilder builder = new StringBuilder();
 		builder.append(httpVersion).append(" ")
 				.append(getStatusPhrase(statusCode)).append("\n")
 				.append("Date: ").append(getCurrentTimeFull()).append("\n")
-				.append("Server: ").append(WebServer.WEB_SERVER_NAME)
-				.append("\n").append("Connection: ").append("close")
-				.append("\n").append("Content-length: ").append(length)
-				.append("\n").append("Content-type: ").append(mime)
-				.append("\n");
+				.append("Server: ").append(WebServer.SERVER_NAME).append("\n")
+				.append("Connection: ").append("close").append("\n")
+				.append("Content-length: ").append(length).append("\n")
+				.append("Content-type: ").append(mime).append("\n");
 
-//		 System.out.println(builder.toString());
+		 System.out.println(builder.toString());
 		return builder.toString();
 
 	}
@@ -144,7 +126,7 @@ public class Response {
 		builder.append(httpVersion).append(" ")
 				.append(getStatusPhrase(statusCode)).append("\n")
 				.append("Date: ").append(getCurrentTimeFull()).append("\n")
-				.append("Server: ").append(WebServer.WEB_SERVER_NAME)
+				.append("Server: ").append(WebServer.SERVER_NAME)
 				// .append("\n").append("Connection: ").append("close")
 				.append("\n").append("Content-length: ").append(length)
 				.append("\n").append(contentType).append("\n");
@@ -152,22 +134,24 @@ public class Response {
 		return builder.toString();
 	}
 
-	protected void serveFile(OutputStream out, File document)
+	protected void serveFile(OutputStream outStream, File document)
 			throws ServerException {
 
 		Log.debug("document path:", document.getAbsolutePath());
 
 		try {
-			byte[] bytes = new byte[(int) document.length()];
-			BufferedInputStream inStream = new BufferedInputStream(
+			byte[] buf = new byte[BUFFER_SIZE];
+			BufferedInputStream in = new BufferedInputStream(
 					new FileInputStream(document));
-			BufferedOutputStream outStream = new BufferedOutputStream(out);
+			BufferedOutputStream out = new BufferedOutputStream(outStream);
 			try {
-				inStream.read(bytes, 0, bytes.length);
-				outStream.write(bytes, 0, bytes.length);
+				int read = -1;
+				while ((read = in.read(buf)) >= 0) {
+					out.write(buf, 0, read);
+				}
 			} finally {
-				inStream.close();
-				outStream.close();
+				in.close();
+				out.close();
 			}
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
@@ -177,13 +161,12 @@ public class Response {
 	}
 
 	protected void writeStreamFromScriptToBrowser(OutputStream out,
-			CountableInputStream cin, int size)
-			throws ServerException {
+			CountableInputStream cin, int size) throws ServerException {
 		try {
-			
-//			System.out.println(cin.toString());
+
+			// System.out.println(cin.toString());
 			cin.skip(3);
-			byte[] bytes = new byte[size-3];
+			byte[] bytes = new byte[size - 3];
 			BufferedOutputStream outStream = new BufferedOutputStream(out);
 			cin.read(bytes, 0, bytes.length);
 			outStream.write(bytes, 0, bytes.length);
@@ -221,10 +204,6 @@ public class Response {
 		return dateFormat.format(calendar.getTime());
 	}
 
-	private String getMIMEType(File document) {
-		return MIME.getMIMEType(getFileExtension(document));
-	}
-
 	public static String getFileExtension(File document) {
 		String name = document.getName();
 		int index = name.lastIndexOf('.');
@@ -241,65 +220,11 @@ public class Response {
 		Log.access(logContent.getLogContent());
 	}
 
-	private boolean isPythonScript(File document) {
+	private boolean isCGIScript(File document) {
 		String extension = getFileExtension(document);
-		if (extension.equalsIgnoreCase("py"))
+		if (extension.equalsIgnoreCase("py") || extension.equalsIgnoreCase("pl"))
 			return true;
 		return false;
 	}
 
-	private String readFirstLineOfInputStream(InputStream in)
-			throws ServerException {
-
-		try {
-			InputStreamReader reader = new InputStreamReader(in, "UTF-8");
-			char c;
-			StringBuilder builder = new StringBuilder();
-			while ((c = (char) reader.read()) != '\n') {
-				builder.append(c);
-			}
-
-			while ((c = (char) reader.read()) != '\n') {
-				// skip all the white space
-			}
-			System.out.println(builder.toString());
-			return builder.toString();
-
-		} catch (UnsupportedEncodingException ue) {
-			ue.printStackTrace();
-			throw new ServerException(INTERNAL_SERVER_ERROR);
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new ServerException(INTERNAL_SERVER_ERROR);
-		}
-
-	}
-
-	private String extractContentType(CountableInputStream cin, int offset)
-			throws IOException {
-		byte[] buf = new byte[offset];
-		cin.read(buf, 0, buf.length);
-		return new String(buf);
-	}
-	
-	private String writeToFile(CountableInputStream in, int size) throws IOException {
-		String name = Long.toString(System.currentTimeMillis());
-		File tempDir = new File(HttpdConf.TEMP_DIRECTORY);
-		if (!tempDir.exists()) {
-			tempDir.mkdirs();
-		}
-		File tempFile = new File(tempDir, name);
-		OutputStream out = new FileOutputStream(tempFile);
-		in.skip(3);
-		byte buf[] = new byte[size-3];
-//		int len;
-//		while ((len = in.read(buf)) >= 0)
-//		
-		in.read(buf, 0, buf.length);
-		out.write(buf, 0, buf.length);
-		out.close();
-		in.close();
-		
-		return name;
-	}
 }

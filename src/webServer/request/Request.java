@@ -1,5 +1,7 @@
 package webServer.request;
 
+import java.util.Map;
+
 import webServer.HttpdConf;
 import webServer.ulti.LogContent;
 
@@ -10,7 +12,7 @@ public class Request {
 	public static final String HEAD = "HEAD";
 	public static final String PUT = "PUT";
 
-	private String[] requestFields;
+	private Map<String, String> requestFields;
 	private String httpVersion, URI, parameterString;
 	private String method;
 	private LogContent logContent;
@@ -24,7 +26,7 @@ public class Request {
 	}
 
 	protected Request(String method, String URI, String httpVersion,
-			String parameterString, String[] requestFields, LogContent logContent) {
+			String parameterString, Map<String,String> requestFields, LogContent logContent) {
 		this.method = method;
 		this.URI = URI;
 		this.httpVersion = httpVersion;
@@ -49,7 +51,7 @@ public class Request {
 		return httpVersion;
 	}
 
-	public String[] getRequestField() {
+	public Map<String, String> getRequestField() {
 		return requestFields;
 	}
 

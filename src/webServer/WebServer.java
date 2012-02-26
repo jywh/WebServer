@@ -10,7 +10,7 @@ import webServer.ulti.Log;
 
 public class WebServer {
 
-	public static final String WEB_SERVER_NAME = "MyServer";
+	public static final String SERVER_NAME = "MyServer";
 	public static final String SERVER_SOFTWARE = "MyJava";
 	public static final String GATEWAY_INTERFACE = "";
 
@@ -98,6 +98,8 @@ public class WebServer {
 						client.getOutputStream(),
 						client.getInetAddress().getHostAddress()).start();
 				addThread();
+			} else {
+				Log.debug("max thread exceed", "no more thread can be added");
 			}
 
 		}

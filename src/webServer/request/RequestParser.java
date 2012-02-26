@@ -5,12 +5,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import webServer.HttpdConf;
-import webServer.Response;
 import webServer.WebServer;
+import webServer.response.Response;
 import webServer.ulti.Log;
 import webServer.ulti.LogContent;
 import webServer.ulti.ServerException;
@@ -21,18 +21,17 @@ import webServer.ulti.ServerException;
  * create a request object. All the incomming message must go through
  * RequestParser.
  * 
- * 
  */
 public class RequestParser {
 
 	public static final String URI_SEPARATOR = "/";
 	private static final String HTTP_PREFIX = "HTTP_";
-	private static final String REMOTE_ADDR = "HTTP_REMOTE_ADDR";
-	private static final String SERVER_NAME = "HTTP_SERVER_NAME";
-	private static final String SERVER_SOFTWARE = "HTTP_SERVER_SOFTWARE";
-	private static final String SERVER_PROTOCOL = "HTTP_SERVER_PROTOCOL";
-	private static final String SERVER_PORT = "HTTP_SERVER_PORT";
-	private static final String REQUEST_METHOD = "HTTP_REQUEST_METHOD";
+	private static final String REMOTE_ADDR = "REMOTE_ADDR";
+	private static final String SERVER_NAME = "SERVER_NAME";
+	private static final String SERVER_SOFTWARE = "SERVER_SOFTWARE";
+	private static final String SERVER_PROTOCOL = "SERVER_PROTOCOL";
+	private static final String SERVER_PORT = "SERVER_PORT";
+	private static final String REQUEST_METHOD = "REQUEST_METHOD";
 	
 	private BufferedReader incommingMessage;
 	private LogContent logContent;
@@ -55,10 +54,12 @@ public class RequestParser {
 
 			// Parse first line of request message
 			String[] parameters = parseFirstLine(incommingMessage.readLine());
-			String[] requestFields = extractRequestFields(parameters[0], parameters[2]);
-			
-			if (parameters[0].equals(Request.POST) || parameters[0].equals(Request.PUT))
+			Map<String, String> requestFields = extractRequestFields(parameters[0], parameters[2]);
+			Log.debug("URI is", parameters[3]);
+			if (parameters[0].equals(Request.POST) || parameters[0].equals(Request.PUT)){
 				parameters[3] = extractParameterStringFromBody();
+				Log.debug("POST parameter", parameters[3]);
+			}
 
 			logContent.setIP(IP);
 			return new Request(parameters[0], parameters[1], parameters[2],
@@ -101,15 +102,21 @@ public class RequestParser {
 		URI = resolveAlias(URI);
 		if (!(new File(URI).isAbsolute())) // there is no alias
 			URI = addDocumentRoot(URI);
-
+		
+		Log.debug("URI ", URI);
+		
+		if (!(new File(URI)).exists())
+			throw new ServerException(Response.NOT_FOUND,
+					"RequestParser: addDocumentRoot");
 		return new String[] { methos, URI, httpVersion, parameterString };
 
 	}
 
 	/**
 	 * This will resolve alias that contains in the URI
+	 * @throws ServerException 
 	 */
-	protected String resolveAlias(String URI) {
+	protected String resolveAlias(String URI) throws ServerException {
 
 		String[] tokens = URI.split(URI_SEPARATOR);
 
@@ -123,7 +130,6 @@ public class RequestParser {
 		} else if (HttpdConf.ALIAS.containsKey(alias)) {
 			URI = URI.replace(alias, HttpdConf.ALIAS.get(alias));
 		}
-
 		return URI;
 	}
 
@@ -135,11 +141,6 @@ public class RequestParser {
 		if (!path.isDirectory() && path.exists()) {
 			return URI;
 		}
-
-		Log.debug("URI is", URI);
-		if (!path.exists())
-			throw new ServerException(Response.NOT_FOUND,
-					"RequestParser: addDocumentRoot");
 
 		URI = path.getAbsolutePath() + File.separator;
 
@@ -176,33 +177,19 @@ public class RequestParser {
 	 * 
 	 *************************************************************/
 
-	private String[] extractRequestFields(String method, String protocol) throws ServerException {
+	private Map<String, String> extractRequestFields(String method, String protocol) throws ServerException {
 
 		try {
-
-//			StringBuilder builder = new StringBuilder();
-//			String currentLine = incommingMessage.readLine();
-//
-//			while (currentLine != null && !currentLine.trim().isEmpty()) {
-//
-//				builder.append(convertStringToEnvironmentVaraible(currentLine))
-//						.append("&");
-//				currentLine = incommingMessage.readLine();
-//
-//			}
-//			
-//			return (!builder.toString().isEmpty()) ? builder.toString()
-//					.substring(0, builder.toString().length() - 1) : "";
-
 			String currentLine = incommingMessage.readLine();
-			List<String> requestHeaders = createPrefilledRequestHeaderList(method, protocol);
+			Map<String, String> requestHeaders = createPrefilledRequestHeaderList(method, protocol);
+			String[] tokens;
 			while( currentLine != null && !currentLine.trim().isEmpty()){
-				requestHeaders.add(convertStringToEnvironmentVaraible(currentLine));
+				tokens = convertStringToEnvironmentVaraible(currentLine);
+				requestHeaders.put(tokens[0], tokens[1]);
 				currentLine = incommingMessage.readLine();
 			}
 			
-			Log.debug("request field", currentLine);
-			return requestHeaders.toArray(new String[requestHeaders.size()]);
+			return requestHeaders;
 			
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
@@ -211,12 +198,12 @@ public class RequestParser {
 		}
 	}
 
-	protected String convertStringToEnvironmentVaraible(String line) {
+	protected String[] convertStringToEnvironmentVaraible(String line) {
 
 		String[] tokens = line.split(":", 2);
 		tokens[1] = tokens[1] != null ? tokens[1].trim() : "";
 		tokens[0] = HTTP_PREFIX + tokens[0].replace('-', '_').toUpperCase();
-		return tokens[0] + "=" + tokens[1];
+		return new String[]{tokens[0], tokens[1]};
 
 	}
 
@@ -225,15 +212,15 @@ public class RequestParser {
 	 * 
 	 * @return
 	 */
-	protected ArrayList<String> createPrefilledRequestHeaderList(String method, String protocol){
+	protected Map<String, String> createPrefilledRequestHeaderList(String method, String protocol){
 		
-		ArrayList<String> headers = new ArrayList<String>();
-		headers.add(SERVER_NAME+"="+WebServer.WEB_SERVER_NAME);
-		headers.add(SERVER_SOFTWARE+"="+WebServer.SERVER_SOFTWARE);
-		headers.add(REMOTE_ADDR+"="+IP);
-		headers.add(SERVER_PORT+"="+Integer.toString(HttpdConf.LISTEN));
-		headers.add(SERVER_PROTOCOL+"="+protocol);
-		headers.add(REQUEST_METHOD+"="+method);
+		Map<String, String> headers = new HashMap<String, String>();
+		headers.put(SERVER_NAME, WebServer.SERVER_NAME);
+		headers.put(SERVER_SOFTWARE, WebServer.SERVER_SOFTWARE);
+		headers.put(REMOTE_ADDR,IP);
+		headers.put(SERVER_PORT,Integer.toString(HttpdConf.LISTEN));
+		headers.put(SERVER_PROTOCOL,protocol);
+		headers.put(REQUEST_METHOD,method);
 		return headers;
 		
 	}
