@@ -1,7 +1,6 @@
 package webServer;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -34,8 +33,8 @@ public class WebServer {
 	 *            The path to web server configuration directory.
 	 * 
 	 */
-	public WebServer(String confDiretory) throws FileNotFoundException,
-			IOException, ConfigurationException {
+	public WebServer(String confDiretory) throws IOException,
+			ConfigurationException {
 
 		this.configure(confDiretory);
 		this.prepareMIMETypes(confDiretory);
@@ -45,29 +44,28 @@ public class WebServer {
 
 	}
 
-	protected void configure(String confDirectory)
-			throws FileNotFoundException, IOException, ConfigurationException {
+	protected void configure(String confDirectory) throws IOException,
+			ConfigurationException {
 
 		File confFile = new File(confDirectory, HTTPD_CONF_FILE);
 		if (!confFile.exists())
-			throw new FileNotFoundException("File not found: "
+			throw new IOException("File not found: "
 					+ confFile.getAbsolutePath());
 		new HttpdConfReader(confFile).readHttpdConfFile();
 
 	}
 
-	protected void prepareMIMETypes(String confDirectory)
-			throws FileNotFoundException, IOException {
+	protected void prepareMIMETypes(String confDirectory) throws IOException {
 
 		File mimeFile = new File(confDirectory, MIME_TYPES_FILE);
 		if (!mimeFile.exists())
-			throw new FileNotFoundException("File not found: "
+			throw new IOException("File not found: "
 					+ mimeFile.getAbsolutePath());
 		new MIME(mimeFile).readMIMEType();
 
 	}
 
-	public synchronized static void addThread() {
+	public static void addThread() {
 		threadCount++;
 	}
 
@@ -76,7 +74,7 @@ public class WebServer {
 	}
 
 	public boolean allowMoreThread() {
-		return threadCount <= 100;
+		return threadCount <= HttpdConf.MAX_THREAD;
 	}
 
 	/**
@@ -86,9 +84,6 @@ public class WebServer {
 	 * 
 	 */
 	public void start() throws IOException {
-
-		// Response response = new Response();
-		// Request request;
 
 		while (true) {
 			try {
@@ -104,7 +99,7 @@ public class WebServer {
 						client.getInetAddress().getHostAddress()).start();
 				addThread();
 			}
-			
+
 		}
 
 	}
@@ -123,11 +118,6 @@ public class WebServer {
 				return;
 			}
 			new WebServer(args[0]).start();
-
-		} catch (FileNotFoundException fne) {
-
-			System.out.println(fne.getMessage());
-			System.exit(1);
 
 		} catch (ConfigurationException wte) {
 

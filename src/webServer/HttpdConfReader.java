@@ -32,7 +32,7 @@ public class HttpdConfReader {
 	 */
 	public void readHttpdConfFile() throws IOException, ConfigurationException {
 
-		String currentLine = reader.readLine();
+		String currentLine;
 		
 		while ( ( currentLine = reader.readLine()) != null) {
 
@@ -88,7 +88,7 @@ public class HttpdConfReader {
 	 * 
 	 * @throws ConfigurationException
 	 * 
-	 * @throws Exception
+	 * @throws IOException
 	 */
 	private void parseTag(String currentLine) throws IOException, ConfigurationException {
 

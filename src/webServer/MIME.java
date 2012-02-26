@@ -20,44 +20,32 @@ public class MIME {
 	public MIME(String path) throws IOException {
 		reader = new BufferedReader(new FileReader(path));
 	}
-	
+
 	public MIME(File mimeFile) throws IOException {
 		reader = new BufferedReader(new FileReader(mimeFile));
 	}
 
-	public void readMIMEType() {
+	public void readMIMEType() throws IOException {
 		String line;
 		String[] tokens;
+		int size = 0;
 		
-		try {
-			int size = 0;
-			line = reader.readLine();
-			while (line != null) {
-				// skip comment and blink line
-				if (line.trim().length() == 0 || line.charAt(0) == '#') {
-					line = reader.readLine();
-					continue;
-				}
-
-				line = line.trim().replaceAll("[ \t]+", "#");
-				tokens = line.split("#");
-				// Log.log("tokens length: ", tokens.length);
-				if (tokens.length > 1) {
-					size = tokens.length;
-					for (int i = 1; i < size; i++) {
-						MIMETable.put(tokens[i], tokens[0]);
-					}
-				}
-				line = reader.readLine();
+		while ((line = reader.readLine()) != null) {
+			// skip comment and blink line
+			if (line.trim().length() == 0 || line.charAt(0) == '#') {
+				continue;
 			}
 
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-			System.exit(1);
-		} catch (NullPointerException npe) {
-			npe.printStackTrace();
-			System.exit(1);
+			line = line.trim().replaceAll("[ \t]+", "#");
+			tokens = line.split("#");
+			if (tokens.length > 1) {
+				size = tokens.length;
+				for (int i = 1; i < size; i++) {
+					MIMETable.put(tokens[i], tokens[0]);
+				}
+			}
 		}
+
 	}
 
 	public static String getMIMEType(String extension) {
@@ -70,10 +58,10 @@ public class MIME {
 
 	public void print() {
 		Set<String> keys = MIMETable.keySet();
-		String[] keyArray=keys.toArray(new String[keys.size()]);
+		String[] keyArray = keys.toArray(new String[keys.size()]);
 		Arrays.sort(keyArray);
-		for(String str: keyArray){
-			System.out.println(str+"---->"+MIMETable.get(str));
+		for (String str : keyArray) {
+			System.out.println(str + "---->" + MIMETable.get(str));
 		}
 		System.out.println("\n\nEnd of MIME");
 	}

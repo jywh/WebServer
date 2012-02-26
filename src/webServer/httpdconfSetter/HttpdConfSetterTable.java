@@ -17,6 +17,7 @@ public class HttpdConfSetterTable {
 		setter.put("DirectoryIndex", new DirectoryIndexSetter());
 		setter.put("Directory", new DirectorySetter());
 		setter.put("CgiHandler", new CgiHandlerSetter());
+		setter.put("TempDirectory", new TempDirectorySetter());
 		
 	}
 	

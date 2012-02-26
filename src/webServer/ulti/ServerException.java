@@ -10,31 +10,26 @@ package webServer.ulti;
  * @author Wenhui
  *
  */
+@SuppressWarnings("serial")
 public class ServerException extends Exception{
 
-	private static final long serialVersionUID = 1L;
-	
 	private int statusCode;
-	private String message="";
 	
 	public ServerException(int statusCode){
+		super();
 		this.statusCode = statusCode;
 	}
 	
-	public ServerException(int statusCode, String message){
+	public ServerException(int statusCode, String s){
+		super(s);
 		this.statusCode = statusCode;
-		this.message = message;
 	}
 	
 	public int getStatusCode(){
 		return statusCode;
 	}
 	
-	public String getMessage(){
-		return message;
-	}
-	
 	public void printMessage(){
-		System.out.println(message);
+		System.out.println(super.getMessage());
 	}
 }

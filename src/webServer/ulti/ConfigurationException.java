@@ -1,30 +1,21 @@
 package webServer.ulti;
 
+
 /**
- * Fatal exception. It is used in HttpdSetter, and HttpdConfReader
+ * Fatal exception, server should stop when this exception is caught. 
+ * It is used in HttpdSetter, and HttpdConfReader
  * 
- * @author Wenhui
  *
  */
+@SuppressWarnings("serial")
 public class ConfigurationException extends Exception {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -1190103348936763303L;
-	private String message="";
-	
-	public ConfigurationException(String message){
-		this.message = message;
+	public ConfigurationException(String s){
+		super(s);
 	}
 	
-	public ConfigurationException(){}
-	
-	public String getMessage(){
-		return message;
+	public ConfigurationException(){
+		super();
 	}
 	
-	public void printMessage(){
-		System.out.println(message);
-	}
 }

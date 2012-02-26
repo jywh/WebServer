@@ -3,6 +3,12 @@ package webServer;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Constant class
+ * 
+ * @author Wenhui
+ *
+ */
 public final class HttpdConf {
 
 	private HttpdConf() {
