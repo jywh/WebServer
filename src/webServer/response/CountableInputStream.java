@@ -83,21 +83,4 @@ public class CountableInputStream {
 		in.skip(n);
 	}
 	
-	public String toString(){
-
-		try {
-			in.mark(0);
-			StringBuilder builder = new StringBuilder();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-			while ( reader.ready() ){
-				builder.append((char)reader.read());
-			}
-			in.reset();
-			return builder.toString();
-		} catch (IOException e) {
-			e.printStackTrace();
-			return "";
-		} 
-		
-	}
 }

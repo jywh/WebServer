@@ -14,14 +14,14 @@ public final class ClientThread extends Thread {
 	private OutputStream outStream = null;
 	private String IP="";
 	
-	private ClientThread(InputStream aIn, OutputStream aOut, String IP) {
-		this.inputStream = aIn;
-		this.outStream = aOut;
+	private ClientThread(InputStream in, OutputStream out, String IP) {
+		this.inputStream = in;
+		this.outStream = out;
 		this.IP = IP;
 	}
 
-	public static ClientThread instantiate(InputStream aIn, OutputStream aOut, String IP) {
-		return new ClientThread(aIn, aOut, IP);
+	public static ClientThread instantiate(InputStream in, OutputStream out, String IP) {
+		return new ClientThread(in, out, IP);
 	}
 
 	@Override

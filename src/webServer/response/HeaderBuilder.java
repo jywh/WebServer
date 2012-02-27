@@ -69,8 +69,7 @@ public class HeaderBuilder {
 
 	public HeaderBuilder buildExpireTime(long millisFromNow) {
 
-		builder
-				.append(HeaderFields.EXPIRE)
+		builder.append(HeaderFields.EXPIRE)
 				.append(": ")
 				.append(Ulti.getTimeFull(Ulti.currentTimeMillis()
 						+ millisFromNow)).append("\n");
