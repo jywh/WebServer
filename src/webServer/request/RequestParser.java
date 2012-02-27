@@ -207,17 +207,15 @@ public class RequestParser {
 	}
 
 	/**
-	 * Prefilled not-request specific and filed not in request header for environment variables
+	 * Prefilled request specific and fileds not in request header for environment variables
 	 * 
 	 * @return
 	 */
 	protected Map<String, String> createPrefilledRequestHeaderList(String method, String protocol){
 		
 		Map<String, String> headers = new HashMap<String, String>();
-		headers.put(EnvVarTable.SERVER_NAME, WebServer.SERVER_NAME);
-		headers.put(EnvVarTable.SERVER_SOFTWARE, WebServer.SERVER_SOFTWARE);
+
 		headers.put(EnvVarTable.REMOTE_ADDR,IP);
-		headers.put(EnvVarTable.SERVER_PORT,Integer.toString(HttpdConf.LISTEN));
 		headers.put(EnvVarTable.SERVER_PROTOCOL,protocol);
 		headers.put(EnvVarTable.REQUEST_METHOD,method);
 		return headers;

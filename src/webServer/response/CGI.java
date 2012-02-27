@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.util.Map;
 import java.util.Set;
 
+import webServer.WebServer;
 import webServer.constant.EnvVarTable;
 import webServer.constant.HttpdConf;
 import webServer.constant.ResponseTable;
@@ -51,6 +52,10 @@ public class CGI {
 	private void addEnvironmentVariables(Map<String, String> env,
 			String queryString, Map<String, String> headers) {
 		env.put("QUERY_STRING", queryString);
+		env.put(EnvVarTable.SERVER_NAME, WebServer.SERVER_NAME);
+		env.put(EnvVarTable.SERVER_SOFTWARE, WebServer.SERVER_SOFTWARE);
+		env.put(EnvVarTable.SERVER_PORT,Integer.toString(HttpdConf.LISTEN));
+
 		Set<String> keySet = headers.keySet();
 		for (String key : keySet) {
 			if (EnvVarTable.containKey(key)) {
@@ -67,13 +72,13 @@ public class CGI {
 		
 		int offset = cin.getOffset('\n');
 
-		String directive = extractContentType(cin, offset);
+		String directive = extractDirective(cin, offset);
 		String tempFileName = writeStreamToFile(cin);
 
 		return new String[] { directive, tempFileName };
 	}
 
-	private String extractContentType(CountableInputStream cin, int offset)
+	private String extractDirective(CountableInputStream cin, int offset)
 			throws IOException {
 		byte[] buf = new byte[offset];
 		cin.read(buf, 0, buf.length);

@@ -87,9 +87,8 @@ public class Response {
 			Date clientDate = (Date) Ulti.DATE_FORMATE.parse(dateFromClient);
 			return lastModified > clientDate.getTime();
 
-		} catch (ParseException pe) {
+		} catch (Exception e) {
 			// If there is exception, assume file is modified
-			pe.printStackTrace();
 		}
 		return true;
 	}
