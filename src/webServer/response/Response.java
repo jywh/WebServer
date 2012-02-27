@@ -7,8 +7,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.HashMap;
+import java.text.ParseException;
+import java.util.Date;
 
+import webServer.constant.HeaderFields;
+import webServer.constant.ResponseTable;
 import webServer.request.Request;
 import webServer.ulti.Log;
 import webServer.ulti.LogContent;
@@ -17,37 +20,11 @@ import webServer.ulti.Ulti;
 
 public class Response {
 
-	public static final int OK = 200;
-	public static final int NO_CONTENT = 204;
-	public static final int FOUND = 302;
-	public static final int NOT_MODIFIED = 304;
-	public static final int BAD_REQUEST = 400;
-	public static final int UNAUTHORIZED = 401;
-	public static final int FORBIDDEN = 403;
-	public static final int NOT_FOUND = 404;
-	public static final int INTERNAL_SERVER_ERROR = 500;
-	public static final int NOT_IMPLEMENTED = 501;
-
 	public static final int BUFFER_SIZE = 2048;
-	private static HashMap<Integer, String> responsePhrase = new HashMap<Integer, String>();
 	public static final String ERROR_FILE_PATH = "C:/MyWebserver/error/";
 	public static String DEFAULT_HTTP_VERSION = "HTTP/1.1";
 
-
 	private LogContent logContent;
-
-	static {
-		responsePhrase.put(OK, "200 OK");
-		responsePhrase.put(NO_CONTENT, "204 No Content");
-		responsePhrase.put(FOUND, "302 Found");
-		responsePhrase.put(NOT_MODIFIED, "304 Not Modified");
-		responsePhrase.put(BAD_REQUEST, "400 Bad Request");
-		responsePhrase.put(UNAUTHORIZED, "401 Unauthorized");
-		responsePhrase.put(FORBIDDEN, "403 Fobidden");
-		responsePhrase.put(NOT_FOUND, "404 Not Found");
-		responsePhrase.put(INTERNAL_SERVER_ERROR, "500 Internal Server Error");
-		responsePhrase.put(NOT_IMPLEMENTED, "501 Not Implemented");
-	}
 
 	public void processRequest(Request request, OutputStream out)
 			throws ServerException {
@@ -58,34 +35,63 @@ public class Response {
 
 		if (isCGIScript(document)) {
 			System.out.println(document.getAbsolutePath());
-			executeScript(document, request, out);
+			executeScript(request, out, document);
 		} else {
-			retrieveRegularFile(document, request, out);
+			retrieveRegularFile(request, out, document);
 			// log();
 		}
 	}
 
-	protected void executeScript(File document, Request request,
-			OutputStream out) throws ServerException {
+	protected void executeScript(Request request, OutputStream out,
+			File document) throws ServerException {
 		String[] tokens = new CGI().execute(document,
 				request.getParameterString(), request.getRequestField());
 		document = new File(tokens[1]);
 		Log.debug("content type", tokens[0]);
-		String headerMessage = createHeaderMessage(request.getHttpVersion(),
-				document.length(), tokens[0], Response.OK);
+		String headerMessage = createHeaderMessageForScript(
+				request.getHttpVersion(), ResponseTable.OK, document.length(),
+				tokens[0]).toString();
 		writeHeaderMessage(out, headerMessage);
 		serveFile(out, document);
 		document.delete();
 	}
 
-	protected void retrieveRegularFile(File document, Request request, OutputStream out)
-			throws ServerException {
-		String headerMessage = createHeaderMessage(request.getHttpVersion(),
-				document, Response.OK);
-		writeHeaderMessage(out, headerMessage);
+	protected void retrieveRegularFile(Request request, OutputStream out,
+			File document) throws ServerException {
+		String headerMessage;
 
+		if (!isModified(request, document)) {
+			headerMessage = createBasicHeaderMessage(request.getHttpVersion(),
+					ResponseTable.NOT_MODIFIED).toString();
+			System.out.println(headerMessage);
+			writeHeaderMessage(out, headerMessage);
+			return;
+		}
+
+		headerMessage = createHeaderMessage(request.getHttpVersion(),
+				ResponseTable.OK, document).toString();
+		System.out.println(headerMessage);
+		writeHeaderMessage(out, headerMessage);
 		if (request.getMethod() != Request.HEAD)
 			serveFile(out, document);
+	}
+
+	private boolean isModified(Request request, File file) {
+		String dateFromClient = request.getRequestField().get(
+				HeaderFields.IF_MODIFIED_SINCE);
+		if (dateFromClient == null)
+			return true;
+		// remove last three significant digits
+		long lastModified = (file.lastModified() / 1000) * 1000;
+		try {
+			Date clientDate = (Date) Ulti.DATE_FORMATE.parse(dateFromClient);
+			return lastModified > clientDate.getTime();
+
+		} catch (ParseException pe) {
+			// If there is exception, assume file is modified
+			pe.printStackTrace();
+		}
+		return true;
 	}
 
 	protected void writeHeaderMessage(OutputStream out, String headerMessage) {
@@ -93,32 +99,35 @@ public class Response {
 		writer.println(headerMessage);
 	}
 
-	private String getStatusPhrase(Integer statusCode) {
-		String phrase = responsePhrase.get(statusCode);
-		if (phrase != null)
-			return phrase;
-		else
-			return responsePhrase.get(Response.OK);
-	}
-
-	private String createHeaderMessage(String httpVersion, File document,
+	protected HeaderBuilder createBasicHeaderMessage(String httpVersion,
 			int statusCode) {
 		HeaderBuilder builder = new HeaderBuilder();
-		builder.buildHeaderBegin(getStatusPhrase(statusCode), httpVersion)
-				.buildConnection(false).buildContentTypeAndLength(document)
-				.buildLastModified(document).buildCacheControl(3600000);
-		
-		System.out.println(builder.toString());
-		return builder.toString();
+		return builder.buildHeaderBegin(
+				ResponseTable.getResponsePhrase(statusCode), httpVersion)
+				.buildConnection(false);
 	}
 
-	private String createHeaderMessage(String httpVersion, long length,
-			String contentType, int statusCode) {
-		HeaderBuilder builder = new HeaderBuilder();
-		builder.buildHeaderBegin(getStatusPhrase(statusCode), httpVersion)
-				.buildConnection(false).buildContentTypeAndLength(length, contentType);
-		System.out.println(builder.toString());
-		return builder.toString();
+	protected HeaderBuilder createSimpleHeaderMessage(String httpVersion,
+			int statusCode, File document) {
+		HeaderBuilder builder = createBasicHeaderMessage(httpVersion,
+				statusCode);
+		return builder.buildContentTypeAndLength(document);
+
+	}
+
+	protected HeaderBuilder createHeaderMessage(String httpVersion,
+			int statusCode, File document) {
+		HeaderBuilder builder = createSimpleHeaderMessage(httpVersion,
+				statusCode, document);
+		return builder.buildLastModified(document).buildCacheControl(3600);
+	}
+
+	protected HeaderBuilder createHeaderMessageForScript(String httpVersion,
+			int statusCode, long length, String contentType) {
+		HeaderBuilder builder = createBasicHeaderMessage(httpVersion,
+				statusCode);
+		return builder.buildContentTypeAndLength(length, contentType);
+
 	}
 
 	protected void serveFile(OutputStream outStream, File document)
@@ -131,18 +140,15 @@ public class Response {
 			BufferedInputStream in = new BufferedInputStream(
 					new FileInputStream(document));
 			BufferedOutputStream out = new BufferedOutputStream(outStream);
-			try {
-				int read = -1;
-				while ((read = in.read(buf)) >= 0) {
-					out.write(buf, 0, read);
-				}
-			} finally {
-				in.close();
-				out.close();
+			int read = -1;
+			while ((read = in.read(buf)) >= 0) {
+				out.write(buf, 0, read);
 			}
+			in.close();
+			out.close();
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
-			throw new ServerException(Response.INTERNAL_SERVER_ERROR,
+			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR,
 					"Response: WriteFile");
 		}
 	}
@@ -153,8 +159,8 @@ public class Response {
 			String errorFilePath = ERROR_FILE_PATH
 					+ Integer.toString(statusCode) + ".html";
 			File errorFile = new File(errorFilePath);
-			String headerMessage = createHeaderMessage(DEFAULT_HTTP_VERSION,
-					errorFile, statusCode);
+			String headerMessage = createSimpleHeaderMessage(
+					DEFAULT_HTTP_VERSION, statusCode, errorFile).toString();
 			writeHeaderMessage(out, headerMessage);
 			serveFile(out, errorFile);
 		} catch (ServerException se) {
@@ -166,7 +172,7 @@ public class Response {
 	private void log() {
 		logContent.setRfc1413("-");
 		logContent.setUserId("-");
-		logContent.setTime(Log.time());
+		logContent.setTime(Ulti.timeInLogFormat());
 		Log.access(logContent.getLogContent());
 	}
 

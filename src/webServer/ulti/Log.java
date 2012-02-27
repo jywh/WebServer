@@ -5,9 +5,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 
-import webServer.HttpdConf;
+import webServer.constant.HttpdConf;
 
 /**
  * 
@@ -17,8 +16,8 @@ import webServer.HttpdConf;
  */
 public class Log {
 
-	public static boolean DEBUG = true;
-	private static SimpleDateFormat simpleDateFormat;
+	private static boolean DEBUG = false;
+	
 
 	/*************************************************************
 	 * 
@@ -27,11 +26,9 @@ public class Log {
 	 *************************************************************/
 	
 	public static void initialize() throws IOException {
-		simpleDateFormat = new SimpleDateFormat("dd/MMM/yyyy :HH:mm:ss Z");
 		if(!verifyFile(HttpdConf.LOG_FILE)){
 			throw new FileNotFoundException("Access log file not found");
 		}
-		
 	}
 
 	private static boolean verifyFile(String path) throws IOException {
@@ -54,10 +51,6 @@ public class Log {
 		}catch(IOException ioe){
 			ioe.printStackTrace();
 		} 
-	}
-	
-	public static String time() {
-		return simpleDateFormat.format(System.currentTimeMillis());
 	}
 	
 	/*************************************************************
@@ -93,5 +86,10 @@ public class Log {
 	
 	private static String getCallingClass(){
 		return new Throwable().getStackTrace()[2].getClassName();
+	}
+	
+	public static void debug(String field, Long d){
+		if( DEBUG ) 
+			System.out.printf("%-35s %-15s %d\n",getCallingClass(), field, d);
 	}
 }

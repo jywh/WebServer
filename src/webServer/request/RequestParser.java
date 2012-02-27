@@ -8,9 +8,10 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
-import webServer.HttpdConf;
 import webServer.WebServer;
-import webServer.response.Response;
+import webServer.constant.EnvVarTable;
+import webServer.constant.HttpdConf;
+import webServer.constant.ResponseTable;
 import webServer.ulti.Log;
 import webServer.ulti.LogContent;
 import webServer.ulti.ServerException;
@@ -26,12 +27,6 @@ public class RequestParser {
 
 	public static final String URI_SEPARATOR = "/";
 	private static final String HTTP_PREFIX = "HTTP_";
-	private static final String REMOTE_ADDR = "REMOTE_ADDR";
-	private static final String SERVER_NAME = "SERVER_NAME";
-	private static final String SERVER_SOFTWARE = "SERVER_SOFTWARE";
-	private static final String SERVER_PROTOCOL = "SERVER_PROTOCOL";
-	private static final String SERVER_PORT = "SERVER_PORT";
-	private static final String REQUEST_METHOD = "REQUEST_METHOD";
 	
 	private BufferedReader incommingMessage;
 	private LogContent logContent;
@@ -40,7 +35,7 @@ public class RequestParser {
 	public RequestParser(InputStream inputStream, String IP) throws ServerException{
 		
 		if (inputStream == null)
-			throw new ServerException(Response.BAD_REQUEST);
+			throw new ServerException(ResponseTable.BAD_REQUEST);
 		
 		incommingMessage = new BufferedReader(
 				new InputStreamReader(inputStream));
@@ -55,7 +50,7 @@ public class RequestParser {
 			// Parse first line of request message
 			String[] parameters = parseFirstLine(incommingMessage.readLine());
 			Map<String, String> requestFields = extractRequestFields(parameters[0], parameters[2]);
-			Log.debug("URI is", parameters[3]);
+			
 			if (parameters[0].equals(Request.POST) || parameters[0].equals(Request.PUT)){
 				parameters[3] = extractParameterStringFromBody();
 				Log.debug("POST parameter", parameters[3]);
@@ -67,7 +62,7 @@ public class RequestParser {
 
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
-			throw new ServerException(Response.BAD_REQUEST,
+			throw new ServerException(ResponseTable.BAD_REQUEST,
 					"RequestParser: parseRequest");
 		}
 
@@ -82,34 +77,40 @@ public class RequestParser {
 	protected String[] parseFirstLine(String firstLine) throws ServerException {
 
 		if (firstLine == null || firstLine.isEmpty())
-			throw new ServerException(Response.BAD_REQUEST,
+			throw new ServerException(ResponseTable.BAD_REQUEST,
 					"RequestParser: parseFirstLine");
 		
 		logContent.setRequestLine(firstLine);
 		String[] tokens = firstLine.split(" ");
 
 		if (tokens.length != 3) {
-			throw new ServerException(Response.BAD_REQUEST,
+			throw new ServerException(ResponseTable.BAD_REQUEST,
 					"RequestParser: parseFirstLine");
 		}
 
 		String methos = tokens[0], URI = tokens[1], httpVersion = tokens[2], parameterString;
-
 		tokens = extractParameterStringFromURI(URI);
 		URI = tokens[0];
 		parameterString = tokens[1];
+		URI = resolveURI(URI);
 
+		return new String[] { methos, URI, httpVersion, parameterString };
+
+	}
+
+	protected String resolveURI(String URI) throws ServerException {
+		
 		URI = resolveAlias(URI);
 		if (!(new File(URI).isAbsolute())) // there is no alias
 			URI = addDocumentRoot(URI);
 		
 		if (!(new File(URI)).exists())
-			throw new ServerException(Response.NOT_FOUND,
+			throw new ServerException(ResponseTable.NOT_FOUND,
 					"RequestParser: addDocumentRoot");
-		return new String[] { methos, URI, httpVersion, parameterString };
-
+		Log.debug("URI: ", URI);
+		return URI;
 	}
-
+	
 	/**
 	 * This will resolve alias that contains in the URI
 	 * @throws ServerException 
@@ -148,7 +149,7 @@ public class RequestParser {
 				return indexFile;
 		}
 
-		throw new ServerException(Response.NOT_FOUND,
+		throw new ServerException(ResponseTable.NOT_FOUND,
 				"RequestParse: addDocumentRoot");
 
 	}
@@ -182,8 +183,8 @@ public class RequestParser {
 			Map<String, String> requestHeaders = createPrefilledRequestHeaderList(method, protocol);
 			String[] tokens;
 			while( currentLine != null && !currentLine.trim().isEmpty()){
-				tokens = convertStringToEnvironmentVaraible(currentLine);
-				requestHeaders.put(tokens[0], tokens[1]);
+				tokens = currentLine.split(":", 2);
+				requestHeaders.put(tokens[0], tokens[1].trim());
 				currentLine = incommingMessage.readLine();
 			}
 			
@@ -191,7 +192,7 @@ public class RequestParser {
 			
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
-			throw new ServerException(Response.BAD_REQUEST,
+			throw new ServerException(ResponseTable.BAD_REQUEST,
 					"Request: getRequestFields");
 		}
 	}
@@ -213,12 +214,12 @@ public class RequestParser {
 	protected Map<String, String> createPrefilledRequestHeaderList(String method, String protocol){
 		
 		Map<String, String> headers = new HashMap<String, String>();
-		headers.put(SERVER_NAME, WebServer.SERVER_NAME);
-		headers.put(SERVER_SOFTWARE, WebServer.SERVER_SOFTWARE);
-		headers.put(REMOTE_ADDR,IP);
-		headers.put(SERVER_PORT,Integer.toString(HttpdConf.LISTEN));
-		headers.put(SERVER_PROTOCOL,protocol);
-		headers.put(REQUEST_METHOD,method);
+		headers.put(EnvVarTable.SERVER_NAME, WebServer.SERVER_NAME);
+		headers.put(EnvVarTable.SERVER_SOFTWARE, WebServer.SERVER_SOFTWARE);
+		headers.put(EnvVarTable.REMOTE_ADDR,IP);
+		headers.put(EnvVarTable.SERVER_PORT,Integer.toString(HttpdConf.LISTEN));
+		headers.put(EnvVarTable.SERVER_PROTOCOL,protocol);
+		headers.put(EnvVarTable.REQUEST_METHOD,method);
 		return headers;
 		
 	}
@@ -245,7 +246,7 @@ public class RequestParser {
 
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
-			throw new ServerException(Response.BAD_REQUEST,
+			throw new ServerException(ResponseTable.BAD_REQUEST,
 					"Request: extractParameterStringFromBody");
 		}
 

@@ -2,7 +2,7 @@ package webServer.request;
 
 import java.util.Map;
 
-import webServer.HttpdConf;
+import webServer.constant.HttpdConf;
 import webServer.ulti.LogContent;
 
 public class Request {

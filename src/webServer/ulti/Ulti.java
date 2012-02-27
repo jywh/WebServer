@@ -2,19 +2,18 @@ package webServer.ulti;
 
 import java.io.File;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
 
 public class Ulti {
 
-	private static final DateFormat dateFormat = new SimpleDateFormat(
-			" EEE, d MMM yyy HH:mm:ss z", Locale.US);
+	public static final DateFormat DATE_FORMATE = new SimpleDateFormat(
+			"EEE, d MMM yyyy HH:mm:ss z", Locale.US);
+	private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MMM/yyyy :HH:mm:ss Z");
 	
 	public static synchronized String getTimeFull(long time) {
-		return dateFormat.format(time);
+		return DATE_FORMATE.format(time);
 	}
 
 	public static String getFileExtension(File document) {
@@ -24,19 +23,6 @@ public class Ulti {
 			return name.substring(index + 1);
 		}
 		return "";
-	}
-
-	public static boolean isModified(long lastModified,
-			String dateFromClient) {
-		try {
-			Date aDate = new Date(lastModified);
-			Date anotherDate = dateFormat.parse(dateFromClient);
-			return aDate.compareTo(anotherDate) > 0;
-		} catch (ParseException pe) {
-			// If there is exception, assume file is modified
-			pe.printStackTrace();
-		}
-		return true;
 	}
 	
 	/**
@@ -49,4 +35,7 @@ public class Ulti {
 		return calendar.getTimeInMillis();
 	}
 	
+	public static String timeInLogFormat() {
+		return simpleDateFormat.format(currentTimeMillis());
+	}
 }

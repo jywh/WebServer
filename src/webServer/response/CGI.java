@@ -7,8 +7,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
+import java.util.Set;
 
-import webServer.HttpdConf;
+import webServer.constant.EnvVarTable;
+import webServer.constant.HttpdConf;
+import webServer.constant.ResponseTable;
 import webServer.ulti.Log;
 import webServer.ulti.ServerException;
 
@@ -19,7 +22,7 @@ public class CGI {
 	 * 
 	 * @param file
 	 * @param queryString
-	 * @return { content-type, the path to the tempFile }
+	 * @return { directive, the path to the tempFile }
 	 */
 	public String[] execute(File file, String queryString,
 			Map<String, String> headers) throws ServerException {
@@ -39,7 +42,7 @@ public class CGI {
 
 		} catch (IOException e) {
 			e.printStackTrace();
-			throw new ServerException(Response.INTERNAL_SERVER_ERROR,
+			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR,
 					"Fail to execute python script");
 		}
 
@@ -47,20 +50,27 @@ public class CGI {
 
 	private void addEnvironmentVariables(Map<String, String> env,
 			String queryString, Map<String, String> headers) {
-		env.putAll(headers);
 		env.put("QUERY_STRING", queryString);
+		Set<String> keySet = headers.keySet();
+		for (String key : keySet) {
+			if (EnvVarTable.containKey(key)) {
+				env.put(EnvVarTable.get(key), headers.get(key));
+			}
+			env.put(key.replace('-', '_').toUpperCase(), headers.get(key));
+		}
 	}
 
 	private String[] interpreteOutputStream(CountableInputStream cin)
 			throws IOException {
 
+		cin.toString();
+		
 		int offset = cin.getOffset('\n');
-		int size = cin.size();
 
-		String firstLine = extractContentType(cin, offset);
-		String tempFileName = writeStreamToFile(cin, size - offset);
+		String directive = extractContentType(cin, offset);
+		String tempFileName = writeStreamToFile(cin);
 
-		return new String[] { firstLine, tempFileName };
+		return new String[] { directive, tempFileName };
 	}
 
 	private String extractContentType(CountableInputStream cin, int offset)
@@ -70,7 +80,7 @@ public class CGI {
 		return new String(buf);
 	}
 
-	private String writeStreamToFile(CountableInputStream in, int size)
+	private String writeStreamToFile(CountableInputStream in)
 			throws IOException {
 
 		File tempFile = createTempFile();

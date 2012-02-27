@@ -1,4 +1,4 @@
-package webServer;
+package webServer.constant;
 
 import java.util.HashMap;
 import java.util.Map;

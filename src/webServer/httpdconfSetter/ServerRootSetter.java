@@ -1,6 +1,6 @@
 package webServer.httpdconfSetter;
 
-import webServer.HttpdConf;
+import webServer.constant.HttpdConf;
 import webServer.ulti.ConfigurationException;
 
 public class ServerRootSetter extends HttpdConfSetter{
