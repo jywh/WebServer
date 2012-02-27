@@ -7,18 +7,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Locale;
 
-import webServer.MIME;
-import webServer.WebServer;
 import webServer.request.Request;
 import webServer.ulti.Log;
 import webServer.ulti.LogContent;
 import webServer.ulti.ServerException;
+import webServer.ulti.Ulti;
 
 public class Response {
 
@@ -37,6 +32,7 @@ public class Response {
 	private static HashMap<Integer, String> responsePhrase = new HashMap<Integer, String>();
 	public static final String ERROR_FILE_PATH = "C:/MyWebserver/error/";
 	public static String DEFAULT_HTTP_VERSION = "HTTP/1.1";
+
 
 	private LogContent logContent;
 
@@ -62,26 +58,34 @@ public class Response {
 
 		if (isCGIScript(document)) {
 			System.out.println(document.getAbsolutePath());
-			String[] tokens = new CGI().execute(document,
-					request.getParameterString(), request.getRequestField());
-			document = new File(tokens[1]);
-			Log.debug("content type", tokens[0]);
-			String headerMessage = createHeaderMessage(
-					request.getHttpVersion(), document.length(), tokens[0],
-					Response.OK);
-			writeHeaderMessage(out, headerMessage);
-			serveFile(out, document);
-			 document.delete();
+			executeScript(document, request, out);
 		} else {
-
-			String headerMessage = createHeaderMessage(
-					request.getHttpVersion(), document, Response.OK);
-			writeHeaderMessage(out, headerMessage);
-
-			if (request.getMethod() != Request.HEAD)
-				serveFile(out, document);
-//			log();
+			retrieveRegularFile(document, request, out);
+			// log();
 		}
+	}
+
+	protected void executeScript(File document, Request request,
+			OutputStream out) throws ServerException {
+		String[] tokens = new CGI().execute(document,
+				request.getParameterString(), request.getRequestField());
+		document = new File(tokens[1]);
+		Log.debug("content type", tokens[0]);
+		String headerMessage = createHeaderMessage(request.getHttpVersion(),
+				document.length(), tokens[0], Response.OK);
+		writeHeaderMessage(out, headerMessage);
+		serveFile(out, document);
+		document.delete();
+	}
+
+	protected void retrieveRegularFile(File document, Request request, OutputStream out)
+			throws ServerException {
+		String headerMessage = createHeaderMessage(request.getHttpVersion(),
+				document, Response.OK);
+		writeHeaderMessage(out, headerMessage);
+
+		if (request.getMethod() != Request.HEAD)
+			serveFile(out, document);
 	}
 
 	protected void writeHeaderMessage(OutputStream out, String headerMessage) {
@@ -99,37 +103,20 @@ public class Response {
 
 	private String createHeaderMessage(String httpVersion, File document,
 			int statusCode) {
-
-		String mime = MIME.getMIMEType(getFileExtension(document));
-		long length = document.length();
-//
-//		logContent.setStatusCode(statusCode);
-//		logContent.setLength(length);
-
-		StringBuilder builder = new StringBuilder();
-		builder.append(httpVersion).append(" ")
-				.append(getStatusPhrase(statusCode)).append("\n")
-				.append("Date: ").append(getCurrentTimeFull()).append("\n")
-				.append("Server: ").append(WebServer.SERVER_NAME).append("\n")
-				.append("Connection: ").append("close").append("\n")
-				.append("Content-length: ").append(length).append("\n")
-				.append("Content-type: ").append(mime).append("\n");
-
-		 System.out.println(builder.toString());
+		HeaderBuilder builder = new HeaderBuilder();
+		builder.buildHeaderBegin(getStatusPhrase(statusCode), httpVersion)
+				.buildConnection(false).buildContentTypeAndLength(document)
+				.buildLastModified(document).buildCacheControl(3600000);
+		
+		System.out.println(builder.toString());
 		return builder.toString();
-
 	}
 
 	private String createHeaderMessage(String httpVersion, long length,
 			String contentType, int statusCode) {
-		StringBuilder builder = new StringBuilder();
-		builder.append(httpVersion).append(" ")
-				.append(getStatusPhrase(statusCode)).append("\n")
-				.append("Date: ").append(getCurrentTimeFull()).append("\n")
-				.append("Server: ").append(WebServer.SERVER_NAME)
-				// .append("\n").append("Connection: ").append("close")
-				.append("\n").append("Content-length: ").append(length)
-				.append("\n").append(contentType).append("\n");
+		HeaderBuilder builder = new HeaderBuilder();
+		builder.buildHeaderBegin(getStatusPhrase(statusCode), httpVersion)
+				.buildConnection(false).buildContentTypeAndLength(length, contentType);
 		System.out.println(builder.toString());
 		return builder.toString();
 	}
@@ -160,27 +147,6 @@ public class Response {
 		}
 	}
 
-	protected void writeStreamFromScriptToBrowser(OutputStream out,
-			CountableInputStream cin, int size) throws ServerException {
-		try {
-
-			// System.out.println(cin.toString());
-			cin.skip(3);
-			byte[] bytes = new byte[size - 3];
-			BufferedOutputStream outStream = new BufferedOutputStream(out);
-			cin.read(bytes, 0, bytes.length);
-			outStream.write(bytes, 0, bytes.length);
-
-			cin.close();
-			out.close();
-
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-			throw new ServerException(Response.INTERNAL_SERVER_ERROR,
-					"Response: WriteFile");
-		}
-	}
-
 	public void sendErrorMessage(OutputStream out, int statusCode) {
 
 		try {
@@ -197,22 +163,6 @@ public class Response {
 
 	}
 
-	private String getCurrentTimeFull() {
-		Calendar calendar = Calendar.getInstance();
-		DateFormat dateFormat = new SimpleDateFormat(
-				" EEE, d MMM yyy HH:mm:ss z", Locale.US);
-		return dateFormat.format(calendar.getTime());
-	}
-
-	public static String getFileExtension(File document) {
-		String name = document.getName();
-		int index = name.lastIndexOf('.');
-		if (index > 0) {
-			return name.substring(index + 1);
-		}
-		return "";
-	}
-
 	private void log() {
 		logContent.setRfc1413("-");
 		logContent.setUserId("-");
@@ -221,8 +171,9 @@ public class Response {
 	}
 
 	private boolean isCGIScript(File document) {
-		String extension = getFileExtension(document);
-		if (extension.equalsIgnoreCase("py") || extension.equalsIgnoreCase("pl"))
+		String extension = Ulti.getFileExtension(document);
+		if (extension.equalsIgnoreCase("py")
+				|| extension.equalsIgnoreCase("pl"))
 			return true;
 		return false;
 	}

@@ -103,8 +103,6 @@ public class RequestParser {
 		if (!(new File(URI).isAbsolute())) // there is no alias
 			URI = addDocumentRoot(URI);
 		
-		Log.debug("URI ", URI);
-		
 		if (!(new File(URI)).exists())
 			throw new ServerException(Response.NOT_FOUND,
 					"RequestParser: addDocumentRoot");
