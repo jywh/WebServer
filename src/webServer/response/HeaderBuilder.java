@@ -34,14 +34,6 @@ public class HeaderBuilder {
 				.append("\n");
 		return this;
 	}
-
-//	public HeaderBuilder buildContentTypeAndLength(long length, String contentType) {
-//		builder.append(HeaderFields.CONTENT_LENGTH)
-//				.append(": ").append(length).append("\n")
-//				.append(contentType)
-//				.append("\n");
-//		return this;
-//	}
 	
 	public HeaderBuilder buildContentLength(int length){
 		builder.append(HeaderFields.CONTENT_LENGTH)

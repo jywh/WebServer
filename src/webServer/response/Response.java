@@ -37,19 +37,6 @@ public class Response {
 		new AccessLog().log(request, statusCode);
 	}
 
-	// protected void executeScript(Request request, OutputStream out) throws
-	// ServerException {
-	// String[] tokens = new CGI().execute(request);
-	// File document = new File(tokens[1]);
-	// Log.debug("content type", tokens[0]);
-	// String headerMessage = createHeaderMessageForScript(
-	// request.getHttpVersion(), ResponseTable.OK, document.length(),
-	// tokens[0]).toString();
-	// writeHeaderMessage(out, headerMessage);
-	// serveFile(out, document);
-	// document.delete();
-	// }
-
 	protected int executeScript(Request request, OutputStream outStream)
 			throws ServerException {
 		CountableInputStream cin = new CGI().execute(request);

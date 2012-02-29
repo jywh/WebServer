@@ -25,30 +25,24 @@ public class RequestParser {
 
 	public static final String URI_SEPARATOR = "/";
 	private static final String HTTP_PREFIX = "HTTP_";
-	
-	private BufferedReader incommingMessage;
 	private final static Pattern PATTERN = Pattern.compile("/([^\\s]+(\\.(?i)(py|pl)))/");
 	
-	public Request parseRequest(InputStream inputStream, String IP, int remotePort) throws ServerException {
-		
+	public Request parse(InputStream inputStream, String IP, int remotePort) throws ServerException {
 		if (inputStream == null)
 			throw new ServerException(ResponseTable.BAD_REQUEST);
 		
-		incommingMessage = new BufferedReader(
+		BufferedReader incommingMessage = new BufferedReader(
 				new InputStreamReader(inputStream));
-		
 		try {
 
 			// Parse first line of request message
 			String[] parameters = parseFirstLine(incommingMessage.readLine());
-			Map<String, String> requestFields = extractRequestFields();
+			Map<String, String> requestFields = extractRequestFields(incommingMessage);
 			
 			if (parameters[0].equals(Request.POST) || parameters[0].equals(Request.PUT)){
-				parameters[3] = extractParameterStringFromBody();
+				parameters[3] = extractParameterStringFromBody(incommingMessage);
 				Log.debug("POST parameter", parameters[3]);
 			}
-			//{method, resolvedURI, httpversion, parameterString, pathInfo,  scriptName}
-			//(method, URI, httpVersion, parameterString, pathInfo, requestFields, scriptName, IP, remotePort)
 			return new Request(parameters[0], parameters[1], parameters[2], parameters[3],
 					parameters[4], parameters[5], requestFields, IP, remotePort);
 
@@ -178,7 +172,7 @@ public class RequestParser {
 	 * 
 	 *************************************************************/
 
-	private Map<String, String> extractRequestFields() throws ServerException {
+	private Map<String, String> extractRequestFields(BufferedReader incommingMessage) throws ServerException {
 
 		try {
 			String currentLine = incommingMessage.readLine();
@@ -217,7 +211,7 @@ public class RequestParser {
 	/**
 	 * 
 	 */
-	protected String extractParameterStringFromBody() throws ServerException {
+	protected String extractParameterStringFromBody(BufferedReader incommingMessage) throws ServerException {
 
 		try {
 			

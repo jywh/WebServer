@@ -34,11 +34,12 @@ public final class ClientThread extends Thread {
 		Response response = new Response();
 		Request request;
 		try {
-			request = new RequestParser().parseRequest(inputStream, IP,
+			request = new RequestParser().parse(inputStream, IP,
 					remotePort);
 			response.processRequest(request, outStream);
 		} catch (ServerException e) {
-			e.printStackTrace();
+			e.printMessage();
+			response.sendErrorMessage(outStream, e.getStatusCode());
 		} finally {
 			WebServer.removeThread();
 		}
