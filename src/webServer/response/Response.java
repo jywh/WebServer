@@ -12,8 +12,8 @@ import java.util.Date;
 import webServer.constant.HeaderFields;
 import webServer.constant.ResponseTable;
 import webServer.request.Request;
+import webServer.ulti.AccessLog;
 import webServer.ulti.Log;
-import webServer.ulti.LogContent;
 import webServer.ulti.ServerException;
 import webServer.ulti.Ulti;
 
@@ -23,21 +23,18 @@ public class Response {
 	public static final String ERROR_FILE_PATH = "C:/MyWebserver/error/";
 	public static String DEFAULT_HTTP_VERSION = "HTTP/1.1";
 
-	private LogContent logContent;
-
 	public void processRequest(Request request, OutputStream out)
 			throws ServerException {
 
 		// Retrieve document
 		File document = new File(request.getURI());
-
+		int statusCode;
 		if (Ulti.isScript(document.getName())) {
-			System.out.println(document.getAbsolutePath());
-			executeScript(request, out);
+			statusCode = executeScript(request, out);
 		} else {
-			retrieveRegularFile(request, out, document);
-			// log();
+			statusCode = retrieveRegularFile(request, out, document);
 		}
+		new AccessLog().log(request, statusCode);
 	}
 
 	// protected void executeScript(Request request, OutputStream out) throws
@@ -53,25 +50,27 @@ public class Response {
 	// document.delete();
 	// }
 
-	protected void executeScript(Request request, OutputStream outStream)
+	protected int executeScript(Request request, OutputStream outStream)
 			throws ServerException {
 		CountableInputStream cin = new CGI().execute(request);
 		try {
 			String headerString = cin.getHeaderString();
 			byte[] content = cin.readBodyContent();
-			HeaderBuilder header = createHeaderMessageForScript(request.getHttpVersion(), ResponseTable.OK,
-					content.length, headerString);
+			HeaderBuilder header = createHeaderMessageForScript(
+					request.getHttpVersion(), ResponseTable.OK, content.length,
+					headerString);
 			writeHeaderMessage(outStream, header.toString());
 			BufferedOutputStream out = new BufferedOutputStream(outStream);
 			out.write(content);
 			out.close();
+			return ResponseTable.OK;
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
 		}
 	}
 
-	protected void retrieveRegularFile(Request request, OutputStream out,
+	protected int retrieveRegularFile(Request request, OutputStream out,
 			File document) throws ServerException {
 		String headerMessage;
 
@@ -80,7 +79,7 @@ public class Response {
 					ResponseTable.NOT_MODIFIED).toString();
 			System.out.println(headerMessage);
 			writeHeaderMessage(out, headerMessage);
-			return;
+			return ResponseTable.NOT_MODIFIED;
 		}
 
 		headerMessage = createHeaderMessage(request.getHttpVersion(),
@@ -88,6 +87,7 @@ public class Response {
 		System.out.println(headerMessage);
 		writeHeaderMessage(out, headerMessage);
 		serveFile(out, document);
+		return ResponseTable.OK;
 	}
 
 	private boolean isModified(Request request, File file) {
@@ -100,7 +100,6 @@ public class Response {
 		try {
 			Date clientDate = (Date) Ulti.DATE_FORMATE.parse(dateFromClient);
 			return lastModified > clientDate.getTime();
-
 		} catch (Exception e) {
 			// If there is exception, assume file is modified
 		}
@@ -166,10 +165,6 @@ public class Response {
 		}
 	}
 
-	protected void serverStream(OutputStream outStream, byte[] content) {
-
-	}
-
 	public void sendErrorMessage(OutputStream out, int statusCode) {
 
 		try {
@@ -184,13 +179,6 @@ public class Response {
 			se.printStackTrace();
 		}
 
-	}
-
-	private void log() {
-		logContent.setRfc1413("-");
-		logContent.setUserId("-");
-		logContent.setTime(Ulti.timeInLogFormat());
-		Log.access(logContent.getLogContent());
 	}
 
 }

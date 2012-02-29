@@ -30,16 +30,14 @@ public class Ulti {
 		return "";
 	}
 
-	public static boolean isScriptFile(String fileName) {
-		String extension = getFileExtension(fileName);
-		if (extension.equalsIgnoreCase("py")
-				|| extension.equalsIgnoreCase("pl"))
-			return true;
-		return false;
-	}
+//	public static boolean isScriptFile(String fileName) {
+//		String extension = getFileExtension(fileName);
+//		if (extension.equalsIgnoreCase("py")
+//				|| extension.equalsIgnoreCase("pl"))
+//			return true;
+//		return false;
+//	}
 	
-
-
 	/**
 	 * Retrieve current time in milliseconds.
 	 * 

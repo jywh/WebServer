@@ -14,7 +14,6 @@ import webServer.constant.EnvVarTable;
 import webServer.constant.HttpdConf;
 import webServer.constant.ResponseTable;
 import webServer.request.Request;
-import webServer.ulti.Log;
 import webServer.ulti.ServerException;
 
 public class CGI {
@@ -32,15 +31,11 @@ public class CGI {
 			BufferedReader reader = new BufferedReader(new FileReader(request.getURI()));
 			String scriptPath = reader.readLine();
 			scriptPath = scriptPath.replace("#!", "");
-			Log.debug("script path", scriptPath);
 			ProcessBuilder pb = new ProcessBuilder(scriptPath,
-					request.getURI(), request.getParameterString());
+					request.getURI());
 			addEnvironmentVariables(pb.environment(), request);
 			process = pb.start();
 			return new CountableInputStream(process.getInputStream());
-//			CountableInputStream cin = new CountableInputStream(
-//					process.getInputStream());
-//			return interpreteOutputStream(cin);
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -52,6 +47,12 @@ public class CGI {
 
 	private void addEnvironmentVariables(Map<String, String> env, Request request) {
 		
+		addNonHeaderEnvVar(env, request);
+		addHeaderFieldsEnvVar(env, request.getRequestField());
+
+	}
+
+	private void addNonHeaderEnvVar(Map<String, String> env, Request request){
 		env.put(EnvVarTable.SERVER_NAME, WebServer.SERVER_NAME);
 		env.put(EnvVarTable.SERVER_SOFTWARE, WebServer.SERVER_SOFTWARE);
 		env.put(EnvVarTable.GATEWAY_INTERFACE, WebServer.GATEWAY_INTERFACE);
@@ -63,12 +64,9 @@ public class CGI {
 		env.put(EnvVarTable.PATH_INFO, request.getPathInfo());
 		env.put(EnvVarTable.SCRIPT_NAME, request.getScriptName());
 		env.put(EnvVarTable.PATH_TRANSLATED, request.getURI());
-	
-		addHeaderFieldsFromRequest(env, request.getRequestField());
-
 	}
-
-	private void addHeaderFieldsFromRequest(Map<String, String> env, Map<String, String> headers){
+	
+	private void addHeaderFieldsEnvVar(Map<String, String> env, Map<String, String> headers){
 		Set<String> keySet = headers.keySet();
 		for (String key : keySet) {
 			if (EnvVarTable.containKey(key)) {

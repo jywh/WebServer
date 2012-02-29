@@ -12,16 +12,19 @@ public final class ClientThread extends Thread {
 
 	private InputStream inputStream = null;
 	private OutputStream outStream = null;
-	private String IP="";
+	private String IP = "";
 	private int remotePort;
-	private ClientThread(InputStream in, OutputStream out, String IP, int remotePort) {
+
+	private ClientThread(InputStream in, OutputStream out, String IP,
+			int remotePort) {
 		this.inputStream = in;
 		this.outStream = out;
 		this.IP = IP;
 		this.remotePort = remotePort;
 	}
 
-	public static ClientThread instantiate(InputStream in, OutputStream out, String IP, int remotePort) {
+	public static ClientThread instantiate(InputStream in, OutputStream out,
+			String IP, int remotePort) {
 		return new ClientThread(in, out, IP, remotePort);
 	}
 
@@ -29,13 +32,14 @@ public final class ClientThread extends Thread {
 	public void run() {
 
 		Response response = new Response();
+		Request request;
 		try {
-			Request request = new RequestParser().parseRequest(inputStream, IP, remotePort);
+			request = new RequestParser().parseRequest(inputStream, IP,
+					remotePort);
 			response.processRequest(request, outStream);
-		} catch (ServerException se) {
-			se.printStackTrace();
-			response.sendErrorMessage(outStream, se.getStatusCode());
-		}finally{
+		} catch (ServerException e) {
+			e.printStackTrace();
+		} finally {
 			WebServer.removeThread();
 		}
 	}
