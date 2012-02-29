@@ -39,4 +39,5 @@ public final class HeaderFields {
 	public static final String WWW_AUTHENTICATE = "WWW-Authenticate";
 	public static final String SET_COOKIE = "Set-Cookie";
 	
+	private HeaderFields(){}
 }

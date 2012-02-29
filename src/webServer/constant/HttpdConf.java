@@ -11,9 +11,6 @@ import java.util.Map;
  */
 public final class HttpdConf {
 
-	private HttpdConf() {
-	}
-
 	public static String SERVER_ROOT;
 
 	public static String DOCUMENT_ROOT;
@@ -43,4 +40,6 @@ public final class HttpdConf {
 
 	public static Map<String, String> CGI_HANDLER = new HashMap<String, String>();
 
+	private HttpdConf() {
+	}
 }

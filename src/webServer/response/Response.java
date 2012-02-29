@@ -7,7 +7,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.text.ParseException;
 import java.util.Date;
 
 import webServer.constant.HeaderFields;
@@ -31,29 +30,45 @@ public class Response {
 
 		// Retrieve document
 		File document = new File(request.getURI());
-		logContent = request.getLogContent();
 
-		if (isCGIScript(document)) {
+		if (Ulti.isScript(document.getName())) {
 			System.out.println(document.getAbsolutePath());
-			executeScript(request, out, document);
+			executeScript(request, out);
 		} else {
 			retrieveRegularFile(request, out, document);
 			// log();
 		}
 	}
 
-	protected void executeScript(Request request, OutputStream out,
-			File document) throws ServerException {
-		String[] tokens = new CGI().execute(document,
-				request.getParameterString(), request.getRequestField());
-		document = new File(tokens[1]);
-		Log.debug("content type", tokens[0]);
-		String headerMessage = createHeaderMessageForScript(
-				request.getHttpVersion(), ResponseTable.OK, document.length(),
-				tokens[0]).toString();
-		writeHeaderMessage(out, headerMessage);
-		serveFile(out, document);
-		document.delete();
+	// protected void executeScript(Request request, OutputStream out) throws
+	// ServerException {
+	// String[] tokens = new CGI().execute(request);
+	// File document = new File(tokens[1]);
+	// Log.debug("content type", tokens[0]);
+	// String headerMessage = createHeaderMessageForScript(
+	// request.getHttpVersion(), ResponseTable.OK, document.length(),
+	// tokens[0]).toString();
+	// writeHeaderMessage(out, headerMessage);
+	// serveFile(out, document);
+	// document.delete();
+	// }
+
+	protected void executeScript(Request request, OutputStream outStream)
+			throws ServerException {
+		CountableInputStream cin = new CGI().execute(request);
+		try {
+			String headerString = cin.getHeaderString();
+			byte[] content = cin.readBodyContent();
+			HeaderBuilder header = createHeaderMessageForScript(request.getHttpVersion(), ResponseTable.OK,
+					content.length, headerString);
+			writeHeaderMessage(outStream, header.toString());
+			BufferedOutputStream out = new BufferedOutputStream(outStream);
+			out.write(content);
+			out.close();
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	protected void retrieveRegularFile(Request request, OutputStream out,
@@ -72,8 +87,7 @@ public class Response {
 				ResponseTable.OK, document).toString();
 		System.out.println(headerMessage);
 		writeHeaderMessage(out, headerMessage);
-		if (request.getMethod() != Request.HEAD)
-			serveFile(out, document);
+		serveFile(out, document);
 	}
 
 	private boolean isModified(Request request, File file) {
@@ -122,10 +136,10 @@ public class Response {
 	}
 
 	protected HeaderBuilder createHeaderMessageForScript(String httpVersion,
-			int statusCode, long length, String contentType) {
+			int statusCode, int length, String headerString) {
 		HeaderBuilder builder = createBasicHeaderMessage(httpVersion,
 				statusCode);
-		return builder.buildContentTypeAndLength(length, contentType);
+		return builder.append(headerString).buildContentLength(length);
 
 	}
 
@@ -152,6 +166,10 @@ public class Response {
 		}
 	}
 
+	protected void serverStream(OutputStream outStream, byte[] content) {
+
+	}
+
 	public void sendErrorMessage(OutputStream out, int statusCode) {
 
 		try {
@@ -173,14 +191,6 @@ public class Response {
 		logContent.setUserId("-");
 		logContent.setTime(Ulti.timeInLogFormat());
 		Log.access(logContent.getLogContent());
-	}
-
-	private boolean isCGIScript(File document) {
-		String extension = Ulti.getFileExtension(document);
-		if (extension.equalsIgnoreCase("py")
-				|| extension.equalsIgnoreCase("pl"))
-			return true;
-		return false;
 	}
 
 }

@@ -13,15 +13,16 @@ public final class ClientThread extends Thread {
 	private InputStream inputStream = null;
 	private OutputStream outStream = null;
 	private String IP="";
-	
-	private ClientThread(InputStream in, OutputStream out, String IP) {
+	private int remotePort;
+	private ClientThread(InputStream in, OutputStream out, String IP, int remotePort) {
 		this.inputStream = in;
 		this.outStream = out;
 		this.IP = IP;
+		this.remotePort = remotePort;
 	}
 
-	public static ClientThread instantiate(InputStream in, OutputStream out, String IP) {
-		return new ClientThread(in, out, IP);
+	public static ClientThread instantiate(InputStream in, OutputStream out, String IP, int remotePort) {
+		return new ClientThread(in, out, IP, remotePort);
 	}
 
 	@Override
@@ -29,7 +30,7 @@ public final class ClientThread extends Thread {
 
 		Response response = new Response();
 		try {
-			Request request = new RequestParser(inputStream, IP).parseRequest();
+			Request request = new RequestParser().parseRequest(inputStream, IP, remotePort);
 			response.processRequest(request, outStream);
 		} catch (ServerException se) {
 			se.printStackTrace();

@@ -13,16 +13,15 @@ public class WebServer {
 
 	public static final String SERVER_NAME = "MyServer";
 	public static final String SERVER_SOFTWARE = "MyJava";
-	public static final String GATEWAY_INTERFACE = "";
+	public static final String GATEWAY_INTERFACE = "CGI/1.0";
 
 	public static final String HTTPDD_CONF_PATH = "C:/MyWebServer/conf/";
 	public static final String HTTPD_CONF_FILE = "httpd.conf";
 	public static final String MIME_TYPES_FILE = "mime.types";
-
-	private static int threadCount = 0;
-
+	
 	private ServerSocket server;
 	private Socket client;
+	private static int threadCount = 0;
 
 	/**
 	 * 
@@ -94,10 +93,11 @@ public class WebServer {
 				ioe.printStackTrace();
 			}
 
+			System.out.println("Remote port: "+client.getPort());
 			if (allowMoreThread()) {
 				ClientThread.instantiate(client.getInputStream(),
 						client.getOutputStream(),
-						client.getInetAddress().getHostAddress()).start();
+						client.getInetAddress().getHostAddress(), client.getPort()).start();
 				addThread();
 			} else {
 				Log.debug("max thread exceed", "no more thread can be added");

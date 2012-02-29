@@ -13,6 +13,7 @@ import webServer.WebServer;
 import webServer.constant.EnvVarTable;
 import webServer.constant.HttpdConf;
 import webServer.constant.ResponseTable;
+import webServer.request.Request;
 import webServer.ulti.Log;
 import webServer.ulti.ServerException;
 
@@ -25,21 +26,21 @@ public class CGI {
 	 * @param queryString
 	 * @return { directive, the path to the tempFile }
 	 */
-	public String[] execute(File file, String queryString,
-			Map<String, String> headers) throws ServerException {
+	public CountableInputStream execute(Request request) throws ServerException {
 		Process process = null;
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(file));
+			BufferedReader reader = new BufferedReader(new FileReader(request.getURI()));
 			String scriptPath = reader.readLine();
 			scriptPath = scriptPath.replace("#!", "");
 			Log.debug("script path", scriptPath);
 			ProcessBuilder pb = new ProcessBuilder(scriptPath,
-					file.getAbsolutePath(), queryString);
-			addEnvironmentVariables(pb.environment(), queryString, headers);
+					request.getURI(), request.getParameterString());
+			addEnvironmentVariables(pb.environment(), request);
 			process = pb.start();
-			CountableInputStream cin = new CountableInputStream(
-					process.getInputStream());
-			return interpreteOutputStream(cin);
+			return new CountableInputStream(process.getInputStream());
+//			CountableInputStream cin = new CountableInputStream(
+//					process.getInputStream());
+//			return interpreteOutputStream(cin);
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -49,33 +50,50 @@ public class CGI {
 
 	}
 
-	private void addEnvironmentVariables(Map<String, String> env,
-			String queryString, Map<String, String> headers) {
-		env.put("QUERY_STRING", queryString);
+	private void addEnvironmentVariables(Map<String, String> env, Request request) {
+		
 		env.put(EnvVarTable.SERVER_NAME, WebServer.SERVER_NAME);
 		env.put(EnvVarTable.SERVER_SOFTWARE, WebServer.SERVER_SOFTWARE);
-		env.put(EnvVarTable.SERVER_PORT,Integer.toString(HttpdConf.LISTEN));
+		env.put(EnvVarTable.GATEWAY_INTERFACE, WebServer.GATEWAY_INTERFACE);
+		env.put(EnvVarTable.SERVER_PORT, Integer.toString(request.getRemotePort()));
+		env.put(EnvVarTable.REMOTE_ADDR, request.getIPAddr());
+		env.put(EnvVarTable.SERVER_PROTOCOL, request.getHttpVersion());
+		env.put(EnvVarTable.REQUEST_METHOD, request.getMethod());
+		env.put(EnvVarTable.QUERY_STRING, request.getParameterString());
+		env.put(EnvVarTable.PATH_INFO, request.getPathInfo());
+		env.put(EnvVarTable.SCRIPT_NAME, request.getScriptName());
+		env.put(EnvVarTable.PATH_TRANSLATED, request.getURI());
+	
+		addHeaderFieldsFromRequest(env, request.getRequestField());
 
+	}
+
+	private void addHeaderFieldsFromRequest(Map<String, String> env, Map<String, String> headers){
 		Set<String> keySet = headers.keySet();
 		for (String key : keySet) {
 			if (EnvVarTable.containKey(key)) {
 				env.put(EnvVarTable.get(key), headers.get(key));
+			} else {
+				env.put(key.replace('-', '_').toUpperCase(), headers.get(key));
 			}
-			env.put(key.replace('-', '_').toUpperCase(), headers.get(key));
 		}
 	}
-
+	
 	private String[] interpreteOutputStream(CountableInputStream cin)
-			throws IOException {
-
-		cin.toString();
+			throws IOException, ServerException {
 		
 		int offset = cin.getOffset('\n');
 
-		String directive = extractDirective(cin, offset);
-		String tempFileName = writeStreamToFile(cin);
+		String firstLine = extractDirective(cin, offset);
+		String[] tokens = firstLine.split(":", 2);
+		if (tokens[0].equalsIgnoreCase("Content-Type")) {
+			String tempFileName = writeStreamToFile(cin);
+			return new String[] { firstLine, tempFileName };
+		}
+		
+		// Handle Location and StatusCode right here
+		throw new ServerException(ResponseTable.NOT_IMPLEMENTED, "Unsupport Directive: "+tokens[0]);
 
-		return new String[] { directive, tempFileName };
 	}
 
 	private String extractDirective(CountableInputStream cin, int offset)

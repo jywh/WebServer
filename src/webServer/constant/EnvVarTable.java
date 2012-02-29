@@ -15,6 +15,11 @@ public final class EnvVarTable {
 	public static final String SERVER_PROTOCOL = "SERVER_PROTOCOL";
 	public static final String SERVER_PORT = "SERVER_PORT";
 	public static final String REQUEST_METHOD = "REQUEST_METHOD";
+	public static final String QUERY_STRING = "QUERY_STRING";
+	public static final String GATEWAY_INTERFACE = "GATEWAY_INTERFACE";
+	public static final String PATH_INFO = "PATH_INFO";
+	public static final String SCRIPT_NAME = "SCRIPT_NAME";
+	public static final String PATH_TRANSLATED = "PATH_TRANSLATED";
 	
 	private static HashMap<String, String> EnvTable = new HashMap<String, String>();
 	

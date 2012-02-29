@@ -26,7 +26,7 @@ public class HeaderBuilder {
 	}
 
 	public HeaderBuilder buildContentTypeAndLength(File file) {
-		String mime = MIME.getMIMEType(Ulti.getFileExtension(file));
+		String mime = MIME.getMIMEType(Ulti.getFileExtension(file.getName()));
 		long length = file.length();
 		builder.append(HeaderFields.CONTENT_LENGTH)
 				.append(": ").append(length).append("\n")
@@ -35,11 +35,17 @@ public class HeaderBuilder {
 		return this;
 	}
 
-	public HeaderBuilder buildContentTypeAndLength(long length, String contentType) {
+//	public HeaderBuilder buildContentTypeAndLength(long length, String contentType) {
+//		builder.append(HeaderFields.CONTENT_LENGTH)
+//				.append(": ").append(length).append("\n")
+//				.append(contentType)
+//				.append("\n");
+//		return this;
+//	}
+	
+	public HeaderBuilder buildContentLength(int length){
 		builder.append(HeaderFields.CONTENT_LENGTH)
-				.append(": ").append(length).append("\n")
-				.append(contentType)
-				.append("\n");
+		.append(": ").append(length).append("\n");
 		return this;
 	}
 	
@@ -76,10 +82,13 @@ public class HeaderBuilder {
 		return this;
 	}
 
+	public HeaderBuilder append(String s){
+		builder.append(s);
+		return this;
+	}
 	@Override
 	public String toString() {
 		return builder.toString();
 	}
-	
 	
 }
