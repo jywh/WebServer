@@ -4,7 +4,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
-import java.util.regex.Pattern;
 
 public class Ulti {
 
@@ -12,16 +11,7 @@ public class Ulti {
 			"EEE, d MMM yyyy HH:mm:ss z", Locale.US);
 	private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
 			"dd/MMM/yyyy :HH:mm:ss Z");
-	private final static Pattern pattern = Pattern.compile("([^\\s]+(\\.(?i)(py|pl)))");
 
-	public static String getTimeFull(long time) {
-		return DATE_FORMATE.format(time);
-	}
-
-	public static boolean isScript(String fileName){
-		return pattern.matcher(fileName).matches();
-	}
-	
 	public static String getFileExtension(String fileName) {
 		int index = fileName.lastIndexOf('.');
 		if (index > 0) {
@@ -30,14 +20,9 @@ public class Ulti {
 		return "";
 	}
 
-//	public static boolean isScriptFile(String fileName) {
-//		String extension = getFileExtension(fileName);
-//		if (extension.equalsIgnoreCase("py")
-//				|| extension.equalsIgnoreCase("pl"))
-//			return true;
-//		return false;
-//	}
-	
+	public static String getTimeFull(long time) {
+		return DATE_FORMATE.format(time);
+	}
 	/**
 	 * Retrieve current time in milliseconds.
 	 * 
@@ -52,4 +37,11 @@ public class Ulti {
 		return simpleDateFormat.format(currentTimeMillis());
 	}
 
+	@SuppressWarnings("rawtypes")
+	public static String getCurrentPackageName(Class c){
+		String className = c.getName();
+		System.out.println("class name: "+className);
+		int indexLastDot = className.lastIndexOf('.');
+		return className.substring(0, indexLastDot);
+	}
 }

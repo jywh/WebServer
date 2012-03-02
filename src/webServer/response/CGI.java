@@ -15,22 +15,22 @@ import webServer.ulti.ServerException;
 
 public class CGI {
 
-	public CountableInputStream execute(Request request) throws ServerException {
+	public CGIOutputStreamReader execute(Request request) throws ServerException {
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(
-					request.getURI()));
-			String scriptPath = reader.readLine();
-			scriptPath = scriptPath.replace("#!", "");
+			String scriptPath = extractScriptPath(request.getURI());
 			ProcessBuilder pb = new ProcessBuilder(scriptPath, request.getURI());
 			addEnvironmentVariables(pb.environment(), request);
-			Process process = pb.start();
-
-			if (request.getMethod().equals(Request.POST)
-					|| request.getMethod().equals(Request.PUT)) {
+			Process process;
+			if (request.getMethod().equals(Request.GET)
+					|| request.equals(Request.HEAD)) {
+				pb.environment().put(EnvVarTable.QUERY_STRING, request.getParameterString());
+				process = pb.start();
+			} else {
+				process = pb.start();
 				servePostParameters(process, request);
 			}
-
-			return new CountableInputStream(process.getInputStream());
+			
+			return new CGIOutputStreamReader(process.getInputStream());
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -40,16 +40,20 @@ public class CGI {
 
 	}
 
+	private String extractScriptPath(String script) throws IOException,
+			ServerException {
+		BufferedReader reader = new BufferedReader(new FileReader(script));
+		String scriptPath = reader.readLine();
+		if (scriptPath.isEmpty())
+			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
+		return scriptPath.replace("#!", "");
+	}
+
+	
 	private void addEnvironmentVariables(Map<String, String> env,
 			Request request) {
-
-		if (request.getMethod().equals(Request.GET)
-				|| request.equals(Request.HEAD)) {
-			env.put(EnvVarTable.QUERY_STRING, request.getParameterString());
-		}
 		addNonHeaderFieldEnvVar(env, request);
 		addHeaderFieldsEnvVar(env, request.getRequestField());
-
 	}
 
 	private void addNonHeaderFieldEnvVar(Map<String, String> env,
@@ -71,11 +75,8 @@ public class CGI {
 			Map<String, String> headers) {
 		Set<String> keySet = headers.keySet();
 		for (String key : keySet) {
-			if (EnvVarTable.containKey(key)) {
+			if (EnvVarTable.containKey(key)) 
 				env.put(EnvVarTable.get(key), headers.get(key));
-			} else {
-				env.put(key.replace('-', '_').toUpperCase(), headers.get(key));
-			}
 		}
 	}
 
@@ -90,53 +91,4 @@ public class CGI {
 
 	}
 
-	// private String[] interpreteOutputStream(CountableInputStream cin)
-	// throws IOException, ServerException {
-	//
-	// int offset = cin.getOffset('\n');
-	//
-	// String firstLine = extractDirective(cin, offset);
-	// String[] tokens = firstLine.split(":", 2);
-	// if (tokens[0].equalsIgnoreCase("Content-Type")) {
-	// String tempFileName = writeStreamToFile(cin);
-	// return new String[] { firstLine, tempFileName };
-	// }
-	//
-	// // Handle Location and StatusCode right here
-	// throw new ServerException(ResponseTable.NOT_IMPLEMENTED,
-	// "Unsupport Directive: " + tokens[0]);
-	//
-	// }
-	//
-	// private String extractDirective(CountableInputStream cin, int offset)
-	// throws IOException {
-	// byte[] buf = new byte[offset];
-	// cin.read(buf, 0, buf.length);
-	// return new String(buf);
-	// }
-	//
-	// private String writeStreamToFile(CountableInputStream in)
-	// throws IOException {
-	//
-	// File tempFile = createTempFile();
-	// OutputStream out = new FileOutputStream(tempFile);
-	// in.skip(3); // skip whitespace and newline characters
-	// byte[] buf = new byte[Response.BUFFER_SIZE];
-	// int read = -1;
-	// while ((read = in.read(buf)) >= 0) {
-	// out.write(buf, 0, read);
-	// }
-	// out.close();
-	// in.close();
-	// return tempFile.getAbsolutePath();
-	// }
-	//
-	// protected File createTempFile() {
-	// String name = Long.toString(System.currentTimeMillis());
-	// File tempDir = new File(HttpdConf.TEMP_DIRECTORY);
-	// if (!tempDir.exists()) {
-	// tempDir.mkdirs();
-	// }
-	// return new File(tempDir, name);
-	// }
 }

@@ -20,16 +20,23 @@ public final class EnvVarTable {
 	public static final String PATH_INFO = "PATH_INFO";
 	public static final String SCRIPT_NAME = "SCRIPT_NAME";
 	public static final String PATH_TRANSLATED = "PATH_TRANSLATED";
+	public static final String HTTP_ACCEPT = "HTTP_ACCEPT";
+	public static final String CONTENT_LENGTH = "CONTENT_LENGTH";
+	public static final String CONTENT_TYPE = "CONTENT_TYPE";
+	public static final String HTTP_REFERER = "HTTP_REFERER";
+	public static final String REMOTE_HOST = "REMOTE_HOST";
+	public static final String HTTP_USER_AGENT = "HTTP_USER_AGENT";
+	public static final String HTTP_COOKIE = "HTTP_COOKIE";
 	
 	private static HashMap<String, String> EnvTable = new HashMap<String, String>();
 	
 	static {
-		EnvTable.put(HeaderFields.ACCEPT, "HTTP_ACCEPT");
-		EnvTable.put(HeaderFields.CONTENT_LENGTH, "CONTENT_LENGTH");
-		EnvTable.put(HeaderFields.CONTENT_TYPE, "CONTENT_TYPE");
-		EnvTable.put(HeaderFields.REFERER, "HTTP_REFERER");
-		EnvTable.put(HeaderFields.HOST, "REMOTE_HOST");
-		EnvTable.put(HeaderFields.USER_AGENT, "HTTP_USER_AGENT");
+		EnvTable.put(HeaderFields.ACCEPT, HTTP_ACCEPT);
+		EnvTable.put(HeaderFields.CONTENT_LENGTH, CONTENT_LENGTH);
+		EnvTable.put(HeaderFields.CONTENT_TYPE, CONTENT_TYPE);
+		EnvTable.put(HeaderFields.REFERER, HTTP_REFERER);
+		EnvTable.put(HeaderFields.HOST, REMOTE_HOST);
+		EnvTable.put(HeaderFields.USER_AGENT, HTTP_USER_AGENT);
 	}
 	
 	public static boolean containKey(String key){

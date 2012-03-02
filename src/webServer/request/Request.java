@@ -20,7 +20,7 @@ public class Request {
 	private String pathInfo;
 	
 	/**
-	 * This prevent direct instaniate of Request object. Request can only be
+	 * This prevent direct instaniate of Request object. Request object can only be
 	 * created by RequestParser.
 	 */
 	protected Request() {

@@ -3,7 +3,7 @@ package webServer.httpdconfSetter;
 import webServer.constant.HttpdConf;
 import webServer.ulti.ConfigurationException;
 
-public class AliasSetter extends HttpdConfSetter{
+public class Alias extends HttpdConfSetter{
 
 	@Override
 	public void process(Object line) throws ConfigurationException{

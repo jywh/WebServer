@@ -38,7 +38,7 @@ public final class ClientThread extends Thread {
 					remotePort);
 			response.processRequest(request, outStream);
 		} catch (ServerException e) {
-			e.printMessage();
+			e.printStackTrace();
 			response.sendErrorMessage(outStream, e.getStatusCode());
 		} finally {
 			WebServer.removeThread();

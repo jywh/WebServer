@@ -3,7 +3,7 @@ package webServer.httpdconfSetter;
 import webServer.constant.HttpdConf;
 import webServer.ulti.ConfigurationException;
 
-public class MaxThreadSetter extends HttpdConfSetter{
+public class MaxThread extends HttpdConfSetter{
 
 	@Override
 	public void process(Object line) throws ConfigurationException{

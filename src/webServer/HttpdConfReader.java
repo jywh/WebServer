@@ -61,7 +61,6 @@ public class HttpdConfReader {
 		}
 		return false;
 	}
-	
 
 	/*****************************************************************
 	 * 
@@ -71,7 +70,7 @@ public class HttpdConfReader {
 	
 	protected void parseLine(String currentLine) throws ConfigurationException{
 		String[] tokens = currentLine.split(" ", 2);
-		HttpdConfSetter httpdConfSetter = HttpdConfSetterTable.getSetter(tokens[0]);
+		HttpdConfSetter httpdConfSetter = HttpdConfSetter.instaniate(tokens[0]);
 
 		if (httpdConfSetter != null)
 			httpdConfSetter.process(tokens[1]);
@@ -97,7 +96,7 @@ public class HttpdConfReader {
 
 		String[] tokens = parseOpenTag(currentLine);
 
-		HttpdConfSetter httpdConfSetter = HttpdConfSetterTable.getSetter(tokens[0]);
+		HttpdConfSetter httpdConfSetter = HttpdConfSetter.instaniate(tokens[0]);
 		
 		if( httpdConfSetter == null ) return;
 		
@@ -118,7 +117,7 @@ public class HttpdConfReader {
 	 * @param line
 	 * @return
 	 */
-	public static boolean checkOpenTag(String line) {
+	private boolean checkOpenTag(String line) {
 		
 		String regex = "^<[a-zA-Z][a-zA-Z1-9]* .+>$";
 		
@@ -136,7 +135,7 @@ public class HttpdConfReader {
 	 * @param line
 	 * @return
 	 */
-	public static boolean checkCloseTag(String tag, String line){
+	private boolean checkCloseTag(String tag, String line){
 		
 		String regex = "^</"+tag+" *>$";
 		

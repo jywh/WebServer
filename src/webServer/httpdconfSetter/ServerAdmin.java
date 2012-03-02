@@ -3,7 +3,7 @@ package webServer.httpdconfSetter;
 import webServer.constant.HttpdConf;
 import webServer.ulti.ConfigurationException;
 
-public class ServerAdminSetter extends HttpdConfSetter{
+public class ServerAdmin extends HttpdConfSetter{
 
 	@Override
 	public void process(Object line) throws ConfigurationException {

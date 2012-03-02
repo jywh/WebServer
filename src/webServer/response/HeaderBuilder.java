@@ -78,8 +78,10 @@ public class HeaderBuilder {
 		builder.append(s);
 		return this;
 	}
+	
 	@Override
 	public String toString() {
+		System.out.println(builder.toString());
 		return builder.toString();
 	}
 	

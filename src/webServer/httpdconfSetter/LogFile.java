@@ -3,7 +3,7 @@ package webServer.httpdconfSetter;
 import webServer.constant.HttpdConf;
 import webServer.ulti.ConfigurationException;
 
-public class LogFileSetter extends HttpdConfSetter {
+public class LogFile extends HttpdConfSetter {
 
 	@Override
 	public void process(Object path) throws ConfigurationException {

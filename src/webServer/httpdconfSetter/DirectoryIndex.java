@@ -3,7 +3,7 @@ package webServer.httpdconfSetter;
 import webServer.constant.HttpdConf;
 import webServer.ulti.ConfigurationException;
 
-public class DirectoryIndexSetter extends HttpdConfSetter {
+public class DirectoryIndex extends HttpdConfSetter {
 
 	@Override
 	public void process(Object line) throws ConfigurationException{

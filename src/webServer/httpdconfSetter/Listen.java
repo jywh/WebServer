@@ -3,7 +3,7 @@ package webServer.httpdconfSetter;
 import webServer.constant.HttpdConf;
 import webServer.ulti.ConfigurationException;
 
-public class ListenSetter extends HttpdConfSetter {
+public class Listen extends HttpdConfSetter {
 
 	@Override
 	public void process(Object portNumber) throws ConfigurationException{

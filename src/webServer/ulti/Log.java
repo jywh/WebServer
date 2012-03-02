@@ -61,35 +61,31 @@ public class Log {
 	
 	public static void debug(String tag, String message){
 		if( DEBUG )
-			System.out.printf("%-35s %-15s %s\n",getCallingClass(), tag, message);
+			System.out.printf("%-15s %s\n",tag, message);
 	}
 	
 	public static void debug(String field, Integer number){
 		if( DEBUG )
-			System.out.printf("%-35s %-15s %d\n",getCallingClass(), field, number);
+			System.out.printf("%-15s %d\n", field, number);
 	}
 
 	public static void debug(String field, Float f){
 		if( DEBUG )
-			System.out.printf("%-35s %-15s %f\n",getCallingClass(), field, f);
+			System.out.printf("%-15s %f\n", field, f);
 	}
 	
 	public static void debug(String field, Double d){
 		if( DEBUG ) 
-			System.out.printf("%-35s %-15s %f\n",getCallingClass(), field, d);
+			System.out.printf("%-15s %f\n", field, d);
 	}
 	
 	public static void debug(String field, char c){
 		if( DEBUG ) 
-			System.out.printf("%-35s %-15s %s\n",getCallingClass(), field, c);
-	}
-	
-	private static String getCallingClass(){
-		return new Throwable().getStackTrace()[2].getClassName();
+			System.out.printf("%-15s %s\n", field, c);
 	}
 	
 	public static void debug(String field, Long d){
 		if( DEBUG ) 
-			System.out.printf("%-35s %-15s %d\n",getCallingClass(), field, d);
+			System.out.printf("%-15s %d\n", field, d);
 	}
 }

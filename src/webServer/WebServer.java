@@ -35,9 +35,9 @@ public class WebServer {
 	 */
 	public WebServer(String confDiretory) throws IOException,
 			ConfigurationException {
-
-		this.configure(confDiretory);
+		
 		this.prepareMIMETypes(confDiretory);
+		this.configure(confDiretory);
 		server = new ServerSocket(HttpdConf.LISTEN);
 		Log.initialize();
 		System.out.println("Opened socket " + HttpdConf.LISTEN);
@@ -93,7 +93,6 @@ public class WebServer {
 				ioe.printStackTrace();
 			}
 
-			System.out.println("Remote port: "+client.getPort());
 			if (allowMoreThread()) {
 				ClientThread.instantiate(client.getInputStream(),
 						client.getOutputStream(),
