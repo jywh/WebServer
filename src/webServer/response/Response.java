@@ -12,8 +12,6 @@ import java.util.Date;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
-
 import webServer.DirectoryInfo;
 import webServer.constant.HeaderFields;
 import webServer.constant.HttpdConf;
@@ -24,10 +22,12 @@ import webServer.ulti.Log;
 import webServer.ulti.ServerException;
 import webServer.ulti.Ulti;
 
+import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
+
 public class Response {
 
 	public static final int BUFFER_SIZE = 2048;
-	public static final String ERROR_FILE_PATH = "C:/MyWebserver/error/";
+	public static final String ERROR_FILE_PATH = HttpdConf.SERVER_ROOT+"/error/";
 	public static String DEFAULT_HTTP_VERSION = "HTTP/1.1";
 	private final static Pattern pattern = Pattern
 			.compile("([^\\s]+(\\.(?i)(py|pl)))");
@@ -38,6 +38,7 @@ public class Response {
 		int statusCode;
 		DirectoryInfo info = authenticate(request);
 		if (info == null) {
+			System.out.println("pass authentication!");
 			statusCode = processNormalRequest(request, out);
 		} else {
 			statusCode = sendAuthenticateMessage(request, info, out);
@@ -71,7 +72,8 @@ public class Response {
 			if (info.getUser().contains(decodeText))
 				return null;
 		}
-		throw new ServerException(ResponseTable.FORBIDDEN);
+//		throw new ServerException(ResponseTable.FORBIDDEN);
+		return info;
 	}
 
 	private DirectoryInfo checkSecureDirectory(String uri) {
@@ -84,12 +86,13 @@ public class Response {
 	}
 
 	protected int sendAuthenticateMessage(Request request, DirectoryInfo info,
-			OutputStream out) {
+			OutputStream out) throws ServerException {
 		String headerMessage = createBasicHeaderMessage(
 				request.getHttpVersion(), ResponseTable.UNAUTHORIZED)
 				.buildAuthentication(info.getAuthType(), info.getAuthName())
 				.toString();
 		writeHeaderMessage(out, headerMessage);
+		serveFile(out, new File(request.getURI()));
 		return ResponseTable.UNAUTHORIZED;
 	}
 
@@ -136,8 +139,8 @@ public class Response {
 			return ResponseTable.NOT_MODIFIED;
 		}
 
-		headerMessage = createHeaderMessage(request.getHttpVersion(),
-				ResponseTable.OK, document).toString();
+		headerMessage = createHeaderMessageCache(request.getHttpVersion(),
+				ResponseTable.OK, document, "public").toString();
 		System.out.println(headerMessage);
 		writeHeaderMessage(out, headerMessage);
 		serveFile(out, document);
@@ -205,19 +208,13 @@ public class Response {
 
 	}
 
-	protected HeaderBuilder createHeaderMessageNoCache(String httpVersion, int statusCode, File document){
-		return createSimpleHeaderMessage(httpVersion, statusCode, document)
-			.buildCacheControl(" no-store");
-		
-	}
-	
-	protected HeaderBuilder createHeaderMessage(String httpVersion,
-			int statusCode, File document) {
+	protected HeaderBuilder createHeaderMessageCache(String httpVersion,
+			int statusCode, File document, String cache) {
 		HeaderBuilder builder = createSimpleHeaderMessage(httpVersion,
 				statusCode, document);
-		return builder.buildLastModified(document).buildCacheControl("3600");
+		return builder.buildLastModified(document).buildCacheControl(cache);
 	}
-
+	
 	protected HeaderBuilder createHeaderMessageForScript(String httpVersion,
 			int statusCode, int length, String headerString) {
 		HeaderBuilder builder = createBasicHeaderMessage(httpVersion,
@@ -252,9 +249,8 @@ public class Response {
 	public void sendErrorMessage(OutputStream out, int statusCode) {
 
 		try {
-			String errorFilePath = ERROR_FILE_PATH
-					+ Integer.toString(statusCode) + ".html";
-			File errorFile = new File(errorFilePath);
+			File errorFile = new File(ERROR_FILE_PATH
+					+ Integer.toString(statusCode) + ".html");
 			String headerMessage = createSimpleHeaderMessage(
 					DEFAULT_HTTP_VERSION, statusCode, errorFile).toString();
 			writeHeaderMessage(out, headerMessage);

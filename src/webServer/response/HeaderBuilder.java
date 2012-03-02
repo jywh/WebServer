@@ -59,7 +59,7 @@ public class HeaderBuilder {
 	}
 
 	public HeaderBuilder buildCacheControl(String howLong) {
-		builder.append(HeaderFields.CACHE_CONTROL).append(": max-age=")
+		builder.append(HeaderFields.CACHE_CONTROL).append(": ")
 				.append(howLong).append("\n");
 		return this;
 	}
