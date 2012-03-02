@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import webServer.DirectoryInfo;
+import webServer.SecureDirectory;
 import webServer.constant.HttpdConf;
 import webServer.ulti.ConfigurationException;
 
@@ -50,7 +50,7 @@ public class Directory extends HttpdConfSetter {
 			throw new ConfigurationException(
 					"Configuration: Fail to read directory tag");
 		List<String> users = retrieveAuthUser(userType, user, authFile);
-		HttpdConf.secureUsers.put(secureDirectory, new DirectoryInfo(authName,
+		HttpdConf.secureUsers.put(secureDirectory, new SecureDirectory(authName,
 				authType, userType, users));
 	}
 

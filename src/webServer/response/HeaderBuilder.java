@@ -10,7 +10,7 @@ import webServer.ulti.Ulti;
 public class HeaderBuilder {
 
 	private StringBuilder builder;
-
+	private static final String NEWLINE = System.getProperty("line.separator");
 	public HeaderBuilder() {
 		builder = new StringBuilder();
 	}
@@ -23,10 +23,10 @@ public class HeaderBuilder {
 	public HeaderBuilder buildHeaderBegin(String responsePhrase,
 			String httpVersion) {
 		builder.append(httpVersion).append(" ").append(responsePhrase)
-				.append("\n").append(HeaderFields.DATE).append(": ")
+				.append(NEWLINE).append(HeaderFields.DATE).append(": ")
 				.append(Ulti.getTimeFull(System.currentTimeMillis()))
-				.append("\n").append(HeaderFields.SERVER).append(": ")
-				.append(WebServer.SERVER_NAME).append("\n");
+				.append(NEWLINE).append(HeaderFields.SERVER).append(": ")
+				.append(WebServer.SERVER_NAME).append(NEWLINE);
 		return this;
 	}
 
@@ -34,21 +34,21 @@ public class HeaderBuilder {
 		String mime = MIME.getMIMEType(Ulti.getFileExtension(file.getName()));
 		long length = file.length();
 		builder.append(HeaderFields.CONTENT_LENGTH)
-				.append(": ").append(length).append("\n")
+				.append(": ").append(length).append(NEWLINE)
 				.append(HeaderFields.CONTENT_TYPE).append(": ").append(mime)
-				.append("\n");
+				.append(NEWLINE);
 		return this;
 	}
 	
 	public HeaderBuilder buildContentLength(int length){
 		builder.append(HeaderFields.CONTENT_LENGTH)
-		.append(": ").append(length).append("\n");
+		.append(": ").append(length).append(NEWLINE);
 		return this;
 	}
 	
 	public HeaderBuilder buildLastModified(File file) {
 		builder.append(HeaderFields.LAST_MODIFIED).append(": ")
-				.append(lastModified(file)).append("\n");
+				.append(lastModified(file)).append(NEWLINE);
 		return this;
 
 	}
@@ -60,13 +60,13 @@ public class HeaderBuilder {
 
 	public HeaderBuilder buildCacheControl(String howLong) {
 		builder.append(HeaderFields.CACHE_CONTROL).append(": ")
-				.append(howLong).append("\n");
+				.append(howLong).append(NEWLINE);
 		return this;
 	}
 
 	public HeaderBuilder buildConnection(boolean keepAlive) {
 		builder.append(HeaderFields.CONNECTION).append(": ")
-				.append((keepAlive) ? "keep-alive" : "close").append("\n");
+				.append((keepAlive) ? "keep-alive" : "close").append(NEWLINE);
 		return this;
 	}
 
@@ -75,13 +75,13 @@ public class HeaderBuilder {
 		builder.append(HeaderFields.EXPIRE)
 				.append(": ")
 				.append(Ulti.getTimeFull(Ulti.currentTimeMillis()
-						+ millisFromNow)).append("\n");
+						+ millisFromNow)).append(NEWLINE);
 		return this;
 	}
 
 	public HeaderBuilder buildAuthentication( String authType, String realm ){
 		builder.append(HeaderFields.WWW_AUTHENTICATE).append(": ").append(authType).append(" realm=")
-			.append(realm).append("\n");
+			.append(realm).append(NEWLINE).append(NEWLINE);
 		return this;
 	}
 	

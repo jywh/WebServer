@@ -2,7 +2,7 @@ package webServer;
 
 import java.util.List;
 
-public class DirectoryInfo {
+public class SecureDirectory {
 	public static final int USER = 1;
 	public static final int GROUP = 2;
 	public static final int VALID_USER = 3;
@@ -12,7 +12,7 @@ public class DirectoryInfo {
 	private int userType;
 	private List<String> validUsers;
 	
-	public DirectoryInfo(String authName,
+	public SecureDirectory(String authName,
 			String authType, String userType,
 			List<String> validUsers) {
 		this.authName = authName;
@@ -27,7 +27,7 @@ public class DirectoryInfo {
 		}
 	}
 	
-	public DirectoryInfo(){}
+	public SecureDirectory(){}
 	
 	public String getAuthName() {
 		return authName;
