@@ -9,9 +9,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Date;
+import java.util.Set;
 import java.util.regex.Pattern;
 
+import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
+
+import webServer.DirectoryInfo;
 import webServer.constant.HeaderFields;
+import webServer.constant.HttpdConf;
 import webServer.constant.ResponseTable;
 import webServer.request.Request;
 import webServer.ulti.AccessLog;
@@ -24,22 +29,80 @@ public class Response {
 	public static final int BUFFER_SIZE = 2048;
 	public static final String ERROR_FILE_PATH = "C:/MyWebserver/error/";
 	public static String DEFAULT_HTTP_VERSION = "HTTP/1.1";
-	private final static Pattern pattern = Pattern.compile("([^\\s]+(\\.(?i)(py|pl)))");
-	
+	private final static Pattern pattern = Pattern
+			.compile("([^\\s]+(\\.(?i)(py|pl)))");
+
 	public void processRequest(Request request, OutputStream out)
 			throws ServerException {
 
-		// Retrieve document
 		int statusCode;
-
-		if (request.getMethod().equals(Request.PUT)) {
-			statusCode = processPUT(request, out);
-		} else if (isScript(request.getURI())) {
-			statusCode = executeScript(request, out);
+		DirectoryInfo info = authenticate(request);
+		if (info == null) {
+			statusCode = processNormalRequest(request, out);
 		} else {
-			statusCode = retrieveRegularFile(request, out);
+			statusCode = sendAuthenticateMessage(request, info, out);
 		}
+
 		new AccessLog().log(request, statusCode);
+	}
+
+	/**
+	 * Check secure directory.
+	 * 
+	 * 
+	 * @param request
+	 * @return Null if not secure directory or authenticate successfully,
+	 *         otherwise return DirectoryInfo for authentication
+	 * @throws ServerException
+	 */
+	private DirectoryInfo authenticate(Request request) throws ServerException {
+
+		DirectoryInfo info = checkSecureDirectory(request.getURI());
+		if (info == null)
+			return null;
+
+		if (!request.getRequestField().containsKey(HeaderFields.AUTHORIZATION))
+			return info;
+
+		String auth = request.getRequestField().get(HeaderFields.AUTHORIZATION);
+		String[] tokens = auth.split(" ");
+		if (tokens[0].equals("Basic")) {
+			String decodeText = new String(Base64.decode(tokens[1]));
+			if (info.getUser().contains(decodeText))
+				return null;
+		}
+		throw new ServerException(ResponseTable.FORBIDDEN);
+	}
+
+	private DirectoryInfo checkSecureDirectory(String uri) {
+		Set<String> secureDirectories = HttpdConf.secureUsers.keySet();
+		for (String directory : secureDirectories) {
+			if (uri.contains(directory))
+				return HttpdConf.secureUsers.get(directory);
+		}
+		return null;
+	}
+
+	protected int sendAuthenticateMessage(Request request, DirectoryInfo info,
+			OutputStream out) {
+		String headerMessage = createBasicHeaderMessage(
+				request.getHttpVersion(), ResponseTable.UNAUTHORIZED)
+				.buildAuthentication(info.getAuthType(), info.getAuthName())
+				.toString();
+		writeHeaderMessage(out, headerMessage);
+		return ResponseTable.UNAUTHORIZED;
+	}
+
+	protected int processNormalRequest(Request request, OutputStream out)
+			throws ServerException {
+		if (request.getMethod().equals(Request.PUT)) {
+			return processPUT(request, out);
+		} else if (isScript(request.getURI())) {
+			return executeScript(request, out);
+		} else {
+			return retrieveRegularFile(request, out);
+		}
+
 	}
 
 	protected int executeScript(Request request, OutputStream outStream)
@@ -83,7 +146,7 @@ public class Response {
 
 	protected int processPUT(Request request, OutputStream outStream)
 			throws ServerException {
-		
+
 		File document = new File(request.getURI());
 		if (document.exists())
 			throw new ServerException(ResponseTable.NO_CONTENT, "File exist: "
@@ -142,11 +205,17 @@ public class Response {
 
 	}
 
+	protected HeaderBuilder createHeaderMessageNoCache(String httpVersion, int statusCode, File document){
+		return createSimpleHeaderMessage(httpVersion, statusCode, document)
+			.buildCacheControl(" no-store");
+		
+	}
+	
 	protected HeaderBuilder createHeaderMessage(String httpVersion,
 			int statusCode, File document) {
 		HeaderBuilder builder = createSimpleHeaderMessage(httpVersion,
 				statusCode, document);
-		return builder.buildLastModified(document).buildCacheControl(3600);
+		return builder.buildLastModified(document).buildCacheControl("3600");
 	}
 
 	protected HeaderBuilder createHeaderMessageForScript(String httpVersion,
@@ -195,8 +264,8 @@ public class Response {
 		}
 
 	}
-	
-	private boolean isScript(String URI){
+
+	private boolean isScript(String URI) {
 		File file = new File(URI);
 		return pattern.matcher(file.getName()).matches();
 	}

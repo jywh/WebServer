@@ -15,6 +15,11 @@ public class HeaderBuilder {
 		builder = new StringBuilder();
 	}
 
+	public HeaderBuilder append(String s){
+		builder.append(s);
+		return this;
+	}
+	
 	public HeaderBuilder buildHeaderBegin(String responsePhrase,
 			String httpVersion) {
 		builder.append(httpVersion).append(" ").append(responsePhrase)
@@ -53,7 +58,7 @@ public class HeaderBuilder {
 		return Ulti.getTimeFull(lastModified);
 	}
 
-	public HeaderBuilder buildCacheControl(int howLong) {
+	public HeaderBuilder buildCacheControl(String howLong) {
 		builder.append(HeaderFields.CACHE_CONTROL).append(": max-age=")
 				.append(howLong).append("\n");
 		return this;
@@ -74,8 +79,9 @@ public class HeaderBuilder {
 		return this;
 	}
 
-	public HeaderBuilder append(String s){
-		builder.append(s);
+	public HeaderBuilder buildAuthentication( String authType, String realm ){
+		builder.append(HeaderFields.WWW_AUTHENTICATE).append(": ").append(authType).append(" realm=")
+			.append(realm).append("\n");
 		return this;
 	}
 	

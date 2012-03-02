@@ -6,9 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import webServer.DirectoryInfo;
 import webServer.constant.HttpdConf;
@@ -32,7 +30,7 @@ public class Directory extends HttpdConfSetter {
 		for (int i = 1; i < lines.size(); i++) {
 			tokens = lines.get(i).split(" ", 2);
 			if (tokens[0].equals("AuthName")) {
-				authName = tokens[1].substring(1, tokens[1].length() - 1);
+				authName = tokens[1];
 			} else if (tokens[0].equals("AuthType")) {
 				authType = tokens[1];
 			} else if (tokens[0].equals("AuthUserFile")) {
@@ -51,12 +49,12 @@ public class Directory extends HttpdConfSetter {
 				|| authFile == null)
 			throw new ConfigurationException(
 					"Configuration: Fail to read directory tag");
-		Map<String, String> users = retrieveAuthUser(userType, user, authFile);
-		HttpdConf.secureUsers.add(new DirectoryInfo(secureDirectory, authName,
+		List<String> users = retrieveAuthUser(userType, user, authFile);
+		HttpdConf.secureUsers.put(secureDirectory, new DirectoryInfo(authName,
 				authType, userType, users));
 	}
 
-	private Map<String, String> retrieveAuthUser(String userType, String user,
+	private List<String> retrieveAuthUser(String userType, String user,
 			String path) throws ConfigurationException {
 		if (userType.equals("valid-user")) {
 			return readAuthUserFileForValidUser(path);
@@ -65,7 +63,7 @@ public class Directory extends HttpdConfSetter {
 		}
 	}
 
-	private Map<String, String> readAuthUserFileForValidUser(String path)
+	private List<String> readAuthUserFileForValidUser(String path)
 			throws ConfigurationException {
 		File file = new File(path);
 		if (!file.exists())
@@ -73,12 +71,10 @@ public class Directory extends HttpdConfSetter {
 
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(file));
-			Map<String, String> result = new HashMap<String, String>();
+			List<String> result = new ArrayList<String>();
 			String line;
-			String[] tokens;
 			while ((line = reader.readLine()) != null) {
-				tokens = line.split(":", 2);
-				result.put(tokens[0], tokens[1]);
+				result.add(line);
 			}
 
 			reader.close();
@@ -89,7 +85,7 @@ public class Directory extends HttpdConfSetter {
 		}
 	}
 
-	private Map<String, String> readAuthFileForUser(String path, String user)
+	private List<String> readAuthFileForUser(String path, String user)
 			throws ConfigurationException {
 
 		File file = new File(path);
@@ -98,13 +94,13 @@ public class Directory extends HttpdConfSetter {
 		List<String> users = Arrays.asList(user.split(","));
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(file));
-			Map<String, String> result = new HashMap<String, String>();
+			List<String> result = new ArrayList<String>();
 			String line;
 			String[] tokens;
 			while ((line = reader.readLine()) != null) {
 				tokens = line.split(":", 2);
 				if (users.contains(tokens[0]))
-					result.put(tokens[0], tokens[1]);
+					result.add(line);
 			}
 
 			reader.close();

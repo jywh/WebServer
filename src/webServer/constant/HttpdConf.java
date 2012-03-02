@@ -1,8 +1,6 @@
 package webServer.constant;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import webServer.DirectoryInfo;
@@ -44,7 +42,7 @@ public final class HttpdConf {
 
 	public static Map<String, String> CGI_HANDLER = new HashMap<String, String>();
 
-	public static List<DirectoryInfo> secureUsers = new ArrayList<DirectoryInfo>();
+	public static Map<String, DirectoryInfo> secureUsers = new HashMap<String, DirectoryInfo>();
 	
 	private HttpdConf() {
 	}
