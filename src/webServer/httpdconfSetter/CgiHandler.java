@@ -13,7 +13,6 @@ public class CgiHandler extends HttpdConfSetter {
 		
 		String[] keywords = ((String)line).split(" ",2);
 		HttpdConf.CGI_HANDLER.put(keywords[1], keywords[0].substring(1, keywords[0].length()-1));
-		
 	}
 
 	

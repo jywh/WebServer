@@ -2,6 +2,7 @@ package webServer.response;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Map;
@@ -9,15 +10,17 @@ import java.util.Set;
 
 import webServer.WebServer;
 import webServer.constant.EnvVarTable;
+import webServer.constant.HttpdConf;
 import webServer.constant.ResponseTable;
 import webServer.request.Request;
 import webServer.ulti.ServerException;
+import webServer.ulti.Ulti;
 
 public class CGI {
 
 	public CGIOutputStreamReader execute(Request request) throws ServerException {
 		try {
-			String scriptPath = extractScriptPath(request.getURI());
+			String scriptPath = getScriptPath(request.getURI());
 			ProcessBuilder pb = new ProcessBuilder(scriptPath, request.getURI());
 			addEnvironmentVariables(pb.environment(), request);
 			Process process;
@@ -40,6 +43,13 @@ public class CGI {
 
 	}
 
+	private String getScriptPath( String URI ){
+		File file = new File(URI);
+		String ext = Ulti.getFileExtension(file.getName());
+		return HttpdConf.CGI_HANDLER.get(ext);
+	}
+	
+	@SuppressWarnings("unused")
 	private String extractScriptPath(String script) throws IOException,
 			ServerException {
 		BufferedReader reader = new BufferedReader(new FileReader(script));
@@ -48,7 +58,6 @@ public class CGI {
 			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
 		return scriptPath.replace("#!", "");
 	}
-
 	
 	private void addEnvironmentVariables(Map<String, String> env,
 			Request request) {
