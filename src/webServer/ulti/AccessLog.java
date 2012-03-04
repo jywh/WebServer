@@ -24,7 +24,7 @@ public class AccessLog {
 		return true;
 	}
 	
-	public static void log(Request request, int statusCode){
+	public void log(Request request, int statusCode){
 		String IP, requestLine, userId, rfc1413, time;
 		IP = request.getIPAddr();
 		requestLine = request.getScriptName();

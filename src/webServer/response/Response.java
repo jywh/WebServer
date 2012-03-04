@@ -57,7 +57,7 @@ public class Response {
 			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
 		}
 
-		AccessLog.log(request, statusCode);
+		new AccessLog().log(request, statusCode);
 	}
 
 	/*************************************************************

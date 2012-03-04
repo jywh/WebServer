@@ -82,7 +82,6 @@ public class RequestParser {
 		}
 
 		// This is for testing purpose
-
 		if (tokens[0].equals(Request.PUT)) {
 			tokens[1] = "/upload/" + tokens[1];
 		}

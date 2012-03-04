@@ -1,6 +1,7 @@
 package webServer.ulti;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -15,7 +16,8 @@ public class Ulti {
 	private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
 			"dd/MMM/yyyy :HH:mm:ss Z");
 
-	public static String getFileExtension(String fileName) {
+	public static String getFileExtension(File file) {
+		String fileName = file.getName();
 		int index = fileName.lastIndexOf('.');
 		if (index > 0) {
 			return fileName.substring(index + 1);

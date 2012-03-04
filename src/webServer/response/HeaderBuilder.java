@@ -33,7 +33,7 @@ public class HeaderBuilder {
 	}
 
 	public HeaderBuilder buildContentTypeAndLength(File file) {
-		String mime = MIME.getMIMEType(Ulti.getFileExtension(file.getName()));
+		String mime = MIME.getMIMEType(Ulti.getFileExtension(file));
 		long length = file.length();
 		builder.append(HeaderFields.CONTENT_LENGTH).append(": ").append(length)
 				.append(NEWLINE).append(HeaderFields.CONTENT_TYPE).append(": ")

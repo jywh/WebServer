@@ -51,8 +51,7 @@ public class CGI {
 	}
 
 	private String getScriptPath( String URI ){
-		File file = new File(URI);
-		String ext = Ulti.getFileExtension(file.getName());
+		String ext = Ulti.getFileExtension(new File(URI));
 		return HttpdConf.CGI_HANDLER.get(ext);
 	}
 	

@@ -3,7 +3,7 @@ package webServer.ulti;
 
 /**
  * 
- * Signal that various errors happen during server request and reponse. 
+ * Signal that various errors happen during parsing request or reponse. 
  * 
  * statusCode refers to http error code.
  * 
@@ -30,6 +30,6 @@ public class ServerException extends Exception{
 	}
 	
 	public void printMessage(){
-		System.out.println(super.getMessage());
+		System.out.println(Integer.toString(statusCode)+": "+super.getMessage());
 	}
 }
