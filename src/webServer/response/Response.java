@@ -26,12 +26,13 @@ import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 
 public class Response {
 
+	public static final String TAG = "Response";
 	public static final int BUFFER_SIZE = 2048;
 	public static final String ERROR_FILE_PATH = HttpdConf.SERVER_ROOT
 			+ "/error/";
-	public final static String DEFAULT_HTTP_VERSION = "HTTP/1.1";
 	private final static Pattern pattern = Pattern
 			.compile("([^\\s]+(\\.(?i)(py|pl)))");
+
 	private final static int NOT_SECURE_DIR = 1;
 	private final static int NEED_AUTHENTICATE = 2;
 	private final static int AUTHENTICATED = 3;
@@ -39,9 +40,9 @@ public class Response {
 	public void processRequest(Request request, OutputStream out)
 			throws ServerException {
 
-		SecureDirectory secureDirectory = getSecureDirectory(request.getURI());
 		int statusCode;
 
+		SecureDirectory secureDirectory = getSecureDirectory(request.getURI());
 		switch (authenticate(request, secureDirectory)) {
 		case NOT_SECURE_DIR:
 			statusCode = processNormalRequest(request, out, true);
@@ -56,16 +57,22 @@ public class Response {
 			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
 		}
 
-		new AccessLog().log(request, statusCode);
+		AccessLog.log(request, statusCode);
 	}
 
+	/*************************************************************
+	 * 
+	 * Check authentication
+	 * 
+	 *************************************************************/
+
 	/**
-	 * Check secure directory.
+	 * Check secure directory. Null if not secure directory or authenticate
+	 * successfully, otherwise return DirectoryInfo for authentication
 	 * 
 	 * 
 	 * @param request
-	 * @return Null if not secure directory or authenticate successfully,
-	 *         otherwise return DirectoryInfo for authentication
+	 * @return Authentication Code.
 	 * @throws ServerException
 	 */
 	private int authenticate(Request request, SecureDirectory secureDirectory)
@@ -107,6 +114,12 @@ public class Response {
 		return ResponseTable.UNAUTHORIZED;
 	}
 
+	/*************************************************************
+	 * 
+	 * Process normal request
+	 * 
+	 *************************************************************/
+
 	protected int processNormalRequest(Request request, OutputStream out,
 			boolean cached) throws ServerException {
 		if (request.getMethod().equals(Request.PUT)) {
@@ -114,9 +127,14 @@ public class Response {
 		} else if (isScript(request.getURI())) {
 			return executeScript(request, out);
 		} else {
-			return retrieveRegularFile(request, out, cached);
+			return retrieveStaticDocument(request, out, cached);
 		}
 
+	}
+
+	private boolean isScript(String URI) {
+		File file = new File(URI);
+		return pattern.matcher(file.getName()).matches();
 	}
 
 	protected int executeScript(Request request, OutputStream outStream)
@@ -127,7 +145,7 @@ public class Response {
 			byte[] content = cin.readBodyContent();
 			String headerMessage = createBasicHeaderMessage(
 					request.getHttpVersion(), ResponseTable.OK)
-					.append(headerString).buildContentLength(content.length)
+					.buildContentLength(content.length).append(headerString)
 					.toString();
 			writeHeaderMessage(outStream, headerMessage);
 			BufferedOutputStream out = new BufferedOutputStream(outStream);
@@ -140,7 +158,7 @@ public class Response {
 		}
 	}
 
-	protected int retrieveRegularFile(Request request, OutputStream out,
+	protected int retrieveStaticDocument(Request request, OutputStream out,
 			boolean cached) throws ServerException {
 
 		File document = new File(request.getURI());
@@ -191,7 +209,7 @@ public class Response {
 		if (dateFromClient == null)
 			return true;
 		// remove last three significant digits
-		long lastModified = (file.lastModified() / 1000) * 1000;
+		long lastModified = (file.lastModified() / 1000L) * 1000L;
 		try {
 			Date clientDate = (Date) Ulti.DATE_FORMATE.parse(dateFromClient);
 			return lastModified > clientDate.getTime();
@@ -201,10 +219,11 @@ public class Response {
 		return true;
 	}
 
-	protected void writeHeaderMessage(OutputStream out, String headerMessage) {
-		PrintWriter writer = new PrintWriter(out, true);
-		writer.println(headerMessage);
-	}
+	/*************************************************************
+	 * 
+	 * Build Header String
+	 * 
+	 *************************************************************/
 
 	protected HeaderBuilder createBasicHeaderMessage(String httpVersion,
 			int statusCode) {
@@ -222,10 +241,21 @@ public class Response {
 
 	}
 
+	/*************************************************************
+	 * 
+	 * Response to client
+	 * 
+	 *************************************************************/
+
+	protected void writeHeaderMessage(OutputStream out, String headerMessage) {
+		PrintWriter writer = new PrintWriter(out, true);
+		writer.println(headerMessage);
+	}
+
 	protected void serveFile(OutputStream outStream, File document)
 			throws ServerException {
 
-		Log.debug("document path:", document.getAbsolutePath());
+		Log.debug(TAG, "document path:" + document.getAbsolutePath());
 
 		try {
 			byte[] buf = new byte[BUFFER_SIZE];
@@ -251,18 +281,13 @@ public class Response {
 			File errorFile = new File(ERROR_FILE_PATH
 					+ Integer.toString(statusCode) + ".html");
 			String headerMessage = createSimpleHeaderMessage(
-					DEFAULT_HTTP_VERSION, statusCode, errorFile).toString();
+					HttpdConf.HTTP_VERSION, statusCode, errorFile).toString();
 			writeHeaderMessage(out, headerMessage);
 			serveFile(out, errorFile);
 		} catch (ServerException se) {
 			se.printStackTrace();
 		}
 
-	}
-
-	private boolean isScript(String URI) {
-		File file = new File(URI);
-		return pattern.matcher(file.getName()).matches();
 	}
 
 }

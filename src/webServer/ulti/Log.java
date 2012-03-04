@@ -1,12 +1,5 @@
 package webServer.ulti;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-
-import webServer.constant.HttpdConf;
 
 /**
  * 
@@ -16,42 +9,9 @@ import webServer.constant.HttpdConf;
  */
 public class Log {
 
-	private static boolean DEBUG = false;
+	private static boolean DEBUG = true;
 	
 
-	/*************************************************************
-	 * 
-	 * Access log
-	 * 
-	 *************************************************************/
-	
-	public static void initialize() throws IOException {
-		if(!verifyFile(HttpdConf.LOG_FILE)){
-			throw new FileNotFoundException("Access log file not found");
-		}
-	}
-
-	private static boolean verifyFile(String path) throws IOException {
-		File logFile = new File(path);
-
-		if (!logFile.exists()) {
-			return logFile.createNewFile();
-		}
-		return true;
-	}
-	
-	
-	public synchronized static void access(String content) {
-
-		try{
-			BufferedWriter out = new BufferedWriter(new FileWriter(HttpdConf.LOG_FILE, true));
-			out.write(content);
-			out.newLine();
-			out.close();
-		}catch(IOException ioe){
-			ioe.printStackTrace();
-		} 
-	}
 	
 	/*************************************************************
 	 * 

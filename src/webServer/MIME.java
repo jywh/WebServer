@@ -8,14 +8,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
 
+import webServer.constant.HttpdConf;
+
 public class MIME {
-
-	public static final String DEFAULT_MIME_TYPE = "text/html";
-
-	private BufferedReader reader;
 
 	private static HashMap<String, String> MIMETable = new HashMap<String, String>(
 			1200, 0.9f);
+	private BufferedReader reader;
 
 	public MIME(String path) throws IOException {
 		reader = new BufferedReader(new FileReader(path));
@@ -53,7 +52,7 @@ public class MIME {
 		if (mime != null)
 			return mime;
 		else
-			return DEFAULT_MIME_TYPE;
+			return HttpdConf.DEFAULT_TYPE;
 	}
 
 	public void print() {

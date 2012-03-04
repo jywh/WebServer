@@ -6,6 +6,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import webServer.constant.HttpdConf;
+import webServer.ulti.AccessLog;
 import webServer.ulti.ConfigurationException;
 import webServer.ulti.Log;
 
@@ -18,7 +19,7 @@ public class WebServer {
 	public static final String HTTPDD_CONF_PATH = "C:/MyWebServer/conf/";
 	public static final String HTTPD_CONF_FILE = "httpd.conf";
 	public static final String MIME_TYPES_FILE = "mime.types";
-	
+
 	private ServerSocket server;
 	private Socket client;
 	private static int threadCount = 0;
@@ -35,11 +36,11 @@ public class WebServer {
 	 */
 	public WebServer(String confDiretory) throws IOException,
 			ConfigurationException {
-		
+
 		this.prepareMIMETypes(confDiretory);
 		this.configure(confDiretory);
 		server = new ServerSocket(HttpdConf.LISTEN);
-		Log.initialize();
+		AccessLog.initialize();
 		System.out.println("Opened socket " + HttpdConf.LISTEN);
 
 	}
@@ -93,11 +94,20 @@ public class WebServer {
 				ioe.printStackTrace();
 				continue;
 			}
-
+//			OutputStream outStream=null;
+//			try {
+//				// Test Output
+//				outStream = new FileOutputStream(new File(
+//						"C:/MyWebserver/temp/test.txt"));
+//			} catch (IOException ioe) {
+//				ioe.printStackTrace();
+//				System.exit(1);
+//			}
 			if (allowMoreThread()) {
 				ClientThread.instantiate(client.getInputStream(),
 						client.getOutputStream(),
-						client.getInetAddress().getHostAddress(), client.getPort()).start();
+						client.getInetAddress().getHostAddress(),
+						client.getPort()).start();
 				addThread();
 			} else {
 				Log.debug("max thread exceed", "no more thread can be added");

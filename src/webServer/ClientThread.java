@@ -8,6 +8,12 @@ import webServer.request.RequestParser;
 import webServer.response.Response;
 import webServer.ulti.ServerException;
 
+/**
+ * 
+ * This class handles request and response to client. It is final class, not
+ * allow to be extended.
+ * 
+ */
 public final class ClientThread extends Thread {
 
 	private InputStream inputStream = null;
@@ -34,8 +40,7 @@ public final class ClientThread extends Thread {
 		Response response = new Response();
 		Request request;
 		try {
-			request = new RequestParser().parse(inputStream, IP,
-					remotePort);
+			request = new RequestParser().parse(inputStream, IP, remotePort);
 			response.processRequest(request, outStream);
 		} catch (ServerException e) {
 			e.printStackTrace();

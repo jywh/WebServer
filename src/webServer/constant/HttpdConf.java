@@ -44,6 +44,10 @@ public final class HttpdConf {
 
 	public static Map<String, SecureDirectory> secureUsers = new HashMap<String, SecureDirectory>();
 	
+	public static String DEFAULT_TYPE = "text/plain";
+	
+	public static String HTTP_VERSION = "HTTP/1.1";
+	
 	private HttpdConf() {
 	}
 }

@@ -9,17 +9,19 @@ import webServer.ulti.Ulti;
 
 public class HeaderBuilder {
 
-	private StringBuilder builder;
 	private static final String NEWLINE = System.getProperty("line.separator");
+
+	private StringBuilder builder;
+	
 	public HeaderBuilder() {
 		builder = new StringBuilder();
 	}
 
-	public HeaderBuilder append(String s){
+	public HeaderBuilder append(String s) {
 		builder.append(s);
 		return this;
 	}
-	
+
 	public HeaderBuilder buildHeaderBegin(String responsePhrase,
 			String httpVersion) {
 		builder.append(httpVersion).append(" ").append(responsePhrase)
@@ -33,19 +35,18 @@ public class HeaderBuilder {
 	public HeaderBuilder buildContentTypeAndLength(File file) {
 		String mime = MIME.getMIMEType(Ulti.getFileExtension(file.getName()));
 		long length = file.length();
-		builder.append(HeaderFields.CONTENT_LENGTH)
-				.append(": ").append(length).append(NEWLINE)
-				.append(HeaderFields.CONTENT_TYPE).append(": ").append(mime)
+		builder.append(HeaderFields.CONTENT_LENGTH).append(": ").append(length)
+				.append(NEWLINE).append(HeaderFields.CONTENT_TYPE).append(": ")
+				.append(mime).append(NEWLINE);
+		return this;
+	}
+
+	public HeaderBuilder buildContentLength(int length) {
+		builder.append(HeaderFields.CONTENT_LENGTH).append(": ").append(length)
 				.append(NEWLINE);
 		return this;
 	}
-	
-	public HeaderBuilder buildContentLength(int length){
-		builder.append(HeaderFields.CONTENT_LENGTH)
-		.append(": ").append(length).append(NEWLINE);
-		return this;
-	}
-	
+
 	public HeaderBuilder buildLastModified(File file) {
 		builder.append(HeaderFields.LAST_MODIFIED).append(": ")
 				.append(lastModified(file)).append(NEWLINE);
@@ -59,8 +60,8 @@ public class HeaderBuilder {
 	}
 
 	public HeaderBuilder buildCacheControl(String howLong) {
-		builder.append(HeaderFields.CACHE_CONTROL).append(": ")
-				.append(howLong).append(NEWLINE);
+		builder.append(HeaderFields.CACHE_CONTROL).append(": ").append(howLong)
+				.append(NEWLINE);
 		return this;
 	}
 
@@ -71,7 +72,6 @@ public class HeaderBuilder {
 	}
 
 	public HeaderBuilder buildExpireTime(long millisFromNow) {
-
 		builder.append(HeaderFields.EXPIRE)
 				.append(": ")
 				.append(Ulti.getTimeFull(Ulti.currentTimeMillis()
@@ -79,16 +79,17 @@ public class HeaderBuilder {
 		return this;
 	}
 
-	public HeaderBuilder buildAuthentication( String authType, String realm ){
-		builder.append(HeaderFields.WWW_AUTHENTICATE).append(": ").append(authType).append(" realm=")
-			.append(realm).append(NEWLINE);
+	public HeaderBuilder buildAuthentication(String authType, String realm) {
+		builder.append(HeaderFields.WWW_AUTHENTICATE).append(": ")
+				.append(authType).append(" realm=").append(realm)
+				.append(NEWLINE);
 		return this;
 	}
-	
+
 	@Override
 	public String toString() {
 		System.out.println(builder.toString());
 		return builder.toString();
 	}
-	
+
 }

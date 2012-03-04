@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import webServer.httpdconfSetter.HttpdConfSetter;
-import webServer.httpdconfSetter.HttpdConfSetterTable;
 import webServer.ulti.ConfigurationException;
 
 public class HttpdConfReader {
@@ -17,13 +16,11 @@ public class HttpdConfReader {
 
 	public HttpdConfReader(String path) throws IOException {
 		reader = new BufferedReader(new FileReader(path));
-		HttpdConfSetterTable.init();
 
 	}
 
 	public HttpdConfReader(File confFile) throws IOException {
 		reader = new BufferedReader(new FileReader(confFile));
-		HttpdConfSetterTable.init();
 	}
 
 	/**
@@ -45,12 +42,10 @@ public class HttpdConfReader {
 			}
 
 			// Check tag which starts with <>
-			if (currentLine.charAt(0) == '<') {
+			if (currentLine.charAt(0) == '<')
 				parseTag(currentLine);
-				continue;
-			}
-			
-			parseLine(currentLine);
+			else
+				parseLine(currentLine);
 
 		}
 	}

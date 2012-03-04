@@ -39,7 +39,7 @@ public class RequestParser {
 				new InputStreamReader(inputStream));
 		try {
 
-			// debug(incommingMessage);
+//			 debug(incommingMessage);
 			// Parse first line of request message
 			String[] parameters = parseFirstLine(incommingMessage.readLine());
 			Map<String, String> requestFields = extractRequestFields();
@@ -228,7 +228,7 @@ public class RequestParser {
 			while (incommingMessage.ready()) {
 				builder.append((char) incommingMessage.read());
 			}
-
+			
 			return builder.toString();
 
 		} catch (IOException ioe) {
