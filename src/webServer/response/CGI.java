@@ -18,6 +18,13 @@ import webServer.ulti.Ulti;
 
 public class CGI {
 
+	/**
+	 * Execute script
+	 * 
+	 * @param request
+	 * @return
+	 * @throws ServerException
+	 */
 	public CGIOutputStreamReader execute(Request request) throws ServerException {
 		try {
 			String scriptPath = getScriptPath(request.getURI());

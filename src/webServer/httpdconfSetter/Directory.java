@@ -19,7 +19,7 @@ public class Directory extends HttpdConfSetter {
 
 		if (!(line instanceof List))
 			throw new ConfigurationException(
-					"DirectorySetter: type ArrayList expect");
+					"Directory: type ArrayList expect");
 
 		@SuppressWarnings("unchecked")
 		List<String> lines = (ArrayList<String>) line;

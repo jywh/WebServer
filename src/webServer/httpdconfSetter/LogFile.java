@@ -9,7 +9,7 @@ public class LogFile extends HttpdConfSetter {
 	public void process(Object path) throws ConfigurationException {
 		
 		if( !(path instanceof String ))
-			throw new ConfigurationException("LogFileSetter: type String expected");
+			throw new ConfigurationException("LogFile: type String expected");
 		
 		HttpdConf.LOG_FILE = ((String)path).substring(1, ((String)path).length()-1);
 	}

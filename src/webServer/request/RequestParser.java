@@ -23,13 +23,13 @@ import webServer.ulti.ServerException;
  */
 public class RequestParser {
 
+	public static String TAG = "RequestParser";
 	public static final String URI_SEPARATOR = "/";
-	private static final String HTTP_PREFIX = "HTTP_";
 	private final static Pattern PATTERN = Pattern
 			.compile("/([^\\s]+(\\.(?i)(py|pl)))/");
 
 	private BufferedReader incommingMessage;
-	
+
 	public Request parse(InputStream inputStream, String IP, int remotePort)
 			throws ServerException {
 		if (inputStream == null)
@@ -39,7 +39,7 @@ public class RequestParser {
 				new InputStreamReader(inputStream));
 		try {
 
-//			debug(incommingMessage);
+			// debug(incommingMessage);
 			// Parse first line of request message
 			String[] parameters = parseFirstLine(incommingMessage.readLine());
 			Map<String, String> requestFields = extractRequestFields();
@@ -47,7 +47,7 @@ public class RequestParser {
 			if (parameters[0].equals(Request.POST)
 					|| parameters[0].equals(Request.PUT)) {
 				parameters[3] = extractParameterStringFromBody();
-				Log.debug("POST parameter", parameters[3]);
+				Log.debug(TAG, "POST parameter " + parameters[3]);
 			}
 			return new Request(parameters[0], parameters[1], parameters[2],
 					parameters[3], parameters[4], parameters[5], requestFields,
@@ -69,7 +69,7 @@ public class RequestParser {
 
 	protected String[] parseFirstLine(String firstLine) throws ServerException {
 
-		Log.debug("RequestParser", "firstLine: " + firstLine);
+		Log.debug(TAG, "firstLine: " + firstLine);
 		if (firstLine == null || firstLine.isEmpty())
 			throw new ServerException(ResponseTable.BAD_REQUEST,
 					"RequestParser: parseFirstLine");
@@ -82,23 +82,24 @@ public class RequestParser {
 		}
 
 		// This is for testing purpose
-		
-		if ( tokens[0].equals(Request.PUT )){
-			tokens[1] = "/upload/"+tokens[1];
+
+		if (tokens[0].equals(Request.PUT)) {
+			tokens[1] = "/upload/" + tokens[1];
 		}
-		
+
 		String[] newTokens = extractParameterString(tokens[1]);
 		String[] anotherTokens = extractPathInfo(newTokens[0]);
 		String URI = resolveURI(anotherTokens[0], tokens[0]);
 
-		// return {method, resolvedURI, httpversion, parameterString, pathInfo,
-		// scriptName}
+		// return {method, resolvedURI, httpversion, parameterString,
+		// pathInfo, scriptName}
 		return new String[] { tokens[0], URI, tokens[2], newTokens[1],
 				anotherTokens[1], anotherTokens[0] };
 
 	}
 
-	protected String resolveURI(String URI, String method) throws ServerException {
+	protected String resolveURI(String URI, String method)
+			throws ServerException {
 
 		URI = resolveAlias(URI);
 		if (!(new File(URI).isAbsolute())) // there is no alias
@@ -107,7 +108,7 @@ public class RequestParser {
 		if (!(new File(URI)).exists() && !method.equals(Request.PUT))
 			throw new ServerException(ResponseTable.NOT_FOUND,
 					"RequestParser: addDocumentRoot");
-		Log.debug("URI: ", URI);
+		Log.debug(TAG, "URI: " + URI);
 		return URI;
 	}
 
@@ -149,7 +150,7 @@ public class RequestParser {
 			if (new File(indexFile).exists())
 				return indexFile;
 		}
-		Log.debug("RequestParser", "URI: "+URI);
+
 		throw new ServerException(ResponseTable.NOT_FOUND,
 				"RequestParse: addDocumentRoot");
 
@@ -162,7 +163,7 @@ public class RequestParser {
 			return new String[] { URI, "" };
 
 		tokens[1] = URI_SEPARATOR + tokens[1];
-		// Replace the URI with no file name with the URI with file name.
+		// Add file name to URI.
 		tokens[0] = URI.replace(tokens[1], "");
 		return tokens;
 	}
@@ -189,8 +190,7 @@ public class RequestParser {
 	 * 
 	 *************************************************************/
 
-	private Map<String, String> extractRequestFields(
-			) throws ServerException {
+	private Map<String, String> extractRequestFields() throws ServerException {
 
 		try {
 			String currentLine = incommingMessage.readLine();
@@ -211,15 +211,6 @@ public class RequestParser {
 		}
 	}
 
-	protected String[] convertStringToEnvironmentVaraible(String line) {
-
-		String[] tokens = line.split(":", 2);
-		tokens[1] = tokens[1] != null ? tokens[1].trim() : "";
-		tokens[0] = HTTP_PREFIX + tokens[0].replace('-', '_').toUpperCase();
-		return new String[] { tokens[0], tokens[1] };
-
-	}
-
 	/*************************************************************
 	 * 
 	 * Parsing body
@@ -229,8 +220,7 @@ public class RequestParser {
 	/**
 	 * 
 	 */
-	protected String extractParameterStringFromBody(
-			) throws ServerException {
+	protected String extractParameterStringFromBody() throws ServerException {
 
 		try {
 
@@ -238,7 +228,7 @@ public class RequestParser {
 			while (incommingMessage.ready()) {
 				builder.append((char) incommingMessage.read());
 			}
-//			System.out.println(builder.toString());
+
 			return builder.toString();
 
 		} catch (IOException ioe) {
@@ -255,9 +245,9 @@ public class RequestParser {
 			while (reader.ready()) {
 				builder.append((char) reader.read());
 			}
-//			while ((line = reader.readLine()) != null) {
-//				System.out.println(line);
-//			}
+			// while ((line = reader.readLine()) != null) {
+			// System.out.println(line);
+			// }
 			System.out.println("debug put");
 			System.out.println(builder.toString());
 		} catch (Exception e) {

@@ -35,13 +35,14 @@ public class Response {
 	private final static int NOT_SECURE_DIR = 1;
 	private final static int NEED_AUTHENTICATE = 2;
 	private final static int AUTHENTICATED = 3;
-	private SecureDirectory secureDirectory=null;
-	
+
 	public void processRequest(Request request, OutputStream out)
 			throws ServerException {
 
+		SecureDirectory secureDirectory = getSecureDirectory(request.getURI());
 		int statusCode;
-		switch (authenticate(request)) {
+
+		switch (authenticate(request, secureDirectory)) {
 		case NOT_SECURE_DIR:
 			statusCode = processNormalRequest(request, out, true);
 			break;
@@ -67,15 +68,15 @@ public class Response {
 	 *         otherwise return DirectoryInfo for authentication
 	 * @throws ServerException
 	 */
-	private int authenticate(Request request) throws ServerException {
+	private int authenticate(Request request, SecureDirectory secureDirectory)
+			throws ServerException {
 
-		secureDirectory = checkSecureDirectory(request.getURI());
 		if (secureDirectory == null)
 			return NOT_SECURE_DIR;
 
 		if (!request.getRequestField().containsKey(HeaderFields.AUTHORIZATION))
 			return NEED_AUTHENTICATE;
-		
+
 		String auth = request.getRequestField().get(HeaderFields.AUTHORIZATION);
 		String[] tokens = auth.split(" ");
 		if (tokens[0].equals("Basic")) {
@@ -86,7 +87,7 @@ public class Response {
 		throw new ServerException(ResponseTable.FORBIDDEN);
 	}
 
-	private SecureDirectory checkSecureDirectory(String uri) {
+	private SecureDirectory getSecureDirectory(String uri) {
 		Set<String> secureDirectories = HttpdConf.secureUsers.keySet();
 		for (String directory : secureDirectories) {
 			if (uri.contains(directory))
@@ -95,8 +96,8 @@ public class Response {
 		return null;
 	}
 
-	protected int sendAuthenticateMessage(Request request, SecureDirectory info,
-			OutputStream out) throws ServerException {
+	protected int sendAuthenticateMessage(Request request,
+			SecureDirectory info, OutputStream out) throws ServerException {
 		String headerMessage = createBasicHeaderMessage(
 				request.getHttpVersion(), ResponseTable.UNAUTHORIZED)
 				.buildAuthentication(info.getAuthType(), info.getAuthName())
@@ -124,9 +125,10 @@ public class Response {
 		try {
 			String headerString = cin.readHeaderString();
 			byte[] content = cin.readBodyContent();
-			String headerMessage = createHeaderMessageForScript(
-					request.getHttpVersion(), ResponseTable.OK, content.length,
-					headerString).toString();
+			String headerMessage = createBasicHeaderMessage(
+					request.getHttpVersion(), ResponseTable.OK)
+					.append(headerString).buildContentLength(content.length)
+					.toString();
 			writeHeaderMessage(outStream, headerMessage);
 			BufferedOutputStream out = new BufferedOutputStream(outStream);
 			out.write(content);
@@ -220,14 +222,6 @@ public class Response {
 
 	}
 
-	protected HeaderBuilder createHeaderMessageForScript(String httpVersion,
-			int statusCode, int length, String headerString) {
-		HeaderBuilder builder = createBasicHeaderMessage(httpVersion,
-				statusCode);
-		return builder.append(headerString).buildContentLength(length);
-
-	}
-
 	protected void serveFile(OutputStream outStream, File document)
 			throws ServerException {
 
@@ -256,8 +250,8 @@ public class Response {
 		try {
 			File errorFile = new File(ERROR_FILE_PATH
 					+ Integer.toString(statusCode) + ".html");
-			String headerMessage = createBasicHeaderMessage(
-					DEFAULT_HTTP_VERSION, statusCode).toString();
+			String headerMessage = createSimpleHeaderMessage(
+					DEFAULT_HTTP_VERSION, statusCode, errorFile).toString();
 			writeHeaderMessage(out, headerMessage);
 			serveFile(out, errorFile);
 		} catch (ServerException se) {

@@ -18,12 +18,12 @@ public class SecureDirectory {
 		this.authName = authName;
 		this.authType = authType;
 		this.validUsers = validUsers;
-		if ( userType.equalsIgnoreCase("group")){
-			this.userType = GROUP;
+		if ( userType.equalsIgnoreCase("user")){
+			this.userType = USER;
 		} else if (userType.equalsIgnoreCase("valid-user")) {
 			this.userType = VALID_USER;
 		} else {
-			this.userType = USER;
+			this.userType = GROUP;
 		}
 	}
 	

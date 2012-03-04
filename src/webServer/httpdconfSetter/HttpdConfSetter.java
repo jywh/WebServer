@@ -36,7 +36,7 @@ public abstract class HttpdConfSetter {
 		} catch (Exception e) {
 			// Ignore the class that not been implemented and print the error
 			// message out for warning.
-			System.out.println("Error: Class not found: " + packageName
+			System.out.println("[Error] Class not found: " + packageName
 					+ className);
 		}
 		return null;

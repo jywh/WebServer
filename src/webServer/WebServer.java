@@ -65,7 +65,7 @@ public class WebServer {
 
 	}
 
-	public static void addThread() {
+	public void addThread() {
 		threadCount++;
 	}
 
@@ -91,6 +91,7 @@ public class WebServer {
 				client = server.accept(); // waits for client here
 			} catch (IOException ioe) {
 				ioe.printStackTrace();
+				continue;
 			}
 
 			if (allowMoreThread()) {

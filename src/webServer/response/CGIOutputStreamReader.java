@@ -18,6 +18,12 @@ public class CGIOutputStreamReader {
 		this.in = new BufferedInputStream(in);
 	}
 
+	/**
+	 * Check for the offset of double '\n', where is the break of header string and body
+	 * 
+	 * @return
+	 * @throws IOException
+	 */
 	private int getHeaderStringSize() throws IOException {
 
 		if (!in.markSupported())
@@ -51,7 +57,6 @@ public class CGIOutputStreamReader {
 	}
 
 	/**
-	 * This method should call after getHeaderString.
 	 * 
 	 * @return
 	 * @throws IOException
@@ -65,7 +70,7 @@ public class CGIOutputStreamReader {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		byte[] buf = new byte[size];
 		in.skip(2);
-		while ((len = in.read(buf, 0, size)) != -1)
+		while ((len = in.read(buf, 0, size)) > -1)
 			bos.write(buf, 0, len);
 		buf = bos.toByteArray();
 		return buf;

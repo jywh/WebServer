@@ -9,7 +9,7 @@ public class ScriptAlias extends HttpdConfSetter{
 	public void process(Object line) throws ConfigurationException{
 		
 		if(!(line instanceof String ))
-			throw new ConfigurationException("ScriptAliasSetter: type String expected");
+			throw new ConfigurationException("ScriptAlias: type String expected");
 		
 		String[] keywords = ((String)line).split(" ", 2);
 		if(keywords.length < 2) return;

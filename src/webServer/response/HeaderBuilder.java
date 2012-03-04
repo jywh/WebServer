@@ -81,7 +81,7 @@ public class HeaderBuilder {
 
 	public HeaderBuilder buildAuthentication( String authType, String realm ){
 		builder.append(HeaderFields.WWW_AUTHENTICATE).append(": ").append(authType).append(" realm=")
-			.append(realm).append(NEWLINE).append(NEWLINE);
+			.append(realm).append(NEWLINE);
 		return this;
 	}
 	

@@ -9,7 +9,7 @@ public class Upload extends HttpdConfSetter{
 	public void process(Object line) throws ConfigurationException{
 		
 		if( !(line instanceof String))
-			throw new ConfigurationException("UploadDirectorySetter: type String expected");
+			throw new ConfigurationException("UploadDirectory: type String expected");
 		
 		HttpdConf.UPLOAD = ((String)line).substring(1,((String)line).length()-1);
 	}
