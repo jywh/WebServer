@@ -5,6 +5,7 @@ import java.util.HashMap;
 public final class ResponseTable {
 
 	public static final int OK = 200;
+	public static final int CREATED = 201;
 	public static final int NO_CONTENT = 204;
 	public static final int FOUND = 302;
 	public static final int NOT_MODIFIED = 304;
@@ -19,6 +20,7 @@ public final class ResponseTable {
 	
 	static {
 		responsePhrase.put(OK, "200 OK");
+		responsePhrase.put(CREATED, "201 Created");
 		responsePhrase.put(NO_CONTENT, "204 No Content");
 		responsePhrase.put(FOUND, "302 Found");
 		responsePhrase.put(NOT_MODIFIED, "304 Not Modified");

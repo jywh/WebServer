@@ -14,6 +14,4 @@ public class Upload extends HttpdConfSetter{
 		HttpdConf.UPLOAD = ((String)line).substring(1,((String)line).length()-1);
 	}
 
-	
-	
 }

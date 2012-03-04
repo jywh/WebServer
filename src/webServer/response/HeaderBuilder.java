@@ -9,7 +9,7 @@ import webServer.ulti.Ulti;
 
 public class HeaderBuilder {
 
-	private static final String NEWLINE = System.getProperty("line.separator");
+	public static final String NEWLINE = "\r\n"; //System.getProperty("line.separator");
 
 	private StringBuilder builder;
 	
@@ -35,12 +35,16 @@ public class HeaderBuilder {
 	public HeaderBuilder buildContentTypeAndLength(File file) {
 		String mime = MIME.getMIMEType(Ulti.getFileExtension(file));
 		long length = file.length();
-		builder.append(HeaderFields.CONTENT_LENGTH).append(": ").append(length)
-				.append(NEWLINE).append(HeaderFields.CONTENT_TYPE).append(": ")
-				.append(mime).append(NEWLINE);
+		buildContentLength((int)length).buildContentType(mime);
 		return this;
 	}
 
+	public HeaderBuilder buildContentType(String mime){
+		builder.append(HeaderFields.CONTENT_TYPE).append(": ")
+		.append(mime).append(NEWLINE);
+		return this;
+	}
+	
 	public HeaderBuilder buildContentLength(int length) {
 		builder.append(HeaderFields.CONTENT_LENGTH).append(": ").append(length)
 				.append(NEWLINE);
@@ -48,19 +52,15 @@ public class HeaderBuilder {
 	}
 
 	public HeaderBuilder buildLastModified(File file) {
+		long lastModified = file.lastModified();
 		builder.append(HeaderFields.LAST_MODIFIED).append(": ")
-				.append(lastModified(file)).append(NEWLINE);
+				.append(Ulti.getTimeFull(lastModified)).append(NEWLINE);
 		return this;
 
 	}
 
-	private String lastModified(File document) {
-		long lastModified = document.lastModified();
-		return Ulti.getTimeFull(lastModified);
-	}
-
-	public HeaderBuilder buildCacheControl(String howLong) {
-		builder.append(HeaderFields.CACHE_CONTROL).append(": ").append(howLong)
+	public HeaderBuilder buildCacheControl(String how) {
+		builder.append(HeaderFields.CACHE_CONTROL).append(": ").append(how)
 				.append(NEWLINE);
 		return this;
 	}

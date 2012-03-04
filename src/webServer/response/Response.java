@@ -56,7 +56,11 @@ public class Response {
 		default:
 			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
 		}
-
+//		try {
+//			out.close();
+//		} catch (IOException ioe) {
+//			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
+//		}
 		new AccessLog().log(request, statusCode);
 	}
 
@@ -91,6 +95,7 @@ public class Response {
 			if (secureDirectory.getUser().contains(decodeText))
 				return AUTHENTICATED;
 		}
+		// Password or username not correct
 		throw new ServerException(ResponseTable.FORBIDDEN);
 	}
 
@@ -109,8 +114,7 @@ public class Response {
 				request.getHttpVersion(), ResponseTable.UNAUTHORIZED)
 				.buildAuthentication(info.getAuthType(), info.getAuthName())
 				.toString();
-		writeHeaderMessage(out, headerMessage);
-		serveFile(out, new File(ERROR_FILE_PATH + "403.html"));
+		writeHeaderMessage(out, headerMessage, true);
 		return ResponseTable.UNAUTHORIZED;
 	}
 
@@ -147,10 +151,10 @@ public class Response {
 					request.getHttpVersion(), ResponseTable.OK)
 					.buildContentLength(content.length).append(headerString)
 					.toString();
-			writeHeaderMessage(outStream, headerMessage);
 			BufferedOutputStream out = new BufferedOutputStream(outStream);
 			out.write(content);
 			out.close();
+			writeHeaderMessage(outStream, headerMessage, true);
 			return ResponseTable.OK;
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
@@ -162,11 +166,18 @@ public class Response {
 			boolean cached) throws ServerException {
 
 		File document = new File(request.getURI());
+		if (request.getMethod().equals(Request.HEAD)) {
+			String headerMessage = createBasicHeaderMessage(
+					request.getHttpVersion(), ResponseTable.OK).toString();
+			writeHeaderMessage(out, headerMessage, true);
+			return ResponseTable.OK;
+		}
+
 		if (!isModified(request, document)) {
 			String headerMessage = createBasicHeaderMessage(
 					request.getHttpVersion(), ResponseTable.NOT_MODIFIED)
 					.toString();
-			writeHeaderMessage(out, headerMessage);
+			writeHeaderMessage(out, headerMessage, true);
 			return ResponseTable.NOT_MODIFIED;
 		}
 
@@ -174,7 +185,7 @@ public class Response {
 				request.getHttpVersion(), ResponseTable.OK, document);
 		if (cached)
 			builder.buildLastModified(document).buildCacheControl("public");
-		writeHeaderMessage(out, builder.toString());
+		writeHeaderMessage(out, builder.toString(), false);
 		serveFile(out, document);
 		return ResponseTable.OK;
 	}
@@ -183,9 +194,13 @@ public class Response {
 			throws ServerException {
 
 		File document = new File(request.getURI());
-		if (document.exists())
-			throw new ServerException(ResponseTable.NO_CONTENT, "File exist: "
-					+ document.getAbsolutePath());
+		if (document.exists()) {
+			String headerMessage = createBasicHeaderMessage(
+					request.getHttpVersion(), ResponseTable.NO_CONTENT)
+					.toString();
+			writeHeaderMessage(outStream, headerMessage, true);
+			return ResponseTable.NO_CONTENT;
+		}
 		try {
 			BufferedOutputStream out = new BufferedOutputStream(
 					new FileOutputStream(document));
@@ -194,9 +209,10 @@ public class Response {
 				out.write((int) c);
 			out.close();
 			String headerMessage = createBasicHeaderMessage(
-					request.getHttpVersion(), ResponseTable.FOUND).toString();
-			writeHeaderMessage(out, headerMessage);
-			return ResponseTable.FOUND;
+					request.getHttpVersion(), ResponseTable.CREATED).toString();
+			writeHeaderMessage(outStream, headerMessage, true);
+
+			return ResponseTable.CREATED;
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
@@ -247,9 +263,11 @@ public class Response {
 	 * 
 	 *************************************************************/
 
-	protected void writeHeaderMessage(OutputStream out, String headerMessage) {
+	protected void writeHeaderMessage(OutputStream out, String headerMessage, boolean close) {
 		PrintWriter writer = new PrintWriter(out, true);
 		writer.println(headerMessage);
+		if(close)
+			writer.close();
 	}
 
 	protected void serveFile(OutputStream outStream, File document)
@@ -263,7 +281,7 @@ public class Response {
 					new FileInputStream(document));
 			BufferedOutputStream out = new BufferedOutputStream(outStream);
 			int read = -1;
-			while ((read = in.read(buf)) >= 0) {
+			while ((read = in.read(buf)) > -1) {
 				out.write(buf, 0, read);
 			}
 			in.close();
@@ -277,16 +295,16 @@ public class Response {
 
 	public void sendErrorMessage(OutputStream out, int statusCode) {
 
-		try {
+//		try {
 			File errorFile = new File(ERROR_FILE_PATH
 					+ Integer.toString(statusCode) + ".html");
 			String headerMessage = createSimpleHeaderMessage(
 					HttpdConf.HTTP_VERSION, statusCode, errorFile).toString();
-			writeHeaderMessage(out, headerMessage);
-			serveFile(out, errorFile);
-		} catch (ServerException se) {
-			se.printStackTrace();
-		}
+			writeHeaderMessage(out, headerMessage, true);
+//			serveFile(out, errorFile);
+//		} catch (ServerException se) {
+//			se.printStackTrace();
+//		}
 
 	}
 

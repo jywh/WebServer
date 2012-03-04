@@ -39,7 +39,7 @@ public class RequestParser {
 				new InputStreamReader(inputStream));
 		try {
 
-//			 debug(incommingMessage);
+			// debug(incommingMessage);
 			// Parse first line of request message
 			String[] parameters = parseFirstLine(incommingMessage.readLine());
 			Map<String, String> requestFields = extractRequestFields();
@@ -80,20 +80,32 @@ public class RequestParser {
 			throw new ServerException(ResponseTable.BAD_REQUEST,
 					"RequestParser: parseFirstLine");
 		}
+		System.out.println("Method: "+tokens[0]);
+		if (!verifyMethod(tokens[0]))
+			throw new ServerException(ResponseTable.NOT_IMPLEMENTED);
 
-		// This is for testing purpose
 		if (tokens[0].equals(Request.PUT)) {
-			tokens[1] = "/upload/" + tokens[1];
+			String URI = HttpdConf.UPLOAD+File.separator+tokens[1];
+			Log.debug(TAG, "Upload path: "+URI);
+			return new String[] {tokens[0], URI, tokens[2], "", "", tokens[1]};
+		} else {
+
+			String[] newTokens = extractParameterString(tokens[1]);
+			String[] anotherTokens = extractPathInfo(newTokens[0]);
+			String URI = resolveURI(anotherTokens[0], tokens[0]);
+			// return {method, resolvedURI, httpversion, parameterString,
+			// pathInfo, scriptName}
+			return new String[] { tokens[0], URI, tokens[2], newTokens[1],
+					anotherTokens[1], anotherTokens[0] };
 		}
 
-		String[] newTokens = extractParameterString(tokens[1]);
-		String[] anotherTokens = extractPathInfo(newTokens[0]);
-		String URI = resolveURI(anotherTokens[0], tokens[0]);
+	}
 
-		// return {method, resolvedURI, httpversion, parameterString,
-		// pathInfo, scriptName}
-		return new String[] { tokens[0], URI, tokens[2], newTokens[1],
-				anotherTokens[1], anotherTokens[0] };
+	private boolean verifyMethod(String method) {
+		if (method.equals(Request.GET) || method.equals(Request.POST)
+				|| method.equals(Request.HEAD) || method.equals(Request.PUT))
+			return true;
+		return false;
 
 	}
 
@@ -195,7 +207,7 @@ public class RequestParser {
 			String currentLine = incommingMessage.readLine();
 			Map<String, String> headers = new HashMap<String, String>();
 			String[] tokens;
-			while (currentLine != null && !currentLine.trim().isEmpty()) {
+			while ((currentLine != null) && !(currentLine.trim().isEmpty())) {
 				tokens = currentLine.split(":", 2);
 				headers.put(tokens[0], tokens[1].trim());
 				currentLine = incommingMessage.readLine();
@@ -222,12 +234,14 @@ public class RequestParser {
 	protected String extractParameterStringFromBody() throws ServerException {
 
 		try {
-
+			System.out.println("Read body: ");
+			// return debug(incommingMessage);
 			StringBuilder builder = new StringBuilder();
 			while (incommingMessage.ready()) {
+				// System.out.print((char)incommingMessage.read());
 				builder.append((char) incommingMessage.read());
 			}
-			
+			System.out.println(builder.toString());
 			return builder.toString();
 
 		} catch (IOException ioe) {
@@ -238,19 +252,17 @@ public class RequestParser {
 
 	}
 
-	public void debug(BufferedReader reader) {
-		try {
-			StringBuilder builder = new StringBuilder();
-			while (reader.ready()) {
-				builder.append((char) reader.read());
-			}
-			// while ((line = reader.readLine()) != null) {
-			// System.out.println(line);
-			// }
-			System.out.println("debug put");
-			System.out.println(builder.toString());
-		} catch (Exception e) {
-			e.printStackTrace();
+	public String debug(BufferedReader reader) throws IOException {
+		String line;
+		StringBuilder builder = new StringBuilder();
+		// while (reader.ready()) {
+		// builder.append((char) reader.read());
+		// }
+		while ((line = reader.readLine()) != null) {
+			builder.append(line);
 		}
+		System.out.println("debug put");
+		System.out.println(builder.toString());
+		return builder.toString();
 	}
 }

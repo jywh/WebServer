@@ -43,6 +43,7 @@ public final class ClientThread extends Thread {
 			request = new RequestParser().parse(inputStream, IP, remotePort);
 			response.processRequest(request, outStream);
 		} catch (ServerException e) {
+			e.printMessage();
 			e.printStackTrace();
 			response.sendErrorMessage(outStream, e.getStatusCode());
 		} finally {
