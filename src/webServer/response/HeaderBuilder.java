@@ -9,10 +9,10 @@ import webServer.ulti.Ulti;
 
 public class HeaderBuilder {
 
-	public static final String NEWLINE = "\r\n"; //System.getProperty("line.separator");
+	public static final String NEWLINE = System.getProperty("line.separator");
 
 	private StringBuilder builder;
-	
+
 	public HeaderBuilder() {
 		builder = new StringBuilder();
 	}
@@ -35,16 +35,16 @@ public class HeaderBuilder {
 	public HeaderBuilder buildContentTypeAndLength(File file) {
 		String mime = MIME.getMIMEType(Ulti.getFileExtension(file));
 		long length = file.length();
-		buildContentLength((int)length).buildContentType(mime);
+		buildContentLength((int) length).buildContentType(mime);
 		return this;
 	}
 
-	public HeaderBuilder buildContentType(String mime){
-		builder.append(HeaderFields.CONTENT_TYPE).append(": ")
-		.append(mime).append(NEWLINE);
+	public HeaderBuilder buildContentType(String mime) {
+		builder.append(HeaderFields.CONTENT_TYPE).append(": ").append(mime)
+				.append(NEWLINE);
 		return this;
 	}
-	
+
 	public HeaderBuilder buildContentLength(int length) {
 		builder.append(HeaderFields.CONTENT_LENGTH).append(": ").append(length)
 				.append(NEWLINE);

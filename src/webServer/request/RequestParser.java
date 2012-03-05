@@ -39,7 +39,6 @@ public class RequestParser {
 				new InputStreamReader(inputStream));
 		try {
 
-			// debug(incommingMessage);
 			// Parse first line of request message
 			String[] parameters = parseFirstLine(incommingMessage.readLine());
 			Map<String, String> requestFields = extractRequestFields();
@@ -76,11 +75,10 @@ public class RequestParser {
 
 		String[] tokens = firstLine.split(" ");
 
-		if (tokens.length != 3) {
+		if (tokens.length != 3) 
 			throw new ServerException(ResponseTable.BAD_REQUEST,
 					"RequestParser: parseFirstLine");
-		}
-		System.out.println("Method: "+tokens[0]);
+		
 		if (!verifyMethod(tokens[0]))
 			throw new ServerException(ResponseTable.NOT_IMPLEMENTED);
 
@@ -234,14 +232,10 @@ public class RequestParser {
 	protected String extractParameterStringFromBody() throws ServerException {
 
 		try {
-			System.out.println("Read body: ");
-			// return debug(incommingMessage);
 			StringBuilder builder = new StringBuilder();
 			while (incommingMessage.ready()) {
-				// System.out.print((char)incommingMessage.read());
 				builder.append((char) incommingMessage.read());
 			}
-			System.out.println(builder.toString());
 			return builder.toString();
 
 		} catch (IOException ioe) {
@@ -252,17 +246,4 @@ public class RequestParser {
 
 	}
 
-	public String debug(BufferedReader reader) throws IOException {
-		String line;
-		StringBuilder builder = new StringBuilder();
-		// while (reader.ready()) {
-		// builder.append((char) reader.read());
-		// }
-		while ((line = reader.readLine()) != null) {
-			builder.append(line);
-		}
-		System.out.println("debug put");
-		System.out.println(builder.toString());
-		return builder.toString();
-	}
 }

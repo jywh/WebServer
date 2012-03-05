@@ -22,8 +22,6 @@ import webServer.ulti.Log;
 import webServer.ulti.ServerException;
 import webServer.ulti.Ulti;
 
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
-
 public class Response {
 
 	public static final String TAG = "Response";
@@ -39,7 +37,6 @@ public class Response {
 
 	public void processRequest(Request request, OutputStream out)
 			throws ServerException {
-
 		int statusCode;
 
 		SecureDirectory secureDirectory = getSecureDirectory(request.getURI());
@@ -56,11 +53,7 @@ public class Response {
 		default:
 			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
 		}
-//		try {
-//			out.close();
-//		} catch (IOException ioe) {
-//			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
-//		}
+
 		new AccessLog().log(request, statusCode);
 	}
 
@@ -91,8 +84,8 @@ public class Response {
 		String auth = request.getRequestField().get(HeaderFields.AUTHORIZATION);
 		String[] tokens = auth.split(" ");
 		if (tokens[0].equals("Basic")) {
-			String decodeText = new String(Base64.decode(tokens[1]));
-			if (secureDirectory.getUser().contains(decodeText))
+//			String decodeText = new String(Base64.decode(tokens[1]));
+			if (secureDirectory.getUser().contains(tokens[1]))
 				return AUTHENTICATED;
 		}
 		// Password or username not correct
@@ -163,7 +156,7 @@ public class Response {
 	}
 
 	protected int retrieveStaticDocument(Request request, OutputStream out,
-			boolean cached) throws ServerException {
+			boolean cache) throws ServerException {
 
 		File document = new File(request.getURI());
 		if (request.getMethod().equals(Request.HEAD)) {
@@ -183,11 +176,27 @@ public class Response {
 
 		HeaderBuilder builder = createSimpleHeaderMessage(
 				request.getHttpVersion(), ResponseTable.OK, document);
-		if (cached)
+		if (cache)
 			builder.buildLastModified(document).buildCacheControl("public");
 		writeHeaderMessage(out, builder.toString(), false);
 		serveFile(out, document);
 		return ResponseTable.OK;
+	}
+
+	private boolean isModified(Request request, File file) {
+		String dateFromClient = request.getRequestField().get(
+				HeaderFields.IF_MODIFIED_SINCE);
+		if (dateFromClient == null)
+			return true;
+		// remove last three significant digits
+		long lastModified = (file.lastModified() / 1000L) * 1000L;
+		try {
+			Date clientDate = (Date) Ulti.DATE_FORMATE.parse(dateFromClient);
+			return lastModified > clientDate.getTime();
+		} catch (Exception e) {
+			// If there is exception, assume file is modified
+		}
+		return true;
 	}
 
 	protected int processPUT(Request request, OutputStream outStream)
@@ -211,28 +220,11 @@ public class Response {
 			String headerMessage = createBasicHeaderMessage(
 					request.getHttpVersion(), ResponseTable.CREATED).toString();
 			writeHeaderMessage(outStream, headerMessage, true);
-
 			return ResponseTable.CREATED;
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
 		}
-	}
-
-	private boolean isModified(Request request, File file) {
-		String dateFromClient = request.getRequestField().get(
-				HeaderFields.IF_MODIFIED_SINCE);
-		if (dateFromClient == null)
-			return true;
-		// remove last three significant digits
-		long lastModified = (file.lastModified() / 1000L) * 1000L;
-		try {
-			Date clientDate = (Date) Ulti.DATE_FORMATE.parse(dateFromClient);
-			return lastModified > clientDate.getTime();
-		} catch (Exception e) {
-			// If there is exception, assume file is modified
-		}
-		return true;
 	}
 
 	/*************************************************************
@@ -263,10 +255,11 @@ public class Response {
 	 * 
 	 *************************************************************/
 
-	protected void writeHeaderMessage(OutputStream out, String headerMessage, boolean close) {
+	protected void writeHeaderMessage(OutputStream out, String headerMessage,
+			boolean close) {
 		PrintWriter writer = new PrintWriter(out, true);
 		writer.println(headerMessage);
-		if(close)
+		if (close)
 			writer.close();
 	}
 
@@ -295,16 +288,16 @@ public class Response {
 
 	public void sendErrorMessage(OutputStream out, int statusCode) {
 
-//		try {
+		try {
 			File errorFile = new File(ERROR_FILE_PATH
 					+ Integer.toString(statusCode) + ".html");
 			String headerMessage = createSimpleHeaderMessage(
 					HttpdConf.HTTP_VERSION, statusCode, errorFile).toString();
-			writeHeaderMessage(out, headerMessage, true);
-//			serveFile(out, errorFile);
-//		} catch (ServerException se) {
-//			se.printStackTrace();
-//		}
+			writeHeaderMessage(out, headerMessage, false);
+			serveFile(out, errorFile);
+		} catch (ServerException se) {
+			se.printStackTrace();
+		}
 
 	}
 

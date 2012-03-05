@@ -103,7 +103,6 @@ public class CGI {
 		for (char c : input)
 			args.write((int) c);
 		args.close();
-
 	}
 
 }
