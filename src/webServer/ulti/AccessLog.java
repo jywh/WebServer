@@ -1,6 +1,8 @@
 package webServer.ulti;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import webServer.constant.HttpdConf;
@@ -33,8 +35,20 @@ public class AccessLog {
 		time = Ulti.timeInLogFormat();
 		String content=String.format("%s %s %s [%s] \"%s\" %d", IP, rfc1413, userId, time,
 				requestLine, statusCode);
-		Ulti.writeFile(content, HttpdConf.LOG_FILE);
+		writeFile(content, HttpdConf.LOG_FILE);
 		
+	}
+	
+	public synchronized void writeFile(String content, String path) {
+
+		try{
+			BufferedWriter out = new BufferedWriter(new FileWriter(path, true));
+			out.write(content);
+			out.newLine();
+			out.close();
+		}catch(IOException ioe){
+			ioe.printStackTrace();
+		} 
 	}
 	
 }

@@ -21,10 +21,10 @@ public abstract class HttpdConfSetter {
 	 * class name.
 	 * 
 	 * @param className
-	 *            The class to instaniate
+	 *            The class to be instaniated
 	 * @return
 	 */
-	public static HttpdConfSetter instaniate(String className) {
+	public static HttpdConfSetter getInstance(String className) {
 		try {
 			if (packageName == null) {
 				String name = HttpdConfSetter.class.getName();
@@ -34,8 +34,6 @@ public abstract class HttpdConfSetter {
 			return (HttpdConfSetter) Class.forName(packageName + className)
 					.newInstance();
 		} catch (Exception e) {
-			// Ignore the class that not been implemented and print the error
-			// message out for warning.
 			System.out.println("[Error] Class not found: " + packageName
 					+ className);
 		}

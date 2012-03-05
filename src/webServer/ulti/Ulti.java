@@ -1,9 +1,6 @@
 package webServer.ulti;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -50,15 +47,5 @@ public class Ulti {
 		return className.substring(0, indexLastDot);
 	}
 	
-	public synchronized static void writeFile(String content, String path) {
 
-		try{
-			BufferedWriter out = new BufferedWriter(new FileWriter(path, true));
-			out.write(content);
-			out.newLine();
-			out.close();
-		}catch(IOException ioe){
-			ioe.printStackTrace();
-		} 
-	}
 }

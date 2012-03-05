@@ -65,7 +65,7 @@ public class HttpdConfReader {
 	
 	protected void parseLine(String currentLine) throws ConfigurationException{
 		String[] tokens = currentLine.split(" ", 2);
-		HttpdConfSetter httpdConfSetter = HttpdConfSetter.instaniate(tokens[0]);
+		HttpdConfSetter httpdConfSetter = HttpdConfSetter.getInstance(tokens[0]);
 
 		if (httpdConfSetter != null)
 			httpdConfSetter.process(tokens[1]);
@@ -91,7 +91,7 @@ public class HttpdConfReader {
 
 		String[] tokens = parseOpenTag(currentLine);
 
-		HttpdConfSetter httpdConfSetter = HttpdConfSetter.instaniate(tokens[0]);
+		HttpdConfSetter httpdConfSetter = HttpdConfSetter.getInstance(tokens[0]);
 		
 		if( httpdConfSetter == null ) return;
 		
