@@ -1,10 +1,8 @@
 package webServer.request;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -28,28 +26,22 @@ public class RequestParser {
 	private final static Pattern PATTERN = Pattern
 			.compile("/([^\\s]+(\\.(?i)(py|pl)))/");
 
-	private BufferedReader incommingMessage;
+	private BufferedInputStreamReader incommingMessage;
 
 	public Request parse(InputStream inputStream, String IP, int remotePort)
 			throws ServerException {
 		if (inputStream == null)
 			throw new ServerException(ResponseTable.BAD_REQUEST);
-
-		incommingMessage = new BufferedReader(
-				new InputStreamReader(inputStream));
+		incommingMessage = new BufferedInputStreamReader(inputStream);
 		try {
 
 			// Parse first line of request message
 			String[] parameters = parseFirstLine(incommingMessage.readLine());
 			Map<String, String> requestFields = extractRequestFields();
-
-			if (parameters[0].equals(Request.POST)
-					|| parameters[0].equals(Request.PUT)) {
-				parameters[3] = extractParameterStringFromBody();
-				Log.debug(TAG, "POST parameter " + parameters[3]);
-			}
-			return new Request(parameters[0], parameters[1], parameters[2],
-					parameters[3], parameters[4], parameters[5], requestFields,
+			// Read body if it is POST or PUT, otherwise we have an empty array
+			byte[] parameterByteArray = incommingMessage.toByteArray();
+			
+			return new Request(parameters, parameterByteArray, requestFields,
 					IP, remotePort);
 
 		} catch (IOException ioe) {
@@ -75,19 +67,17 @@ public class RequestParser {
 
 		String[] tokens = firstLine.split(" ");
 
-		if (tokens.length != 3) 
+		if (tokens.length != 3)
 			throw new ServerException(ResponseTable.BAD_REQUEST,
 					"RequestParser: parseFirstLine");
-		
+
 		if (!verifyMethod(tokens[0]))
 			throw new ServerException(ResponseTable.NOT_IMPLEMENTED);
 
 		if (tokens[0].equals(Request.PUT)) {
-			String URI = HttpdConf.UPLOAD+File.separator+tokens[1];
-			Log.debug(TAG, "Upload path: "+URI);
-			return new String[] {tokens[0], URI, tokens[2], "", "", tokens[1]};
+			String URI = HttpdConf.UPLOAD + File.separator + tokens[1];
+			return new String[] { tokens[0], URI, tokens[2], "", "", tokens[1] };
 		} else {
-
 			String[] newTokens = extractParameterString(tokens[1]);
 			String[] anotherTokens = extractPathInfo(newTokens[0]);
 			String URI = resolveURI(anotherTokens[0], tokens[0]);
@@ -218,32 +208,6 @@ public class RequestParser {
 			throw new ServerException(ResponseTable.BAD_REQUEST,
 					"Request: getRequestFields");
 		}
-	}
-
-	/*************************************************************
-	 * 
-	 * Parsing body
-	 * 
-	 *************************************************************/
-
-	/**
-	 * 
-	 */
-	protected String extractParameterStringFromBody() throws ServerException {
-
-		try {
-			StringBuilder builder = new StringBuilder();
-			while (incommingMessage.ready()) {
-				builder.append((char) incommingMessage.read());
-			}
-			return builder.toString();
-
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-			throw new ServerException(ResponseTable.BAD_REQUEST,
-					"Request: extractParameterStringFromBody");
-		}
-
 	}
 
 }

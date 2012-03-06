@@ -50,7 +50,7 @@ public class HttpdConfReader {
 		}
 	}
 
-	private boolean isCommentOrEmptyLine(String line) {
+	protected boolean isCommentOrEmptyLine(String line) {
 		if (line.length() == 0 || line.charAt(0) == '#') {
 			return true;
 		}
@@ -84,7 +84,7 @@ public class HttpdConfReader {
 	 * 
 	 * @throws IOException
 	 */
-	private void parseTag(String currentLine) throws IOException, ConfigurationException {
+	protected void parseTag(String currentLine) throws IOException, ConfigurationException {
 
 		if( !checkOpenTag(currentLine))
 			throw new ConfigurationException("Illegal open tag: "+currentLine);
@@ -112,7 +112,7 @@ public class HttpdConfReader {
 	 * @param line
 	 * @return
 	 */
-	private boolean checkOpenTag(String line) {
+	protected boolean checkOpenTag(String line) {
 		
 		String regex = "^<[a-zA-Z][a-zA-Z1-9]* .+>$";
 		
@@ -130,7 +130,7 @@ public class HttpdConfReader {
 	 * @param line
 	 * @return
 	 */
-	private boolean checkCloseTag(String tag, String line){
+	protected boolean checkCloseTag(String tag, String line){
 		
 		String regex = "^</"+tag+" *>$";
 		

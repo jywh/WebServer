@@ -25,7 +25,8 @@ public class CGI {
 	 * @return
 	 * @throws ServerException
 	 */
-	public CGIOutputStreamReader execute(Request request) throws ServerException {
+	public CGIOutputStreamReader execute(Request request)
+			throws ServerException {
 		try {
 			String scriptPath = getScriptPath(request.getURI());
 			ProcessBuilder pb = new ProcessBuilder(scriptPath, request.getURI());
@@ -33,13 +34,14 @@ public class CGI {
 			Process process;
 			if (request.getMethod().equals(Request.GET)
 					|| request.equals(Request.HEAD)) {
-				pb.environment().put(EnvVarTable.QUERY_STRING, request.getParameterString());
+				pb.environment().put(EnvVarTable.QUERY_STRING,
+						request.getParameterString());
 				process = pb.start();
 			} else {
 				process = pb.start();
 				servePostParameters(process, request);
 			}
-			
+
 			return new CGIOutputStreamReader(process.getInputStream());
 
 		} catch (IOException e) {
@@ -50,11 +52,11 @@ public class CGI {
 
 	}
 
-	private String getScriptPath( String URI ){
+	private String getScriptPath(String URI) {
 		String ext = Ulti.getFileExtension(new File(URI));
 		return HttpdConf.CGI_HANDLER.get(ext);
 	}
-	
+
 	@SuppressWarnings("unused")
 	private String extractScriptPath(String script) throws IOException,
 			ServerException {
@@ -64,7 +66,7 @@ public class CGI {
 			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
 		return scriptPath.replace("#!", "");
 	}
-	
+
 	private void addEnvironmentVariables(Map<String, String> env,
 			Request request) {
 		addNonHeaderFieldEnvVar(env, request);
@@ -90,7 +92,7 @@ public class CGI {
 			Map<String, String> headers) {
 		Set<String> keySet = headers.keySet();
 		for (String key : keySet) {
-			if (EnvVarTable.containKey(key)) 
+			if (EnvVarTable.containKey(key))
 				env.put(EnvVarTable.get(key), headers.get(key));
 		}
 	}
@@ -99,9 +101,7 @@ public class CGI {
 			throws IOException {
 		BufferedOutputStream args = new BufferedOutputStream(
 				p.getOutputStream());
-		char[] input = request.getParameterString().toCharArray();
-		for (char c : input)
-			args.write((int) c);
+		args.write(request.getParameterByteArray());
 		args.close();
 	}
 

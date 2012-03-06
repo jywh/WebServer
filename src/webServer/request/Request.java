@@ -18,26 +18,28 @@ public class Request {
 	private int remotePort;
 	private String scriptName;
 	private String pathInfo;
-	
+	private byte[] parameterByteArray;
+
 	/**
-	 * This prevent direct instaniate of Request object. Request object can only be
-	 * created by RequestParser.
+	 * This prevent direct instaniate of Request object. Request object can only
+	 * be created by RequestParser.
 	 */
 	protected Request() {
 	}
 
-	protected Request(String method, String URI, String httpVersion,
-			String parameterString, String pathInfo, String scriptName, Map<String, String> requestFields, 
-			String IP, int remotePort) {
-		this.method = method;
-		this.URI = URI;
-		this.httpVersion = httpVersion;
-		this.parameterString = parameterString;
-		this.requestFields = requestFields;
-		this.scriptName = scriptName;
+	protected Request(String[] parameters, byte[] parameterByteArray,
+			Map<String, String> requestFields, String IP, int remotePort) {
+		this.method = parameters[0];
+		this.URI = parameters[1];
+		this.httpVersion = parameters[2];
+		this.parameterString = parameters[3];
+		this.pathInfo = parameters[4];
+		this.scriptName = parameters[5];
+		this.parameterByteArray = parameterByteArray;
 		this.IP = IP;
+		this.requestFields = requestFields;
 		this.remotePort = remotePort;
-		this.pathInfo = pathInfo;
+
 	}
 
 	public String getMethod() {
@@ -64,20 +66,23 @@ public class Request {
 		return HttpdConf.DOCUMENT_ROOT + URI;
 	}
 
-	public String getScriptName(){
+	public String getScriptName() {
 		return scriptName;
 	}
-	
-	public String getIPAddr(){
+
+	public String getIPAddr() {
 		return IP;
 	}
-	
-	public int getRemotePort(){
+
+	public int getRemotePort() {
 		return remotePort;
 	}
-	
-	public String getPathInfo(){
+
+	public String getPathInfo() {
 		return pathInfo;
 	}
 
+	public byte[] getParameterByteArray() {
+		return parameterByteArray;
+	}
 }

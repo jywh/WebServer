@@ -183,7 +183,7 @@ public class Response {
 		return ResponseTable.OK;
 	}
 
-	private boolean isModified(Request request, File file) {
+	protected boolean isModified(Request request, File file) {
 		String dateFromClient = request.getRequestField().get(
 				HeaderFields.IF_MODIFIED_SINCE);
 		if (dateFromClient == null)
@@ -213,9 +213,7 @@ public class Response {
 		try {
 			BufferedOutputStream out = new BufferedOutputStream(
 					new FileOutputStream(document));
-			char[] input = request.getParameterString().toCharArray();
-			for (char c : input)
-				out.write((int) c);
+			out.write(request.getParameterByteArray());
 			out.close();
 			String headerMessage = createBasicHeaderMessage(
 					request.getHttpVersion(), ResponseTable.CREATED).toString();
@@ -273,7 +271,7 @@ public class Response {
 			BufferedInputStream in = new BufferedInputStream(
 					new FileInputStream(document));
 			BufferedOutputStream out = new BufferedOutputStream(outStream);
-			int read = -1;
+			int read=-1;
 			while ((read = in.read(buf)) > -1) {
 				out.write(buf, 0, read);
 			}
