@@ -15,7 +15,6 @@ public class Request {
 	private String httpVersion, URI, parameterString;
 	private String method;
 	private String IP;
-	private int remotePort;
 	private String scriptName;
 	private String pathInfo;
 	private byte[] parameterByteArray;
@@ -28,7 +27,7 @@ public class Request {
 	}
 
 	protected Request(String[] parameters, byte[] parameterByteArray,
-			Map<String, String> requestFields, String IP, int remotePort) {
+			Map<String, String> requestFields, String IP) {
 		this.method = parameters[0];
 		this.URI = parameters[1];
 		this.httpVersion = parameters[2];
@@ -38,7 +37,6 @@ public class Request {
 		this.parameterByteArray = parameterByteArray;
 		this.IP = IP;
 		this.requestFields = requestFields;
-		this.remotePort = remotePort;
 
 	}
 
@@ -72,10 +70,6 @@ public class Request {
 
 	public String getIPAddr() {
 		return IP;
-	}
-
-	public int getRemotePort() {
-		return remotePort;
 	}
 
 	public String getPathInfo() {

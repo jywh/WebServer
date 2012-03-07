@@ -5,6 +5,7 @@ import java.io.File;
 import webServer.MIME;
 import webServer.WebServer;
 import webServer.constant.HeaderFields;
+import webServer.constant.ResponseTable;
 import webServer.ulti.Ulti;
 
 public class HeaderBuilder {
@@ -22,9 +23,9 @@ public class HeaderBuilder {
 		return this;
 	}
 
-	public HeaderBuilder buildHeaderBegin(String responsePhrase,
+	public HeaderBuilder buildHeaderBegin(int statusCode,
 			String httpVersion) {
-		builder.append(httpVersion).append(" ").append(responsePhrase)
+		builder.append(httpVersion).append(" ").append(ResponseTable.getResponsePhrase(statusCode))
 				.append(NEWLINE).append(HeaderFields.DATE).append(": ")
 				.append(Ulti.getTimeFull(System.currentTimeMillis()))
 				.append(NEWLINE).append(HeaderFields.SERVER).append(": ")
@@ -65,9 +66,9 @@ public class HeaderBuilder {
 		return this;
 	}
 
-	public HeaderBuilder buildConnection(boolean keepAlive) {
+	public HeaderBuilder buildConnection(String connection) {
 		builder.append(HeaderFields.CONNECTION).append(": ")
-				.append((keepAlive) ? "keep-alive" : "close").append(NEWLINE);
+				.append(connection).append(NEWLINE);
 		return this;
 	}
 

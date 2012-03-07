@@ -98,8 +98,7 @@ public class WebServer {
 			if (allowMoreThread()) {
 				ClientThread.instantiate(client.getInputStream(),
 						client.getOutputStream(),
-						client.getInetAddress().getHostAddress(),
-						client.getPort()).start();
+						client.getInetAddress().getHostAddress()).start();
 				addThread();
 			} else {
 				Log.debug("max thread exceed", "no more thread can be added");

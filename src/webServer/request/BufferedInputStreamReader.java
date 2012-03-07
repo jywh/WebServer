@@ -23,6 +23,13 @@ public class BufferedInputStreamReader {
 		return in.read();
 	}
 
+	/**
+	 * 
+	 * Reads a line of text. A line is considered to be terminated by any one of
+	 * a line feed ('\n'), a carriage return ('\r'), or a carriage return
+	 * followed immediately by a linefeed.
+	 * 
+	 **/
 	public String readLine() throws IOException {
 		char c = (char) in.read();
 		StringBuilder builder = new StringBuilder();
@@ -30,9 +37,19 @@ public class BufferedInputStreamReader {
 			builder.append(c);
 			c = (char) in.read();
 		}
-		in.skip(1); // skip another newline char, maybe '\n', not sure, but it
-					// works
+		skipLineFeed();
+		// System.out.println(builder.toString());
 		return builder.toString();
+	}
+
+	private void skipLineFeed() throws IOException {
+		if (in.markSupported()) {
+			in.mark(1);
+			char c = (char) in.read();
+			if (c != '\n') 
+				in.reset();
+		}
+
 	}
 
 	public void close() throws IOException {

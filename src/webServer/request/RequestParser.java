@@ -26,24 +26,25 @@ public class RequestParser {
 	private final static Pattern PATTERN = Pattern
 			.compile("/([^\\s]+(\\.(?i)(py|pl)))/");
 
-	private BufferedInputStreamReader incommingMessage;
+	private BufferedInputStreamReader requestStream;
 
-	public Request parse(InputStream inputStream, String IP, int remotePort)
+	public Request parse(InputStream inputStream, String IP)
 			throws ServerException {
 		if (inputStream == null)
 			throw new ServerException(ResponseTable.BAD_REQUEST);
-		incommingMessage = new BufferedInputStreamReader(inputStream);
+		
+		requestStream = new BufferedInputStreamReader(inputStream);
 		try {
 
 			// Parse first line of request message
-			String[] parameters = parseFirstLine(incommingMessage.readLine());
+			String[] parameters = parseFirstLine(requestStream.readLine());
 			Map<String, String> requestFields = extractRequestFields();
 			// Read body if it is POST or PUT, otherwise we have an empty array
-			byte[] parameterByteArray = incommingMessage.toByteArray();
-			
+			byte[] parameterByteArray = requestStream.toByteArray();
+		
 			return new Request(parameters, parameterByteArray, requestFields,
-					IP, remotePort);
-
+					IP);
+		
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			throw new ServerException(ResponseTable.BAD_REQUEST,
@@ -192,13 +193,13 @@ public class RequestParser {
 	private Map<String, String> extractRequestFields() throws ServerException {
 
 		try {
-			String currentLine = incommingMessage.readLine();
+			String currentLine = requestStream.readLine();
 			Map<String, String> headers = new HashMap<String, String>();
 			String[] tokens;
 			while ((currentLine != null) && !(currentLine.trim().isEmpty())) {
 				tokens = currentLine.split(":", 2);
 				headers.put(tokens[0], tokens[1].trim());
-				currentLine = incommingMessage.readLine();
+				currentLine = requestStream.readLine();
 			}
 
 			return headers;
@@ -209,5 +210,5 @@ public class RequestParser {
 					"Request: getRequestFields");
 		}
 	}
-
+	
 }

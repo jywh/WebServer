@@ -79,13 +79,13 @@ public class CGI {
 		env.put(EnvVarTable.SERVER_SOFTWARE, WebServer.SERVER_SOFTWARE);
 		env.put(EnvVarTable.GATEWAY_INTERFACE, WebServer.GATEWAY_INTERFACE);
 		env.put(EnvVarTable.SERVER_PORT,
-				Integer.toString(request.getRemotePort()));
+				Integer.toString(HttpdConf.LISTEN));
 		env.put(EnvVarTable.REMOTE_ADDR, request.getIPAddr());
 		env.put(EnvVarTable.SERVER_PROTOCOL, request.getHttpVersion());
 		env.put(EnvVarTable.REQUEST_METHOD, request.getMethod());
 		env.put(EnvVarTable.PATH_INFO, request.getPathInfo());
 		env.put(EnvVarTable.SCRIPT_NAME, request.getScriptName());
-		env.put(EnvVarTable.PATH_TRANSLATED, request.getURI());
+		env.put(EnvVarTable.PATH_TRANSLATED, (request.getPathInfo().isEmpty())? "":request.getURI());
 	}
 
 	private void addHeaderFieldsEnvVar(Map<String, String> env,

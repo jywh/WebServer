@@ -84,7 +84,7 @@ public class Response {
 		String auth = request.getRequestField().get(HeaderFields.AUTHORIZATION);
 		String[] tokens = auth.split(" ");
 		if (tokens[0].equals("Basic")) {
-//			String decodeText = new String(Base64.decode(tokens[1]));
+			// String decodeText = new String(Base64.decode(tokens[1]));
 			if (secureDirectory.getUser().contains(tokens[1]))
 				return AUTHENTICATED;
 		}
@@ -103,10 +103,9 @@ public class Response {
 
 	protected int sendAuthenticateMessage(Request request,
 			SecureDirectory info, OutputStream out) throws ServerException {
-		String headerMessage = createBasicHeaderMessage(
-				request.getHttpVersion(), ResponseTable.UNAUTHORIZED)
-				.buildAuthentication(info.getAuthType(), info.getAuthName())
-				.toString();
+		String headerMessage = createBasicHeaderMessage(request,
+				ResponseTable.UNAUTHORIZED).buildAuthentication(
+				info.getAuthType(), info.getAuthName()).toString();
 		writeHeaderMessage(out, headerMessage, true);
 		return ResponseTable.UNAUTHORIZED;
 	}
@@ -129,7 +128,7 @@ public class Response {
 
 	}
 
-	private boolean isScript(String URI) {
+	protected boolean isScript(String URI) {
 		File file = new File(URI);
 		return pattern.matcher(file.getName()).matches();
 	}
@@ -140,10 +139,9 @@ public class Response {
 		try {
 			String headerString = cin.readHeaderString();
 			byte[] content = cin.readBodyContent();
-			String headerMessage = createBasicHeaderMessage(
-					request.getHttpVersion(), ResponseTable.OK)
-					.buildContentLength(content.length).append(headerString)
-					.toString();
+			String headerMessage = createBasicHeaderMessage(request,
+					ResponseTable.OK).buildContentLength(content.length)
+					.append(headerString).toString();
 			BufferedOutputStream out = new BufferedOutputStream(outStream);
 			out.write(content);
 			out.close();
@@ -160,22 +158,21 @@ public class Response {
 
 		File document = new File(request.getURI());
 		if (request.getMethod().equals(Request.HEAD)) {
-			String headerMessage = createBasicHeaderMessage(
-					request.getHttpVersion(), ResponseTable.OK).toString();
+			String headerMessage = createBasicHeaderMessage(request,
+					ResponseTable.OK).toString();
 			writeHeaderMessage(out, headerMessage, true);
 			return ResponseTable.OK;
 		}
 
 		if (!isModified(request, document)) {
-			String headerMessage = createBasicHeaderMessage(
-					request.getHttpVersion(), ResponseTable.NOT_MODIFIED)
-					.toString();
+			String headerMessage = createBasicHeaderMessage(request,
+					ResponseTable.NOT_MODIFIED).toString();
 			writeHeaderMessage(out, headerMessage, true);
 			return ResponseTable.NOT_MODIFIED;
 		}
 
-		HeaderBuilder builder = createSimpleHeaderMessage(
-				request.getHttpVersion(), ResponseTable.OK, document);
+		HeaderBuilder builder = createSimpleHeaderMessage(request,
+				ResponseTable.OK, document);
 		if (cache)
 			builder.buildLastModified(document).buildCacheControl("public");
 		writeHeaderMessage(out, builder.toString(), false);
@@ -204,19 +201,15 @@ public class Response {
 
 		File document = new File(request.getURI());
 		if (document.exists()) {
-			String headerMessage = createBasicHeaderMessage(
-					request.getHttpVersion(), ResponseTable.NO_CONTENT)
-					.toString();
+			String headerMessage = createBasicHeaderMessage(request,
+					ResponseTable.NO_CONTENT).toString();
 			writeHeaderMessage(outStream, headerMessage, true);
 			return ResponseTable.NO_CONTENT;
 		}
 		try {
-			BufferedOutputStream out = new BufferedOutputStream(
-					new FileOutputStream(document));
-			out.write(request.getParameterByteArray());
-			out.close();
-			String headerMessage = createBasicHeaderMessage(
-					request.getHttpVersion(), ResponseTable.CREATED).toString();
+			uploadFile(request, document);
+			String headerMessage = createBasicHeaderMessage(request,
+					ResponseTable.CREATED).toString();
 			writeHeaderMessage(outStream, headerMessage, true);
 			return ResponseTable.CREATED;
 		} catch (IOException ioe) {
@@ -225,25 +218,48 @@ public class Response {
 		}
 	}
 
+	/**
+	 * Since all the files will be uploaded to the same directory, this will ensure
+	 * there is only on thread can write file to UPLOAD directory at once. It
+	 * also ensure there won't be multiple threads upload files with the same
+	 * name that the previous one gets overwrite.
+	 * 
+	 * @param request
+	 * @param toFile
+	 * @throws IOException
+	 */
+	protected synchronized void uploadFile(Request request, File toFile)
+			throws IOException {
+		BufferedOutputStream out = new BufferedOutputStream(
+				new FileOutputStream(toFile));
+		out.write(request.getParameterByteArray());
+		out.close();
+	}
+
 	/*************************************************************
 	 * 
 	 * Build Header String
 	 * 
 	 *************************************************************/
 
-	protected HeaderBuilder createBasicHeaderMessage(String httpVersion,
+	protected HeaderBuilder createBasicHeaderMessage(Request request,
 			int statusCode) {
 		HeaderBuilder builder = new HeaderBuilder();
-		return builder.buildHeaderBegin(
-				ResponseTable.getResponsePhrase(statusCode), httpVersion)
-				.buildConnection(false);
+		return builder.buildHeaderBegin(statusCode, request.getHttpVersion())
+				.buildConnection("close");
 	}
 
-	protected HeaderBuilder createSimpleHeaderMessage(String httpVersion,
+	protected HeaderBuilder createSimpleHeaderMessage(Request request,
 			int statusCode, File document) {
-		HeaderBuilder builder = createBasicHeaderMessage(httpVersion,
-				statusCode);
+		HeaderBuilder builder = createBasicHeaderMessage(request, statusCode);
 		return builder.buildContentTypeAndLength(document);
+
+	}
+
+	protected String checkPersistentConnection(Request request) {
+		String connection = request.getRequestField().get(
+				HeaderFields.CONNECTION);
+		return (connection != null) ? connection : "close";
 
 	}
 
@@ -271,7 +287,7 @@ public class Response {
 			BufferedInputStream in = new BufferedInputStream(
 					new FileInputStream(document));
 			BufferedOutputStream out = new BufferedOutputStream(outStream);
-			int read=-1;
+			int read = -1;
 			while ((read = in.read(buf)) > -1) {
 				out.write(buf, 0, read);
 			}
@@ -289,8 +305,10 @@ public class Response {
 		try {
 			File errorFile = new File(ERROR_FILE_PATH
 					+ Integer.toString(statusCode) + ".html");
-			String headerMessage = createSimpleHeaderMessage(
-					HttpdConf.HTTP_VERSION, statusCode, errorFile).toString();
+			HeaderBuilder builder = new HeaderBuilder();
+			String headerMessage = builder
+					.buildHeaderBegin(statusCode, HttpdConf.HTTP_VERSION)
+					.buildContentTypeAndLength(errorFile).toString();
 			writeHeaderMessage(out, headerMessage, false);
 			serveFile(out, errorFile);
 		} catch (ServerException se) {
