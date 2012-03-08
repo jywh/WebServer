@@ -43,12 +43,12 @@ public class BufferedInputStreamReader {
 	}
 
 	private void skipLineFeed() throws IOException {
-		if (in.markSupported()) {
-			in.mark(1);
-			char c = (char) in.read();
-			if (c != '\n') 
-				in.reset();
-		}
+		if (!in.markSupported())
+			return;
+		in.mark(1);
+		char c = (char) in.read();
+		if (c != '\n')
+			in.reset();
 
 	}
 

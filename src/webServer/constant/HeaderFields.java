@@ -9,9 +9,7 @@ public final class HeaderFields {
 	public static final String CACHE_CONTROL = "Cache-Control";
 		
 	/*******************************************
-	 * 
 	 * For request specific
-	 * 
 	 ********************************************/
 	
 	public static final String HOST = "Host";
@@ -27,9 +25,7 @@ public final class HeaderFields {
 	public static final String REFERER = "Referer";
 	
 	/*******************************************
-	 * 
 	 * For reponse specific
-	 * 
 	 ********************************************/
 	
 	public static final String AGE = "Age";

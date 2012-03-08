@@ -10,8 +10,6 @@ public class Ulti {
 
 	public static final DateFormat DATE_FORMATE = new SimpleDateFormat(
 			"EEE, d MMM yyyy HH:mm:ss z", Locale.US);
-	private static final SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
-			"dd/MMM/yyyy :HH:mm:ss Z");
 
 	public static String getFileExtension(File file) {
 		String fileName = file.getName();
@@ -22,9 +20,12 @@ public class Ulti {
 		return "";
 	}
 
+	
 	public static String getTimeFull(long time) {
 		return DATE_FORMATE.format(time);
 	}
+	
+	
 	/**
 	 * Retrieve current time in milliseconds.
 	 * 
@@ -35,17 +36,6 @@ public class Ulti {
 		return calendar.getTimeInMillis();
 	}
 
-	public static String timeInLogFormat() {
-		return simpleDateFormat.format(currentTimeMillis());
-	}
 
-	@SuppressWarnings("rawtypes")
-	public static String getCurrentPackageName(Class c){
-		String className = c.getName();
-		System.out.println("class name: "+className);
-		int indexLastDot = className.lastIndexOf('.');
-		return className.substring(0, indexLastDot);
-	}
-	
 
 }

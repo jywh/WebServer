@@ -12,9 +12,7 @@ public class Log {
 	private static boolean DEBUG = false;
 	
 	/*************************************************************
-	 * 
 	 * Debug log
-	 * 
 	 *************************************************************/
 	
 	public static void debug(String tag, String message){

@@ -37,9 +37,9 @@ public class HttpdConfReader {
 			currentLine = currentLine.trim().replaceAll(" +", " ");
 
 			// skip comment and blink line
-			if (isCommentOrEmptyLine(currentLine)) {
+			if (isCommentOrEmptyLine(currentLine)) 
 				continue;
-			}
+			
 
 			// Check tag which starts with <>
 			if (currentLine.charAt(0) == '<')
@@ -58,9 +58,7 @@ public class HttpdConfReader {
 	}
 
 	/*****************************************************************
-	 * 
 	 * Parsing single line
-	 * 
 	 *****************************************************************/
 	
 	protected void parseLine(String currentLine) throws ConfigurationException{
@@ -72,13 +70,11 @@ public class HttpdConfReader {
 	}
 	
 	/*****************************************************************
-	 * 
 	 * Parsing tag <>
-	 * 
 	 *****************************************************************/
 	
 	/**
-	 * Processing any line with <> and </>
+	 * Processing lines between <> and </>
 	 * 
 	 * @throws ConfigurationException
 	 * 
@@ -99,9 +95,8 @@ public class HttpdConfReader {
 		lines.add(tokens[1]);
 		currentLine = readTagContent(lines);
 
-		if(!checkCloseTag(tokens[0], currentLine)){
+		if(!checkCloseTag(tokens[0], currentLine))
 			throw new ConfigurationException("Illegal close tag: "+currentLine);
-		}
 
 		httpdConfSetter.process(lines);
 	}
@@ -154,21 +149,17 @@ public class HttpdConfReader {
 	 */
 	private String readTagContent(List<String> list) throws IOException {
 		
-		String currentLine = reader.readLine().trim();
+		String currentLine=null; 
 
-		while (currentLine != null) {
+		while (( currentLine = reader.readLine().trim()) != null) {
 
-			if (isCommentOrEmptyLine(currentLine)) {
-				currentLine = reader.readLine().trim();
+			if (isCommentOrEmptyLine(currentLine)) 
 				continue;
-			}
 
-			if (currentLine.charAt(0) == '<') {
+			if (currentLine.charAt(0) == '<') // reach close tag
 				break;
-			}
 
 			list.add(currentLine);
-			currentLine = reader.readLine().trim();
 		}
 		
 		return currentLine;

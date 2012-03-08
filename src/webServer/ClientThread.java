@@ -14,6 +14,7 @@ import webServer.ulti.ServerException;
  * This class handles request and response to client. It is final class, not
  * allow to be extended.
  * 
+ * 
  */
 public final class ClientThread extends Thread {
 

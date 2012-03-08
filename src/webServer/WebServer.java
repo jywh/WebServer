@@ -12,8 +12,8 @@ import webServer.ulti.Log;
 
 public class WebServer {
 
-	public static final String SERVER_NAME = "MyServer";
-	public static final String SERVER_SOFTWARE = "MyJava";
+	public static final String SERVER_NAME = "MyServer02";
+	public static final String SERVER_SOFTWARE = "MyJava02";
 	public static final String GATEWAY_INTERFACE = "CGI/1.0";
 
 	public static final String HTTPDD_CONF_PATH = "C:/MyWebServer/conf/";
@@ -21,6 +21,7 @@ public class WebServer {
 	public static final String MIME_TYPES_FILE = "mime.types";
 
 	private static int threadCount = 0;
+	private ServerSocket server;
 
 	/**
 	 * 
@@ -38,6 +39,8 @@ public class WebServer {
 		this.prepareMIMETypes(confDiretory);
 		this.configure(confDiretory);
 		AccessLog.initialize();
+		server = new ServerSocket(HttpdConf.LISTEN);
+		System.out.println("Opened socket " + HttpdConf.LISTEN);
 
 	}
 
@@ -70,8 +73,13 @@ public class WebServer {
 		threadCount--;
 	}
 
-	public boolean allowMoreThread() {
+	public boolean moreThreadAllowed() {
 		return threadCount <= HttpdConf.MAX_THREAD;
+	}
+
+	public void stop() throws IOException {
+		if (server != null)
+			server.close();
 	}
 
 	/**
@@ -81,10 +89,8 @@ public class WebServer {
 	 * 
 	 */
 	public void start() throws IOException {
-		
-		Socket client;
-		ServerSocket server = new ServerSocket(HttpdConf.LISTEN);
-		System.out.println("Opened socket " + HttpdConf.LISTEN);
+
+		Socket client = null;
 
 		while (true) {
 			try {
@@ -95,7 +101,7 @@ public class WebServer {
 				continue;
 			}
 
-			if (allowMoreThread()) {
+			if (moreThreadAllowed()) {
 				ClientThread.instantiate(client.getInputStream(),
 						client.getOutputStream(),
 						client.getInetAddress().getHostAddress()).start();
@@ -115,17 +121,19 @@ public class WebServer {
 	 */
 	public static void main(String[] args) {
 
+		WebServer webServer = null;
 		try {
 			if (args.length != 1) {
 				System.out
 						.println("Exact one argument: path of web server configuration directory");
 				return;
 			}
-			new WebServer(args[0]).start();
+			webServer = new WebServer(args[0]);
+			webServer.start();
 
-		} catch (ConfigurationException wte) {
+		} catch (ConfigurationException ce) {
 
-			System.out.println(wte.getMessage());
+			System.out.println(ce.getMessage());
 			System.exit(1);
 
 		} catch (IOException e) {
@@ -133,6 +141,13 @@ public class WebServer {
 			e.printStackTrace();
 			System.exit(1);
 
+		} finally {
+			try {
+				if (webServer != null)
+					webServer.stop();
+			} catch (IOException ioe) {
+
+			}
 		}
 	}
 

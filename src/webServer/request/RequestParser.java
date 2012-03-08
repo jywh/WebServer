@@ -32,19 +32,19 @@ public class RequestParser {
 			throws ServerException {
 		if (inputStream == null)
 			throw new ServerException(ResponseTable.BAD_REQUEST);
-		
+
 		requestStream = new BufferedInputStreamReader(inputStream);
 		try {
 
 			// Parse first line of request message
 			String[] parameters = parseFirstLine(requestStream.readLine());
-			Map<String, String> requestFields = extractRequestFields();
-			// Read body if it is POST or PUT, otherwise we have an empty array
-			byte[] parameterByteArray = requestStream.toByteArray();
-		
-			return new Request(parameters, parameterByteArray, requestFields,
+			Map<String, String> headerFields = extractHeaderFields();
+			// Read body if it is POST or PUT, otherwise it is an empty array
+			byte[] parameterByteArray = extractBodyContent();
+
+			return new Request(parameters, parameterByteArray, headerFields,
 					IP);
-		
+
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			throw new ServerException(ResponseTable.BAD_REQUEST,
@@ -54,11 +54,14 @@ public class RequestParser {
 	}
 
 	/*****************************************************************
-	 * 
 	 * Parsing the first line
-	 * 
 	 *****************************************************************/
 
+	/**
+	 * 
+	 * @return String array with elements: {method, resolvedURI, httpversion,
+	 *         parameterString, pathInfo, scriptName }
+	 */
 	protected String[] parseFirstLine(String firstLine) throws ServerException {
 
 		Log.debug(TAG, "firstLine: " + firstLine);
@@ -82,8 +85,6 @@ public class RequestParser {
 			String[] newTokens = extractParameterString(tokens[1]);
 			String[] anotherTokens = extractPathInfo(newTokens[0]);
 			String URI = resolveURI(anotherTokens[0], tokens[0]);
-			// return {method, resolvedURI, httpversion, parameterString,
-			// pathInfo, scriptName}
 			return new String[] { tokens[0], URI, tokens[2], newTokens[1],
 					anotherTokens[1], anotherTokens[0] };
 		}
@@ -139,9 +140,8 @@ public class RequestParser {
 		URI = HttpdConf.DOCUMENT_ROOT + URI;
 		File path = new File(URI);
 
-		if (!path.isDirectory() && path.exists()) {
+		if (!path.isDirectory() && path.exists()) 
 			return URI;
-		}
 
 		URI = path.getAbsolutePath() + File.separator;
 
@@ -176,25 +176,23 @@ public class RequestParser {
 	private String[] extractParameterString(String URI) {
 
 		int index = URI.indexOf('?');
-		if (index > 0) {
+		if (index > 0) 
 			// there is parameters
 			return URI.split("\\?");
-		}
+		
 		return new String[] { URI, "" };
 
 	}
 
 	/*************************************************************
-	 * 
-	 * Parsing header field
-	 * 
+	 * Parsing header fields
 	 *************************************************************/
 
-	private Map<String, String> extractRequestFields() throws ServerException {
+	private Map<String, String> extractHeaderFields() throws ServerException {
 
 		try {
-			String currentLine = requestStream.readLine();
 			Map<String, String> headers = new HashMap<String, String>();
+			String currentLine = requestStream.readLine();
 			String[] tokens;
 			while ((currentLine != null) && !(currentLine.trim().isEmpty())) {
 				tokens = currentLine.split(":", 2);
@@ -209,6 +207,16 @@ public class RequestParser {
 			throw new ServerException(ResponseTable.BAD_REQUEST,
 					"Request: getRequestFields");
 		}
+	}
+
+	/*************************************************************
+	 * Parsing body
+	 * @throws IOException 
+	 *************************************************************/
+	
+	
+	private byte[] extractBodyContent() throws IOException{
+		return requestStream.toByteArray();
 	}
 	
 }

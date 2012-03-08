@@ -28,7 +28,7 @@ public class Response {
 	public static final int BUFFER_SIZE = 2048;
 	public static final String ERROR_FILE_PATH = HttpdConf.SERVER_ROOT
 			+ "/error/";
-	private final static Pattern pattern = Pattern
+	private final static Pattern SCRIPT_PATTERN = Pattern
 			.compile("([^\\s]+(\\.(?i)(py|pl)))");
 
 	private final static int NOT_SECURE_DIR = 1;
@@ -58,9 +58,7 @@ public class Response {
 	}
 
 	/*************************************************************
-	 * 
 	 * Check authentication
-	 * 
 	 *************************************************************/
 
 	/**
@@ -111,9 +109,7 @@ public class Response {
 	}
 
 	/*************************************************************
-	 * 
 	 * Process normal request
-	 * 
 	 *************************************************************/
 
 	protected int processNormalRequest(Request request, OutputStream out,
@@ -130,7 +126,7 @@ public class Response {
 
 	protected boolean isScript(String URI) {
 		File file = new File(URI);
-		return pattern.matcher(file.getName()).matches();
+		return SCRIPT_PATTERN.matcher(file.getName()).matches();
 	}
 
 	protected int executeScript(Request request, OutputStream outStream)
@@ -154,9 +150,8 @@ public class Response {
 	}
 
 	protected int retrieveStaticDocument(Request request, OutputStream out,
-			boolean cache) throws ServerException {
+			boolean allowCache) throws ServerException {
 
-		File document = new File(request.getURI());
 		if (request.getMethod().equals(Request.HEAD)) {
 			String headerMessage = createBasicHeaderMessage(request,
 					ResponseTable.OK).toString();
@@ -164,6 +159,7 @@ public class Response {
 			return ResponseTable.OK;
 		}
 
+		File document = new File(request.getURI());
 		if (!isModified(request, document)) {
 			String headerMessage = createBasicHeaderMessage(request,
 					ResponseTable.NOT_MODIFIED).toString();
@@ -171,11 +167,10 @@ public class Response {
 			return ResponseTable.NOT_MODIFIED;
 		}
 
-		HeaderBuilder builder = createSimpleHeaderMessage(request,
-				ResponseTable.OK, document);
-		if (cache)
-			builder.buildLastModified(document).buildCacheControl("public");
-		writeHeaderMessage(out, builder.toString(), false);
+		String headerMessage = createSimpleHeaderMessage(request,
+				ResponseTable.OK, document, allowCache).toString();
+			
+		writeHeaderMessage(out, headerMessage, false);
 		serveFile(out, document);
 		return ResponseTable.OK;
 	}
@@ -198,20 +193,24 @@ public class Response {
 
 	protected int processPUT(Request request, OutputStream outStream)
 			throws ServerException {
-
+		int statusCode;
 		File document = new File(request.getURI());
-		if (document.exists()) {
-			String headerMessage = createBasicHeaderMessage(request,
-					ResponseTable.NO_CONTENT).toString();
-			writeHeaderMessage(outStream, headerMessage, true);
-			return ResponseTable.NO_CONTENT;
-		}
 		try {
-			uploadFile(request, document);
-			String headerMessage = createBasicHeaderMessage(request,
-					ResponseTable.CREATED).toString();
+			synchronized (this) {
+				if (!document.exists()) {
+					BufferedOutputStream out = new BufferedOutputStream(
+							new FileOutputStream(document));
+					out.write(request.getParameterByteArray());
+					statusCode = ResponseTable.CREATED;
+					out.close();
+				} else {
+					statusCode = ResponseTable.NO_CONTENT;
+				}
+			}
+			String headerMessage = createBasicHeaderMessage(request, statusCode)
+					.toString();
 			writeHeaderMessage(outStream, headerMessage, true);
-			return ResponseTable.CREATED;
+			return statusCode;
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
@@ -219,10 +218,10 @@ public class Response {
 	}
 
 	/**
-	 * Since all the files will be uploaded to the same directory, this will ensure
-	 * there is only on thread can write file to UPLOAD directory at once. It
-	 * also ensure there won't be multiple threads upload files with the same
-	 * name that the previous one gets overwrite.
+	 * Since all the files will be uploaded to the same directory, this will
+	 * ensure there is only on thread can write file to UPLOAD directory at
+	 * once. It also ensure there won't be multiple threads uploading files with
+	 * the same name that the forth one gets overwritten.
 	 * 
 	 * @param request
 	 * @param toFile
@@ -237,9 +236,7 @@ public class Response {
 	}
 
 	/*************************************************************
-	 * 
 	 * Build Header String
-	 * 
 	 *************************************************************/
 
 	protected HeaderBuilder createBasicHeaderMessage(Request request,
@@ -250,9 +247,12 @@ public class Response {
 	}
 
 	protected HeaderBuilder createSimpleHeaderMessage(Request request,
-			int statusCode, File document) {
-		HeaderBuilder builder = createBasicHeaderMessage(request, statusCode);
-		return builder.buildContentTypeAndLength(document);
+			int statusCode, File document, boolean allowCache) {
+		HeaderBuilder builder = createBasicHeaderMessage(request, statusCode)
+				.buildContentTypeAndLength(document);
+		if ( allowCache )
+			builder.buildLastModified(document).buildCacheControl("public");
+		return builder;
 
 	}
 
@@ -264,9 +264,7 @@ public class Response {
 	}
 
 	/*************************************************************
-	 * 
 	 * Response to client
-	 * 
 	 *************************************************************/
 
 	protected void writeHeaderMessage(OutputStream out, String headerMessage,
