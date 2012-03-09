@@ -102,15 +102,15 @@ public class RequestParser {
 	protected String resolveURI(String URI, String method)
 			throws ServerException {
 
-		URI = resolveAlias(URI);
-		if (!(new File(URI).isAbsolute())) // there is no alias
-			URI = addDocumentRoot(URI);
+		String newURI = resolveAlias(URI);
+		if ( URI.equals(newURI)) // there is no alias
+			newURI = addDocumentRoot(URI);
 
-		if (!(new File(URI)).exists() && !method.equals(Request.PUT))
+		if (!(new File(newURI)).exists() && !method.equals(Request.PUT))
 			throw new ServerException(ResponseTable.NOT_FOUND,
 					"RequestParser: addDocumentRoot");
 		Log.debug(TAG, "URI: " + URI);
-		return URI;
+		return newURI;
 	}
 
 	/**
@@ -137,6 +137,7 @@ public class RequestParser {
 
 	protected String addDocumentRoot(String URI) throws ServerException {
 
+		Log.debug(TAG, "document root: "+HttpdConf.DOCUMENT_ROOT);
 		URI = HttpdConf.DOCUMENT_ROOT + URI;
 		File path = new File(URI);
 

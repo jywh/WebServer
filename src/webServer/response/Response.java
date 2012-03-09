@@ -82,7 +82,6 @@ public class Response {
 		String auth = request.getRequestField().get(HeaderFields.AUTHORIZATION);
 		String[] tokens = auth.split(" ");
 		if (tokens[0].equals("Basic")) {
-			// String decodeText = new String(Base64.decode(tokens[1]));
 			if (secureDirectory.getUser().contains(tokens[1]))
 				return AUTHENTICATED;
 		}
@@ -133,15 +132,15 @@ public class Response {
 			throws ServerException {
 		CGIOutputStreamReader cin = new CGI().execute(request);
 		try {
-			String headerString = cin.readHeaderString();
+			int headerStringLen = cin.getHeaderStringSize();
 			byte[] content = cin.readBodyContent();
 			String headerMessage = createBasicHeaderMessage(request,
-					ResponseTable.OK).buildContentLength(content.length)
-					.append(headerString).toString();
+					ResponseTable.OK).buildContentLength(content.length-headerStringLen).toString();
+			
 			BufferedOutputStream out = new BufferedOutputStream(outStream);
+			out.write(headerMessage.getBytes());
 			out.write(content);
 			out.close();
-			writeHeaderMessage(outStream, headerMessage, true);
 			return ResponseTable.OK;
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
@@ -191,6 +190,13 @@ public class Response {
 		return true;
 	}
 
+	/**
+	 * Since all the files will be uploaded to the same directory, synchronized block will
+	 * ensure there is only on thread can write file to UPLOAD directory at
+	 * once. It also ensure there won't be multiple threads uploading files with
+	 * the same name that the forth one gets overwritten.
+	 * 
+	 */
 	protected int processPUT(Request request, OutputStream outStream)
 			throws ServerException {
 		int statusCode;
@@ -217,23 +223,7 @@ public class Response {
 		}
 	}
 
-	/**
-	 * Since all the files will be uploaded to the same directory, this will
-	 * ensure there is only on thread can write file to UPLOAD directory at
-	 * once. It also ensure there won't be multiple threads uploading files with
-	 * the same name that the forth one gets overwritten.
-	 * 
-	 * @param request
-	 * @param toFile
-	 * @throws IOException
-	 */
-	protected synchronized void uploadFile(Request request, File toFile)
-			throws IOException {
-		BufferedOutputStream out = new BufferedOutputStream(
-				new FileOutputStream(toFile));
-		out.write(request.getParameterByteArray());
-		out.close();
-	}
+
 
 	/*************************************************************
 	 * Build Header String

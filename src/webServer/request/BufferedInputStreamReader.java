@@ -37,17 +37,17 @@ public class BufferedInputStreamReader {
 			builder.append(c);
 			c = (char) in.read();
 		}
-		skipLineFeed();
+		skipNewLineChar();
 		// System.out.println(builder.toString());
 		return builder.toString();
 	}
 
-	private void skipLineFeed() throws IOException {
+	private void skipNewLineChar() throws IOException {
 		if (!in.markSupported())
 			return;
 		in.mark(1);
 		char c = (char) in.read();
-		if (c != '\n')
+		if (c != '\n' && c != '\r')
 			in.reset();
 
 	}
