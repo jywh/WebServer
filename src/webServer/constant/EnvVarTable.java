@@ -38,7 +38,6 @@ public final class EnvVarTable {
 		EnvTable.put(HeaderFields.REFERER, HTTP_REFERER);
 		EnvTable.put(HeaderFields.HOST, REMOTE_HOST);
 		EnvTable.put(HeaderFields.USER_AGENT, HTTP_USER_AGENT);
-		EnvTable.put(REMOTE_USER, REMOTE_USER);
 	}
 	
 	public static boolean containKey(String key){

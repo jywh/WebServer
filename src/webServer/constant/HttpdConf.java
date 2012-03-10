@@ -3,13 +3,13 @@ package webServer.constant;
 import java.util.HashMap;
 import java.util.Map;
 
-import webServer.SecureDirectory;
+import webServer.httpdconfSetter.Directory;
 
 /**
  * Constant class
  * 
  * @author Wenhui
- *
+ * 
  */
 public final class HttpdConf {
 
@@ -31,9 +31,9 @@ public final class HttpdConf {
 
 	public static String TEMP_DIRECTORY;
 
-	public static int MAX_THREAD = 10;
+	public static int MAX_THREAD = 100;
 
-	public static boolean CACHE_ENABLE = false;
+	public static boolean CACHE_ENABLE = true;
 
 	public static boolean PERSISTENT_CONNECTION = false;
 
@@ -42,12 +42,15 @@ public final class HttpdConf {
 
 	public static Map<String, String> CGI_HANDLER = new HashMap<String, String>();
 
-	public static Map<String, SecureDirectory> secureUsers = new HashMap<String, SecureDirectory>();
-	
+	public static Map<String, Directory.SecureDirectory> secureUsers = new HashMap<String, Directory.SecureDirectory>();
+
 	public static String DEFAULT_TYPE = "text/plain";
-	
+
 	public static String HTTP_VERSION = "HTTP/1.1";
-	
+
+	/*************************************************************
+	 * Private Constructor
+	 *************************************************************/
 	private HttpdConf() {
 	}
 }

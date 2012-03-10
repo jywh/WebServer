@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import webServer.constant.EnvVarTable;
 import webServer.constant.HeaderFields;
 import webServer.constant.HttpdConf;
 import webServer.constant.ResponseTable;
@@ -18,11 +17,11 @@ import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingExcepti
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 /**
- * 
+ * <p>
  * RequestParser is responsiable to parse the incomming request message, and
  * create a request object. All the incomming message must go through
  * RequestParser.
- * 
+ * </p>
  */
 public class RequestParser {
 
@@ -31,14 +30,14 @@ public class RequestParser {
 	private final static Pattern PATTERN = Pattern
 			.compile("/([^\\s]+(\\.(?i)(py|pl)))/");
 
-	private BufferedInputStreamReader requestStream;
+	private ByteInputStreamReader requestStream;
 
 	public Request parse(InputStream inputStream, String IP)
 			throws ServerException {
 		if (inputStream == null)
 			throw new ServerException(ResponseTable.BAD_REQUEST);
 
-		requestStream = new BufferedInputStreamReader(inputStream);
+		requestStream = new ByteInputStreamReader(inputStream);
 		try {
 
 			// Parse first line of request message
@@ -46,9 +45,10 @@ public class RequestParser {
 			Map<String, String> headerFields = extractHeaderFields();
 			// Read body if it is POST or PUT, otherwise it is an empty array
 			byte[] parameterByteArray = extractBodyContent(headerFields.get(HeaderFields.CONTENT_LENGTH));
-
+			String remoteUser = getRemoteUser(headerFields);
+			
 			return new Request(parameters, parameterByteArray, headerFields,
-					IP);
+					remoteUser, IP);
 
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
@@ -63,6 +63,7 @@ public class RequestParser {
 	 *****************************************************************/
 
 	/**
+	 * Parse the first line of http request.
 	 * 
 	 * @return String array with elements: {method, resolvedURI, httpversion,
 	 *         parameterString, pathInfo, scriptName }
@@ -71,28 +72,29 @@ public class RequestParser {
 
 		Log.debug(TAG, "firstLine: " + firstLine);
 		if (firstLine == null || firstLine.isEmpty())
-			throw new ServerException(ResponseTable.BAD_REQUEST,
-					"RequestParser: parseFirstLine");
+			throw new ServerException(ResponseTable.BAD_REQUEST, "parseFirstLine");
 
 		String[] tokens = firstLine.split(" ");
-
+		
 		if (tokens.length != 3)
-			throw new ServerException(ResponseTable.BAD_REQUEST,
-					"RequestParser: parseFirstLine");
+			throw new ServerException(ResponseTable.BAD_REQUEST, "parseFirstLine");
 
 		if (!verifyMethod(tokens[0]))
 			throw new ServerException(ResponseTable.NOT_IMPLEMENTED);
-
+		
+		String[] result;
 		if (tokens[0].equals(Request.PUT)) {
-			String URI = HttpdConf.UPLOAD + File.separator + tokens[1];
-			return new String[] { tokens[0], URI, tokens[2], "", "", tokens[1] };
+			String URI = (tokens[1].startsWith(URI_SEPARATOR))? tokens[1] : URI_SEPARATOR+tokens[1];
+			URI = HttpdConf.UPLOAD + URI;
+			result = new String[] { tokens[0], URI, tokens[2], "", "", tokens[1] };
 		} else {
 			String[] newTokens = extractParameterString(tokens[1]);
 			String[] anotherTokens = extractPathInfo(newTokens[0]);
 			String URI = resolveURI(anotherTokens[0], tokens[0]);
-			return new String[] { tokens[0], URI, tokens[2], newTokens[1],
+			result = new String[] { tokens[0], URI, tokens[2], newTokens[1],
 					anotherTokens[1], anotherTokens[0] };
 		}
+		return result;
 
 	}
 
@@ -112,14 +114,14 @@ public class RequestParser {
 			newURI = addDocumentRoot(URI);
 
 		if (!(new File(newURI)).exists() && !method.equals(Request.PUT))
-			throw new ServerException(ResponseTable.NOT_FOUND,
-					"RequestParser: addDocumentRoot");
+			throw new ServerException(ResponseTable.NOT_FOUND,"RequestParser: addDocumentRoot");
+		
 		Log.debug(TAG, "URI: " + URI);
 		return newURI;
 	}
 
 	/**
-	 * This will resolve alias that contains in the URI
+	 * Resolve alias that contain in the URI, if URI contains no alias, return the original URI.
 	 * 
 	 * @throws ServerException
 	 */
@@ -140,6 +142,13 @@ public class RequestParser {
 		return URI;
 	}
 
+	/**
+	 * Add document root when a URI contains no alais.
+	 * 
+	 * @param URI
+	 * @return
+	 * @throws ServerException
+	 */
 	protected String addDocumentRoot(String URI) throws ServerException {
 
 		Log.debug(TAG, "document root: "+HttpdConf.DOCUMENT_ROOT);
@@ -162,6 +171,12 @@ public class RequestParser {
 
 	}
 
+	/**
+	 * Extract script path info.
+	 * 
+	 * @param URI
+	 * @return Script path info, empty if there is no path info.
+	 */
 	public String[] extractPathInfo(String URI) {
 
 		String[] tokens = PATTERN.split(URI);
@@ -175,7 +190,7 @@ public class RequestParser {
 	}
 
 	/**
-	 * This is for GET and HEAD method that carries parameters at URI
+	 * Extract GET and HEAD method that carry parameters at URI.
 	 * 
 	 * @param parameters
 	 */
@@ -183,7 +198,7 @@ public class RequestParser {
 
 		int index = URI.indexOf('?');
 		if (index > 0) 
-			// there is parameters
+			// there is parameter string
 			return URI.split("\\?");
 		
 		return new String[] { URI, "" };
@@ -206,7 +221,6 @@ public class RequestParser {
 				currentLine = requestStream.readLine();
 			}
 			
-			getRemoteUser(headers);
 			return headers;
 
 		} catch (IOException ioe) {
@@ -216,24 +230,45 @@ public class RequestParser {
 		}
 	}
 	
-	private void getRemoteUser( Map<String, String> headerFields ){
+	/**
+	 * Get REMOTE_USER from AUTHORIZATION fiels. REMOTE_USER is used by CGI script.
+	 * 
+	 * @param headerFields
+	 * @return
+	 */
+	private String getRemoteUser( Map<String, String> headerFields ){
 		String encodedText = headerFields.get(HeaderFields.AUTHORIZATION);
 		if ( encodedText == null )
-			return; 
+			return ""; 
+		
+		String[] tokens = encodedText.split(" +", 2);
+		if ( !tokens[0].equals("Basic") )
+			// Right now, this web server only supports Basic encryption
+			return "";
+		
 		try {
-			byte[] decodedText = Base64.decode(encodedText);
-			String[] tokens = new String(decodedText).split(":",2);
-			headerFields.put(EnvVarTable.REMOTE_USER, tokens[0]);
+			String decodedText = new String(Base64.decode(tokens[1]));
+			tokens = decodedText.split(":",2);
+			String remoteUser = (tokens[0] != null )? tokens[0]:"";
+			return remoteUser;
 		} catch (Base64DecodingException e) {
 			e.printStackTrace();
 		}
+		return "";
 	}
 
 	/*************************************************************
 	 * Parsing body
-	 * @throws IOException 
 	 *************************************************************/
 	
+	/**
+	 * Extract request body, if request comes with content-length, then extract exactly the size of content-length,
+	 * otherwise, extract all the avaiable bytes.
+	 * 
+	 * @param contentLength The size of request body.
+	 * @return ByteArray of request body.
+	 * 
+	 */
 	private byte[] extractBodyContent(String contentLength) throws IOException{
 		byte[] bytes;
 		if ( contentLength != null )

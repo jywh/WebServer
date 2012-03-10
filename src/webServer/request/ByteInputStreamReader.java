@@ -6,16 +6,19 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Since BufferedReader can not read bytes, so I write this class that can both
- * readLine and read bytes. I also provide method to convert the rest of
- * inputstream to byte[] which can be easily write to any output stream.
+ * 
+ * <p>
+ * A ByteInputStreamReader combines the functionality of BufferedReader and
+ * BufferedInputStream. As the name suggest, a ByteInputStreamReader can both
+ * read lines and read bytes.
+ * </p>
  * 
  */
-public class BufferedInputStreamReader {
+public class ByteInputStreamReader {
 
 	private InputStream in;
 
-	public BufferedInputStreamReader(InputStream in) {
+	public ByteInputStreamReader(InputStream in) {
 		this.in = new BufferedInputStream(in);
 	}
 
@@ -24,55 +27,91 @@ public class BufferedInputStreamReader {
 	}
 
 	/**
-	 * 
 	 * Reads a line of text. A line is considered to be terminated by any one of
 	 * a line feed ('\n'), a carriage return ('\r'), or a carriage return
 	 * followed immediately by a linefeed.
 	 * 
 	 **/
 	public String readLine() throws IOException {
-		int count=0;
+		if (!in.markSupported())
+			return null;
+		int count = 0;
 		in.mark(0);
 		char c = (char) in.read();
-		while (c != '\r' && c != '\n') {
-			count++;
+		while (in.available() > 0) {
 			c = (char) in.read();
+			count++;
+			if (c == '\r' || c == '\n')
+				break;
+
 		}
 		in.reset();
 		byte[] buf = new byte[count];
 		in.read(buf, 0, buf.length);
 		// skip newline char, each char 2 bytes
-		in.skip(2);
+		skip(2);
+		// System.out.println(new String(buf));
 		return new String(buf);
 	}
 
+	/**
+	 * 
+	 * A newline char is considered to be either a line feed ('\n'), a carriage
+	 * return ('\r'), or a carriage return followed immediately by a linefeed.
+	 * 
+	 **/
 	public void skipNewLineChar() throws IOException {
 		if (!in.markSupported())
 			return;
-		in.mark(1);
-		char c = (char) in.read();
-		while (c == '\n' || c == '\r'){
-			in.mark(1);
-			c = (char)in.read();
+		int s;
+		char c;
+		while (in.available() > 0) {
+			in.mark(3);
+			s = in.read();
+			c = (char) s;
+			if (s == -1 || (c != '\n' && c != '\r'))
+				break;
 		}
+
 		in.reset();
 
 	}
 
+	/**
+	 * Close input stream.
+	 * 
+	 * @throws IOException
+	 */
 	public void close() throws IOException {
 		in.close();
 	}
 
+	/**
+	 * Refer to BufferedInputStream read(byte[] b, int off, int len) method.
+	 * 
+	 * @param b
+	 * @param off
+	 * @param len
+	 * @return
+	 * @throws IOException
+	 */
 	public int read(byte[] b, int off, int len) throws IOException {
 		return in.read(b, off, len);
 	}
 
+	/**
+	 * Refer to BufferedInputStream skip(long n) method.
+	 * 
+	 * @param n
+	 * @return
+	 * @throws IOException
+	 */
 	public long skip(long n) throws IOException {
 		return in.skip(n);
 	}
 
 	/**
-	 * Convert the rest of the input stream to byte[]
+	 * Convert the available input stream to byte array
 	 * 
 	 * @return
 	 * @throws IOException
@@ -92,7 +131,7 @@ public class BufferedInputStreamReader {
 	/**
 	 * Convert certain size of input stream to byte array.
 	 * 
-	 * @param size
+	 * @param size The size of the input stream
 	 * @return
 	 * @throws IOException
 	 */

@@ -12,15 +12,18 @@ import java.util.Date;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import webServer.SecureDirectory;
 import webServer.constant.HeaderFields;
 import webServer.constant.HttpdConf;
 import webServer.constant.ResponseTable;
+import webServer.httpdconfSetter.Directory.SecureDirectory;
 import webServer.request.Request;
 import webServer.ulti.AccessLog;
 import webServer.ulti.Log;
 import webServer.ulti.ServerException;
 import webServer.ulti.Ulti;
+
+import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
+import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 public class Response {
 
@@ -104,10 +107,17 @@ public class Response {
 			return NEED_AUTHENTICATE;
 
 		String auth = request.getRequestField().get(HeaderFields.AUTHORIZATION);
-		String[] tokens = auth.split(" ");
+		String[] tokens = auth.split(" ", 2);
 		if (tokens[0].equals("Basic")) {
-			if (secureDirectory.getUser().contains(tokens[1]))
-				return AUTHENTICATED;
+			printSecureKey(secureDirectory);
+			// System.out.println("key: "+tokens[1]);
+			try {
+				String decodedText = new String(Base64.decode(tokens[1]));
+				if (secureDirectory.getUser().contains(decodedText))
+					return AUTHENTICATED;
+			} catch (Base64DecodingException e) {
+				e.printStackTrace();
+			}
 		}
 		// Password or username not correct
 		throw new ServerException(ResponseTable.FORBIDDEN);
@@ -120,6 +130,13 @@ public class Response {
 				return HttpdConf.secureUsers.get(directory);
 		}
 		return null;
+	}
+
+	private void printSecureKey(SecureDirectory sd) {
+		System.out.println("Secure keys for " + sd.getPath());
+		for (String str : sd.getUser()) {
+			System.out.println(str);
+		}
 	}
 
 	protected int sendAuthenticateMessage(SecureDirectory info)
@@ -168,7 +185,7 @@ public class Response {
 			out.write(content);
 			cin.close();
 			out.flush();
-			
+
 			return ResponseTable.OK;
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
@@ -264,7 +281,7 @@ public class Response {
 			File document, boolean allowCache) {
 		HeaderBuilder builder = createBasicHeaderMessage(statusCode)
 				.buildContentTypeAndLength(document);
-		if (allowCache)
+		if (allowCache && HttpdConf.CACHE_ENABLE)
 			builder.buildLastModified(document).buildCacheControl("public");
 		return builder;
 

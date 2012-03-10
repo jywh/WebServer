@@ -8,7 +8,6 @@ import java.net.Socket;
 import webServer.constant.HttpdConf;
 import webServer.ulti.AccessLog;
 import webServer.ulti.ConfigurationException;
-import webServer.ulti.Log;
 
 public class WebServer {
 
@@ -107,25 +106,23 @@ public class WebServer {
 						client.getInetAddress().getHostAddress()).start();
 				addThread();
 			} else {
-				Log.debug("max thread exceed", "no more thread can be added");
+				System.out.println("Reach maximum thread capacity.");
 			}
-
+			
+			client = null;
 		}
 
 	}
 
-	/**
-	 * 
-	 * @param args
-	 *            The path to web server configurateion directory.
-	 */
 	public static void main(String[] args) {
 
 		WebServer webServer = null;
 		try {
 			if (args.length != 1) {
 				System.out
-						.println("Exact one argument: path of web server configuration directory");
+						.println("Need one arg, which is the directory to httpd.conf file");
+				System.out
+						.println("Usage (for jar file): java -jar <path of WebServer.jar> <directory to httpd.conf>");
 				return;
 			}
 			webServer = new WebServer(args[0]);

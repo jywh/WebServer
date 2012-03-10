@@ -10,6 +10,11 @@ import java.util.Set;
 
 import webServer.constant.HttpdConf;
 
+/**
+ * <p> 
+ * MIME parse mime.types file.
+ * </p>
+ */
 public class MIME {
 
 	private static HashMap<String, String> MIMETable = new HashMap<String, String>(
@@ -55,7 +60,8 @@ public class MIME {
 			return HttpdConf.DEFAULT_TYPE;
 	}
 
-	public void print() {
+	@SuppressWarnings("unused")
+	private void print() {
 		Set<String> keys = MIMETable.keySet();
 		String[] keyArray = keys.toArray(new String[keys.size()]);
 		Arrays.sort(keyArray);
@@ -65,7 +71,8 @@ public class MIME {
 		System.out.println("\n\nEnd of MIME");
 	}
 
-	public int length() {
+	@SuppressWarnings("unused")
+	private int length() {
 		return MIMETable.size();
 	}
 

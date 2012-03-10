@@ -6,8 +6,17 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Wraper class for InputStream
  * 
+ * A CGIOutputStreamReader is created specifically for handling CGI output
+ * result.
+ * 
+ *  <p>
+ * Format of CGI output:</b></b>
+ *
+ * Header Fields ( Directive ): which consists header field(s) that are needed to be sent back to client </b>
+ * Blank line </b>
+ * Body </b>
+ * </p>
  */
 public class CGIOutputStreamReader {
 
@@ -19,17 +28,20 @@ public class CGIOutputStreamReader {
 	}
 
 	/**
-	 * Check for the offset of double '\n', where is the break of header string
-	 * and body
+	 * Check for the offset of consecutive line terminators, where is the break of
+	 * header string and body.
 	 * 
-	 * @return
+	 * A line terminator consistes each a linefeed ('\n'), or a carriage return
+	 * ('\r') or a carriage return followed inmediately by a linefeed.
+	 * 
+	 * @return The size of header string in bytes.
 	 * @throws IOException
 	 */
 	public int getHeaderStringSize() throws IOException {
 
 		if (!in.markSupported())
 			return -1;
-		in.mark(1);
+		in.mark(200);
 		int c, count = 0;
 		char s;
 		while ((c = in.read()) >= 0) {
@@ -49,7 +61,13 @@ public class CGIOutputStreamReader {
 		in.reset();
 		return count;
 	}
-
+	
+	/**
+	 * Extract header string from input stream. 
+	 * 
+	 * @return
+	 * @throws IOException
+	 */
 	public String readHeaderString() throws IOException {
 		if (headerString == null) {
 			int offset = getHeaderStringSize();
@@ -60,13 +78,14 @@ public class CGIOutputStreamReader {
 		return headerString;
 	}
 
-	public void close() throws IOException{
+	public void close() throws IOException {
 		in.close();
 	}
-	
+
 	/**
-	 * 
-	 * @return
+	 * Read the body content of the input stream, and return byte array.
+	 *  
+	 * @return Byte array of the content.
 	 * @throws IOException
 	 */
 	public byte[] readBodyContent() throws IOException {

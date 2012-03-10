@@ -8,18 +8,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import webServer.SecureDirectory;
 import webServer.constant.HttpdConf;
 import webServer.ulti.ConfigurationException;
 
+/**
+ * <p>
+ * Directory handles the Directory tag of httpd.conf file. It parses the body of
+ * the tag and store the information to a SecureDirectory Object
+ * </p>
+ */
 public class Directory extends HttpdConfSetter {
 
 	@Override
 	public void process(Object line) throws ConfigurationException {
 
 		if (!(line instanceof List))
-			throw new ConfigurationException(
-					"Directory: type ArrayList expect");
+			throw new ConfigurationException("Directory: type ArrayList expect");
 
 		@SuppressWarnings("unchecked")
 		List<String> lines = (ArrayList<String>) line;
@@ -50,8 +54,8 @@ public class Directory extends HttpdConfSetter {
 			throw new ConfigurationException(
 					"Configuration: Fail to read directory tag");
 		List<String> users = retrieveAuthUser(userType, user, authFile);
-		HttpdConf.secureUsers.put(secureDirectory, new SecureDirectory(authName,
-				authType, userType, users));
+		HttpdConf.secureUsers.put(secureDirectory, new SecureDirectory(
+				secureDirectory, authName, authType, userType, users));
 	}
 
 	private List<String> retrieveAuthUser(String userType, String user,
@@ -63,6 +67,14 @@ public class Directory extends HttpdConfSetter {
 		}
 	}
 
+	/**
+	 * All the users in sercure file are allowed to access this directory and
+	 * its subdirectories.
+	 * 
+	 * @param path
+	 * @return
+	 * @throws ConfigurationException
+	 */
 	private List<String> readAuthUserFileForValidUser(String path)
 			throws ConfigurationException {
 		File file = new File(path);
@@ -85,6 +97,15 @@ public class Directory extends HttpdConfSetter {
 		}
 	}
 
+	/**
+	 * Only the users that is listed are allowed to access this directory and
+	 * its subdirectories.
+	 * 
+	 * @param path
+	 * @param user
+	 * @return
+	 * @throws ConfigurationException
+	 */
 	private List<String> readAuthFileForUser(String path, String user)
 			throws ConfigurationException {
 
@@ -110,6 +131,62 @@ public class Directory extends HttpdConfSetter {
 			throw new ConfigurationException();
 		}
 
+	}
+
+	/**
+	 * <p>
+	 * A SecureDirectory holds all the information of a Directory tag.
+	 * </p>
+	 */
+	public class SecureDirectory {
+
+		public static final int USER = 1;
+		public static final int GROUP = 2;
+		public static final int VALID_USER = 3;
+
+		private String path;
+		private String authName;
+		private String authType;
+		private int userType;
+		private List<String> validUsers;
+
+		public SecureDirectory(String path, String authName, String authType,
+				String userType, List<String> validUsers) {
+			this.path = path;
+			this.authName = authName;
+			this.authType = authType;
+			this.validUsers = validUsers;
+			if (userType.equalsIgnoreCase("user")) {
+				this.userType = USER;
+			} else if (userType.equalsIgnoreCase("valid-user")) {
+				this.userType = VALID_USER;
+			} else {
+				this.userType = GROUP;
+			}
+		}
+
+		public SecureDirectory() {
+		}
+
+		public String getPath() {
+			return path;
+		}
+
+		public String getAuthName() {
+			return authName;
+		}
+
+		public String getAuthType() {
+			return authType;
+		}
+
+		public int getUserType() {
+			return userType;
+		}
+
+		public List<String> getUser() {
+			return validUsers;
+		}
 	}
 
 }

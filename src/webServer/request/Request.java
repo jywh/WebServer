@@ -18,6 +18,7 @@ public class Request {
 	private String scriptName;
 	private String pathInfo;
 	private byte[] parameterByteArray;
+	private String remoteUser;
 
 	/**
 	 * This prevent direct instaniate of Request object. Request object can only
@@ -27,7 +28,7 @@ public class Request {
 	}
 
 	protected Request(String[] parameters, byte[] parameterByteArray,
-			Map<String, String> requestFields, String IP) {
+			Map<String, String> requestFields, String remoteUser, String IP) {
 		this.method = parameters[0];
 		this.URI = parameters[1];
 		this.httpVersion = parameters[2];
@@ -35,6 +36,7 @@ public class Request {
 		this.pathInfo = parameters[4];
 		this.scriptName = parameters[5];
 		this.parameterByteArray = parameterByteArray;
+		this.remoteUser = remoteUser;
 		this.IP = IP;
 		this.requestFields = requestFields;
 
@@ -78,5 +80,9 @@ public class Request {
 
 	public byte[] getParameterByteArray() {
 		return parameterByteArray;
+	}
+	
+	public String getRemoteUser(){
+		return remoteUser;
 	}
 }

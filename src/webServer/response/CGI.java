@@ -80,6 +80,7 @@ public class CGI {
 		env.put(EnvVarTable.GATEWAY_INTERFACE, WebServer.GATEWAY_INTERFACE);
 		env.put(EnvVarTable.SERVER_PORT, Integer.toString(HttpdConf.LISTEN));
 		env.put(EnvVarTable.REMOTE_ADDR, request.getIPAddr());
+		env.put(EnvVarTable.REMOTE_USER, request.getRemoteUser());
 		env.put(EnvVarTable.SERVER_PROTOCOL, request.getHttpVersion());
 		env.put(EnvVarTable.REQUEST_METHOD, request.getMethod());
 		env.put(EnvVarTable.PATH_INFO, request.getPathInfo());

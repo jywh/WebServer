@@ -10,10 +10,9 @@ import webServer.response.Response;
 import webServer.ulti.ServerException;
 
 /**
- * 
- * This class handles request and response to client. It is final class, not
- * allow to be extended.
- * 
+ * <p>
+ * ClientTread handles request and response of each client request.
+ * </p>
  * 
  */
 public class ClientThread extends Thread {

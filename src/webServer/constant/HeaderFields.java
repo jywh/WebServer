@@ -1,5 +1,11 @@
 package webServer.constant;
 
+/**
+ * <p>
+ * Header fields parameters.
+ * </p>
+ * 
+ */
 public final class HeaderFields {
 
 	public static final String CONNECTION = "Connection";
