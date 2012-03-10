@@ -7,11 +7,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import webServer.constant.EnvVarTable;
 import webServer.constant.HeaderFields;
 import webServer.constant.HttpdConf;
 import webServer.constant.ResponseTable;
 import webServer.ulti.Log;
 import webServer.ulti.ServerException;
+
+import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
+import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 /**
  * 
@@ -201,13 +205,27 @@ public class RequestParser {
 				headers.put(tokens[0], tokens[1].trim());
 				currentLine = requestStream.readLine();
 			}
-
+			
+			getRemoteUser(headers);
 			return headers;
 
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			throw new ServerException(ResponseTable.BAD_REQUEST,
 					"Request: getRequestFields");
+		}
+	}
+	
+	private void getRemoteUser( Map<String, String> headerFields ){
+		String encodedText = headerFields.get(HeaderFields.AUTHORIZATION);
+		if ( encodedText == null )
+			return; 
+		try {
+			byte[] decodedText = Base64.decode(encodedText);
+			String[] tokens = new String(decodedText).split(":",2);
+			headerFields.put(EnvVarTable.REMOTE_USER, tokens[0]);
+		} catch (Base64DecodingException e) {
+			e.printStackTrace();
 		}
 	}
 

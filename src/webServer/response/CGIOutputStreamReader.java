@@ -60,6 +60,10 @@ public class CGIOutputStreamReader {
 		return headerString;
 	}
 
+	public void close() throws IOException{
+		in.close();
+	}
+	
 	/**
 	 * 
 	 * @return

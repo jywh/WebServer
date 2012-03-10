@@ -9,7 +9,7 @@ package webServer.ulti;
  */
 public class Log {
 
-	private static boolean DEBUG = true;
+	private static boolean DEBUG = false;
 	
 	/*************************************************************
 	 * Debug log

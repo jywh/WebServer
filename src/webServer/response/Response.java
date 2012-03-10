@@ -166,7 +166,9 @@ public class Response {
 			BufferedOutputStream out = new BufferedOutputStream(outStream);
 			out.write(headerMessage.getBytes());
 			out.write(content);
-			out.close();
+			cin.close();
+			out.flush();
+			
 			return ResponseTable.OK;
 		} catch (IOException ioe) {
 			ioe.printStackTrace();

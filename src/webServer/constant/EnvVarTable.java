@@ -27,6 +27,7 @@ public final class EnvVarTable {
 	public static final String REMOTE_HOST = "REMOTE_HOST";
 	public static final String HTTP_USER_AGENT = "HTTP_USER_AGENT";
 	public static final String HTTP_COOKIE = "HTTP_COOKIE";
+	public static final String REMOTE_USER = "REMOTE_USER";
 	
 	private static HashMap<String, String> EnvTable = new HashMap<String, String>();
 	
@@ -37,6 +38,7 @@ public final class EnvVarTable {
 		EnvTable.put(HeaderFields.REFERER, HTTP_REFERER);
 		EnvTable.put(HeaderFields.HOST, REMOTE_HOST);
 		EnvTable.put(HeaderFields.USER_AGENT, HTTP_USER_AGENT);
+		EnvTable.put(REMOTE_USER, REMOTE_USER);
 	}
 	
 	public static boolean containKey(String key){

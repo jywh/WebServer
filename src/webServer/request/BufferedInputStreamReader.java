@@ -31,24 +31,31 @@ public class BufferedInputStreamReader {
 	 * 
 	 **/
 	public String readLine() throws IOException {
+		int count=0;
+		in.mark(0);
 		char c = (char) in.read();
-		StringBuilder builder = new StringBuilder();
 		while (c != '\r' && c != '\n') {
-			builder.append(c);
+			count++;
 			c = (char) in.read();
 		}
-		skipNewLineChar();
-		// System.out.println(builder.toString());
-		return builder.toString();
+		in.reset();
+		byte[] buf = new byte[count];
+		in.read(buf, 0, buf.length);
+		// skip newline char, each char 2 bytes
+		in.skip(2);
+		return new String(buf);
 	}
 
-	private void skipNewLineChar() throws IOException {
+	public void skipNewLineChar() throws IOException {
 		if (!in.markSupported())
 			return;
 		in.mark(1);
 		char c = (char) in.read();
-		if (c != '\n' && c != '\r')
-			in.reset();
+		while (c == '\n' || c == '\r'){
+			in.mark(1);
+			c = (char)in.read();
+		}
+		in.reset();
 
 	}
 

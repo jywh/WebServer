@@ -1,6 +1,5 @@
 package webServer;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -51,11 +50,10 @@ public class ClientThread extends Thread {
 			new Response(outStream)
 					.sendErrorMessage(ResponseTable.INTERNAL_SERVER_ERROR);
 		} finally {
-			System.out.println("close stream");
 			try {
 				inputStream.close();
 				outStream.close();
-			} catch (IOException ie) {
+			} catch (Exception ie) {
 
 			}
 			WebServer.removeThread();
