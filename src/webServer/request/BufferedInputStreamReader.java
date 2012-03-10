@@ -6,9 +6,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Since BufferedRead can not read bytes, so I write this class that can both
- * readLine and read bytes. I also provide method to convert the rest stream to
- * byte[] which can be easily write to any output stream.
+ * Since BufferedReader can not read bytes, so I write this class that can both
+ * readLine and read bytes. I also provide method to convert the rest of
+ * inputstream to byte[] which can be easily write to any output stream.
  * 
  */
 public class BufferedInputStreamReader {
@@ -78,6 +78,22 @@ public class BufferedInputStreamReader {
 			len = in.read(buf, 0, size);
 			bos.write(buf, 0, len);
 		}
+		buf = bos.toByteArray();
+		return buf;
+	}
+
+	/**
+	 * Convert certain size of input stream to byte array.
+	 * 
+	 * @param size
+	 * @return
+	 * @throws IOException
+	 */
+	public byte[] toByteArray(int size) throws IOException {
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		byte[] buf = new byte[size];
+		int len = in.read(buf, 0, size);
+		bos.write(buf, 0, len);
 		buf = bos.toByteArray();
 		return buf;
 	}

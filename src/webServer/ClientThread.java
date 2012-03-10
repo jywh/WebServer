@@ -1,5 +1,6 @@
 package webServer;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -16,7 +17,7 @@ import webServer.ulti.ServerException;
  * 
  * 
  */
-public final class ClientThread extends Thread {
+public class ClientThread extends Thread {
 
 	private InputStream inputStream = null;
 	private OutputStream outStream = null;
@@ -36,19 +37,27 @@ public final class ClientThread extends Thread {
 	@Override
 	public void run() {
 
-		Response response = new Response();
-		Request request;
 		try {
-			request = new RequestParser().parse(inputStream, IP);
-			response.processRequest(request, outStream);
+
+			Request request = new RequestParser().parse(inputStream, IP);
+			new Response(request, outStream).processRequest();
+
 		} catch (ServerException e) {
 			e.printMessage();
 			e.printStackTrace();
-			response.sendErrorMessage(outStream, e.getStatusCode());
-		} catch(Exception e){
+			new Response(outStream).sendErrorMessage(e.getStatusCode());
+		} catch (Exception e) {
 			e.printStackTrace();
-			response.sendErrorMessage(outStream, ResponseTable.INTERNAL_SERVER_ERROR);
+			new Response(outStream)
+					.sendErrorMessage(ResponseTable.INTERNAL_SERVER_ERROR);
 		} finally {
+			System.out.println("close stream");
+			try {
+				inputStream.close();
+				outStream.close();
+			} catch (IOException ie) {
+
+			}
 			WebServer.removeThread();
 		}
 	}

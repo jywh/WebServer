@@ -35,20 +35,45 @@ public class Response {
 	private final static int NEED_AUTHENTICATE = 2;
 	private final static int AUTHENTICATED = 3;
 
-	public void processRequest(Request request, OutputStream out)
-			throws ServerException {
+	private Request request;
+	private OutputStream outStream;
+
+	public Response(Request request, OutputStream outStream) {
+		this.request = request;
+		this.outStream = outStream;
+	}
+
+	public Response(OutputStream outStream) {
+		this.outStream = outStream;
+	}
+
+	/**
+	 * Process request, produce appropriate response. Check if the URI contain
+	 * secure directory, return three options:
+	 * 
+	 * 1. NOT_SECURE_DIR: contains no secure directory. 2. NEED_AUTHENTICATE:
+	 * contains secure directory, need authentication. 3. AUTHENTICATED:
+	 * contains secure directory, and has correct password/username.
+	 * 
+	 * @param request
+	 *            A request object created by RequestParser
+	 * @param out
+	 *            Client OutputStream
+	 * @throws ServerException
+	 */
+	public void processRequest() throws ServerException {
 		int statusCode;
 
 		SecureDirectory secureDirectory = getSecureDirectory(request.getURI());
-		switch (authenticate(request, secureDirectory)) {
+		switch (authenticate(secureDirectory)) {
 		case NOT_SECURE_DIR:
-			statusCode = processNormalRequest(request, out, true);
+			statusCode = processNormalRequest(true);
 			break;
 		case NEED_AUTHENTICATE:
-			statusCode = sendAuthenticateMessage(request, secureDirectory, out);
+			statusCode = sendAuthenticateMessage(secureDirectory);
 			break;
 		case AUTHENTICATED:
-			statusCode = processNormalRequest(request, out, false);
+			statusCode = processNormalRequest(false);
 			break;
 		default:
 			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
@@ -62,15 +87,14 @@ public class Response {
 	 *************************************************************/
 
 	/**
-	 * Check secure directory. Null if not secure directory or authenticate
-	 * successfully, otherwise return DirectoryInfo for authentication
+	 * Check if contains secure directory.
 	 * 
 	 * 
 	 * @param request
 	 * @return Authentication Code.
 	 * @throws ServerException
 	 */
-	private int authenticate(Request request, SecureDirectory secureDirectory)
+	private int authenticate(SecureDirectory secureDirectory)
 			throws ServerException {
 
 		if (secureDirectory == null)
@@ -98,12 +122,12 @@ public class Response {
 		return null;
 	}
 
-	protected int sendAuthenticateMessage(Request request,
-			SecureDirectory info, OutputStream out) throws ServerException {
-		String headerMessage = createBasicHeaderMessage(request,
+	protected int sendAuthenticateMessage(SecureDirectory info)
+			throws ServerException {
+		String headerMessage = createBasicHeaderMessage(
 				ResponseTable.UNAUTHORIZED).buildAuthentication(
 				info.getAuthType(), info.getAuthName()).toString();
-		writeHeaderMessage(out, headerMessage, true);
+		writeHeaderMessage(headerMessage);
 		return ResponseTable.UNAUTHORIZED;
 	}
 
@@ -111,14 +135,13 @@ public class Response {
 	 * Process normal request
 	 *************************************************************/
 
-	protected int processNormalRequest(Request request, OutputStream out,
-			boolean cached) throws ServerException {
+	protected int processNormalRequest(boolean cached) throws ServerException {
 		if (request.getMethod().equals(Request.PUT)) {
-			return processPUT(request, out);
+			return processPUT();
 		} else if (isScript(request.getURI())) {
-			return executeScript(request, out);
+			return executeScript();
 		} else {
-			return retrieveStaticDocument(request, out, cached);
+			return retrieveStaticDocument(cached);
 		}
 
 	}
@@ -128,15 +151,18 @@ public class Response {
 		return SCRIPT_PATTERN.matcher(file.getName()).matches();
 	}
 
-	protected int executeScript(Request request, OutputStream outStream)
-			throws ServerException {
+	protected int executeScript() throws ServerException {
 		CGIOutputStreamReader cin = new CGI().execute(request);
 		try {
 			int headerStringLen = cin.getHeaderStringSize();
 			byte[] content = cin.readBodyContent();
-			String headerMessage = createBasicHeaderMessage(request,
-					ResponseTable.OK).buildContentLength(content.length-headerStringLen).toString();
-			
+			int contentLength = content.length - headerStringLen - 1; // 1 byte
+																		// for
+																		// newline
+																		// char
+			String headerMessage = createBasicHeaderMessage(ResponseTable.OK)
+					.buildContentLength(contentLength).toString();
+
 			BufferedOutputStream out = new BufferedOutputStream(outStream);
 			out.write(headerMessage.getBytes());
 			out.write(content);
@@ -148,33 +174,33 @@ public class Response {
 		}
 	}
 
-	protected int retrieveStaticDocument(Request request, OutputStream out,
-			boolean allowCache) throws ServerException {
+	protected int retrieveStaticDocument(boolean allowCache)
+			throws ServerException {
 
 		if (request.getMethod().equals(Request.HEAD)) {
-			String headerMessage = createBasicHeaderMessage(request,
-					ResponseTable.OK).toString();
-			writeHeaderMessage(out, headerMessage, true);
+			String headerMessage = createBasicHeaderMessage(ResponseTable.OK)
+					.toString();
+			writeHeaderMessage(headerMessage);
 			return ResponseTable.OK;
 		}
 
 		File document = new File(request.getURI());
-		if (!isModified(request, document)) {
-			String headerMessage = createBasicHeaderMessage(request,
+		if (!isModified(document)) {
+			String headerMessage = createBasicHeaderMessage(
 					ResponseTable.NOT_MODIFIED).toString();
-			writeHeaderMessage(out, headerMessage, true);
+			writeHeaderMessage(headerMessage);
 			return ResponseTable.NOT_MODIFIED;
 		}
 
-		String headerMessage = createSimpleHeaderMessage(request,
-				ResponseTable.OK, document, allowCache).toString();
-			
-		writeHeaderMessage(out, headerMessage, false);
-		serveFile(out, document);
+		String headerMessage = createSimpleHeaderMessage(ResponseTable.OK,
+				document, allowCache).toString();
+
+		writeHeaderMessage(headerMessage);
+		serveFile(document);
 		return ResponseTable.OK;
 	}
 
-	protected boolean isModified(Request request, File file) {
+	protected boolean isModified(File file) {
 		String dateFromClient = request.getRequestField().get(
 				HeaderFields.IF_MODIFIED_SINCE);
 		if (dateFromClient == null)
@@ -191,14 +217,13 @@ public class Response {
 	}
 
 	/**
-	 * Since all the files will be uploaded to the same directory, synchronized block will
-	 * ensure there is only on thread can write file to UPLOAD directory at
-	 * once. It also ensure there won't be multiple threads uploading files with
-	 * the same name that the forth one gets overwritten.
+	 * Since all the files will be uploaded to the same directory, synchronized
+	 * block will ensure there is only on thread can write file to UPLOAD
+	 * directory at once. It also ensure there won't be multiple threads
+	 * uploading files with the same name that the forth one gets overwritten.
 	 * 
 	 */
-	protected int processPUT(Request request, OutputStream outStream)
-			throws ServerException {
+	protected int processPUT() throws ServerException {
 		int statusCode;
 		File document = new File(request.getURI());
 		try {
@@ -213,9 +238,9 @@ public class Response {
 					statusCode = ResponseTable.NO_CONTENT;
 				}
 			}
-			String headerMessage = createBasicHeaderMessage(request, statusCode)
+			String headerMessage = createBasicHeaderMessage(statusCode)
 					.toString();
-			writeHeaderMessage(outStream, headerMessage, true);
+			writeHeaderMessage(headerMessage);
 			return statusCode;
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
@@ -223,30 +248,27 @@ public class Response {
 		}
 	}
 
-
-
 	/*************************************************************
 	 * Build Header String
 	 *************************************************************/
 
-	protected HeaderBuilder createBasicHeaderMessage(Request request,
-			int statusCode) {
+	protected HeaderBuilder createBasicHeaderMessage(int statusCode) {
 		HeaderBuilder builder = new HeaderBuilder();
 		return builder.buildHeaderBegin(statusCode, request.getHttpVersion())
 				.buildConnection("close");
 	}
 
-	protected HeaderBuilder createSimpleHeaderMessage(Request request,
-			int statusCode, File document, boolean allowCache) {
-		HeaderBuilder builder = createBasicHeaderMessage(request, statusCode)
+	protected HeaderBuilder createSimpleHeaderMessage(int statusCode,
+			File document, boolean allowCache) {
+		HeaderBuilder builder = createBasicHeaderMessage(statusCode)
 				.buildContentTypeAndLength(document);
-		if ( allowCache )
+		if (allowCache)
 			builder.buildLastModified(document).buildCacheControl("public");
 		return builder;
 
 	}
 
-	protected String checkPersistentConnection(Request request) {
+	protected String checkPersistentConnection() {
 		String connection = request.getRequestField().get(
 				HeaderFields.CONNECTION);
 		return (connection != null) ? connection : "close";
@@ -257,16 +279,12 @@ public class Response {
 	 * Response to client
 	 *************************************************************/
 
-	protected void writeHeaderMessage(OutputStream out, String headerMessage,
-			boolean close) {
-		PrintWriter writer = new PrintWriter(out, true);
+	protected void writeHeaderMessage(String headerMessage) {
+		PrintWriter writer = new PrintWriter(outStream, true);
 		writer.println(headerMessage);
-		if (close)
-			writer.close();
 	}
 
-	protected void serveFile(OutputStream outStream, File document)
-			throws ServerException {
+	protected void serveFile(File document) throws ServerException {
 
 		Log.debug(TAG, "document path:" + document.getAbsolutePath());
 
@@ -280,7 +298,7 @@ public class Response {
 				out.write(buf, 0, read);
 			}
 			in.close();
-			out.close();
+			out.flush();
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR,
@@ -288,7 +306,7 @@ public class Response {
 		}
 	}
 
-	public void sendErrorMessage(OutputStream out, int statusCode) {
+	public void sendErrorMessage(int statusCode) {
 
 		try {
 			File errorFile = new File(ERROR_FILE_PATH
@@ -297,8 +315,8 @@ public class Response {
 			String headerMessage = builder
 					.buildHeaderBegin(statusCode, HttpdConf.HTTP_VERSION)
 					.buildContentTypeAndLength(errorFile).toString();
-			writeHeaderMessage(out, headerMessage, false);
-			serveFile(out, errorFile);
+			writeHeaderMessage(headerMessage);
+			serveFile(errorFile);
 		} catch (ServerException se) {
 			se.printStackTrace();
 		}

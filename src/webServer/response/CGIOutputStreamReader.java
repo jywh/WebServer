@@ -19,7 +19,8 @@ public class CGIOutputStreamReader {
 	}
 
 	/**
-	 * Check for the offset of double '\n', where is the break of header string and body
+	 * Check for the offset of double '\n', where is the break of header string
+	 * and body
 	 * 
 	 * @return
 	 * @throws IOException
@@ -30,13 +31,17 @@ public class CGIOutputStreamReader {
 			return -1;
 		in.mark(1);
 		int c, count = 0;
+		char s;
 		while ((c = in.read()) >= 0) {
 			count++;
-			if ( ((char)c) == '\n' || (char)c=='\r') {
-				if (((char) in.read()) == '\n' || (char)c == '\r') {
-					break;
+			s = (char) c;
+			if (s == '\n' || s == '\r') {
+				if ((c = in.read()) >= 0) {
+					s = (char) c;
+					if (s == '\n' || s == '\r') {
+						break;
+					}
 				}
-				// This is for the byte that is skipped
 				count++;
 			}
 
@@ -61,8 +66,8 @@ public class CGIOutputStreamReader {
 	 * @throws IOException
 	 */
 	public byte[] readBodyContent() throws IOException {
-		
-		if ( headerString == null )
+
+		if (headerString == null)
 			readHeaderString();
 		int len, size = 1024;
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();

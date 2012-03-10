@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import webServer.constant.HeaderFields;
 import webServer.constant.HttpdConf;
 import webServer.constant.ResponseTable;
 import webServer.ulti.Log;
@@ -40,7 +41,7 @@ public class RequestParser {
 			String[] parameters = parseFirstLine(requestStream.readLine());
 			Map<String, String> headerFields = extractHeaderFields();
 			// Read body if it is POST or PUT, otherwise it is an empty array
-			byte[] parameterByteArray = extractBodyContent();
+			byte[] parameterByteArray = extractBodyContent(headerFields.get(HeaderFields.CONTENT_LENGTH));
 
 			return new Request(parameters, parameterByteArray, headerFields,
 					IP);
@@ -215,9 +216,13 @@ public class RequestParser {
 	 * @throws IOException 
 	 *************************************************************/
 	
-	
-	private byte[] extractBodyContent() throws IOException{
-		return requestStream.toByteArray();
+	private byte[] extractBodyContent(String contentLength) throws IOException{
+		byte[] bytes;
+		if ( contentLength != null )
+			bytes = requestStream.toByteArray(Integer.parseInt(contentLength));
+		else
+			bytes = requestStream.toByteArray();
+		return bytes;
 	}
 	
 }
