@@ -31,11 +31,9 @@ public abstract class HttpdConfSetter {
 				int indexLastDot = name.lastIndexOf('.');
 				packageName = name.substring(0, indexLastDot + 1);
 			}
-			return (HttpdConfSetter) Class.forName(packageName + className)
-					.newInstance();
+			return (HttpdConfSetter) Class.forName(packageName + className).newInstance();
 		} catch (Exception e) {
-			System.out.println("[Error] Class not found: " + packageName
-					+ className);
+			System.out.println("[Error] Class not found: " + packageName + className);
 		}
 		return null;
 	}

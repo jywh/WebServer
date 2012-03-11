@@ -8,8 +8,8 @@ import java.util.Locale;
 
 public class Ulti {
 
-	public static final DateFormat DATE_FORMATE = new SimpleDateFormat(
-			"EEE, d MMM yyyy HH:mm:ss z", Locale.US);
+	public static final DateFormat DATE_FORMATE = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z",
+			Locale.US);
 
 	public static String getFileExtension(File file) {
 		String fileName = file.getName();
@@ -20,12 +20,10 @@ public class Ulti {
 		return "";
 	}
 
-	
 	public static String getTimeFull(long time) {
 		return DATE_FORMATE.format(time);
 	}
-	
-	
+
 	/**
 	 * Retrieve current time in milliseconds.
 	 * 
@@ -35,7 +33,5 @@ public class Ulti {
 		Calendar calendar = Calendar.getInstance();
 		return calendar.getTimeInMillis();
 	}
-
-
 
 }

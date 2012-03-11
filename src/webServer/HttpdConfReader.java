@@ -66,8 +66,7 @@ public class HttpdConfReader {
 
 	private void parseLine(String currentLine) throws ConfigurationException {
 		String[] tokens = currentLine.split(" ", 2);
-		HttpdConfSetter httpdConfSetter = HttpdConfSetter
-				.getInstance(tokens[0]);
+		HttpdConfSetter httpdConfSetter = HttpdConfSetter.getInstance(tokens[0]);
 
 		if (httpdConfSetter != null)
 			httpdConfSetter.process(tokens[1]);
@@ -84,16 +83,14 @@ public class HttpdConfReader {
 	 * 
 	 * @throws IOException
 	 */
-	private void parseTag(String currentLine) throws IOException,
-			ConfigurationException {
+	private void parseTag(String currentLine) throws IOException, ConfigurationException {
 
 		if (!checkOpenTag(currentLine))
 			throw new ConfigurationException("Illegal open tag: " + currentLine);
 
 		String[] tokens = parseOpenTag(currentLine);
 
-		HttpdConfSetter httpdConfSetter = HttpdConfSetter
-				.getInstance(tokens[0]);
+		HttpdConfSetter httpdConfSetter = HttpdConfSetter.getInstance(tokens[0]);
 
 		if (httpdConfSetter == null)
 			return;
@@ -103,8 +100,7 @@ public class HttpdConfReader {
 		currentLine = readTagContent(lines);
 
 		if (!checkCloseTag(tokens[0], currentLine))
-			throw new ConfigurationException("Illegal close tag: "
-					+ currentLine);
+			throw new ConfigurationException("Illegal close tag: " + currentLine);
 
 		httpdConfSetter.process(lines);
 	}

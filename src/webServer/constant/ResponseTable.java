@@ -15,9 +15,9 @@ public final class ResponseTable {
 	public static final int NOT_FOUND = 404;
 	public static final int INTERNAL_SERVER_ERROR = 500;
 	public static final int NOT_IMPLEMENTED = 501;
-	
+
 	private static HashMap<Integer, String> responsePhrase = new HashMap<Integer, String>();
-	
+
 	static {
 		responsePhrase.put(OK, "200 OK");
 		responsePhrase.put(CREATED, "201 Created");
@@ -31,7 +31,7 @@ public final class ResponseTable {
 		responsePhrase.put(INTERNAL_SERVER_ERROR, "500 Internal Server Error");
 		responsePhrase.put(NOT_IMPLEMENTED, "501 Not Implemented");
 	}
-	
+
 	public static String getResponsePhrase(Integer statusCode) {
 		String phrase = responsePhrase.get(statusCode);
 		if (phrase != null)
@@ -40,5 +40,6 @@ public final class ResponseTable {
 			return responsePhrase.get(OK);
 	}
 
-	private ResponseTable(){}
+	private ResponseTable() {
+	}
 }

@@ -11,8 +11,7 @@ import webServer.request.Request;
 
 public class AccessLog {
 
-	private static final SimpleDateFormat LOG_DATE_FORMAT = new SimpleDateFormat(
-			"dd/MMM/yyyy :HH:mm:ss Z");
+	private static final SimpleDateFormat LOG_DATE_FORMAT = new SimpleDateFormat("dd/MMM/yyyy :HH:mm:ss Z");
 
 	public static void initialize() throws IOException {
 		if (!verifyFile(HttpdConf.LOG_FILE)) {
@@ -35,8 +34,8 @@ public class AccessLog {
 		userId = "-";
 		rfc1413 = "-";
 		time = LOG_DATE_FORMAT.format(Ulti.currentTimeMillis());
-		String content = String.format("%s %s %s [%s] \"%s\" %d", IP, rfc1413,
-				userId, time, requestLine, statusCode);
+		String content = String.format("%s %s %s [%s] \"%s\" %d", IP, rfc1413, userId, time, requestLine,
+				statusCode);
 		writeFile(content, HttpdConf.LOG_FILE);
 
 	}

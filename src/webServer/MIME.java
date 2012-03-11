@@ -11,14 +11,13 @@ import java.util.Set;
 import webServer.constant.HttpdConf;
 
 /**
- * <p> 
+ * <p>
  * MIME parse mime.types file.
  * </p>
  */
 public class MIME {
 
-	private static HashMap<String, String> MIMETable = new HashMap<String, String>(
-			1200, 0.9f);
+	private static HashMap<String, String> MIMETable = new HashMap<String, String>(1200, 0.9f);
 	private BufferedReader reader;
 
 	public MIME(String path) throws IOException {
@@ -33,7 +32,7 @@ public class MIME {
 		String line;
 		String[] tokens;
 		int size = 0;
-		
+
 		while ((line = reader.readLine()) != null) {
 			// skip comment and blink line
 			if (line.trim().length() == 0 || line.charAt(0) == '#') {

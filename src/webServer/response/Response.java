@@ -28,16 +28,14 @@ public class Response {
 
 	public static final String TAG = "Response";
 	public static final int BUFFER_SIZE = 2048;
-	public static final String ERROR_FILE_PATH = HttpdConf.SERVER_ROOT
-			+ "/error/";
-	private final static Pattern SCRIPT_PATTERN = Pattern
-			.compile("([^\\s]+(\\.(?i)(py|pl)))");
+	public static final String ERROR_FILE_PATH = HttpdConf.SERVER_ROOT + "/error/";
+	private final static Pattern SCRIPT_PATTERN = Pattern.compile("([^\\s]+(\\.(?i)(py|pl)))");
 
 	private final static int NOT_SECURE_DIR = 1;
 	private final static int NEED_AUTHENTICATE = 2;
 	private final static int AUTHENTICATED = 3;
 
-	private Request request = null ;
+	private Request request = null;
 	private OutputStream outStream = null;
 
 	public Response(Request request, OutputStream outStream) {
@@ -91,8 +89,7 @@ public class Response {
 	 * @return Authentication Code.
 	 * @throws ServerException
 	 */
-	private int authenticate(SecureDirectory secureDirectory)
-			throws ServerException {
+	private int authenticate(SecureDirectory secureDirectory) throws ServerException {
 
 		if (secureDirectory == null)
 			return NOT_SECURE_DIR;
@@ -124,11 +121,9 @@ public class Response {
 		return null;
 	}
 
-	private int sendAuthenticateMessage(SecureDirectory info)
-			throws ServerException {
-		String headerMessage = createBasicHeaderMessage(
-				ResponseTable.UNAUTHORIZED).buildAuthentication(
-				info.getAuthType(), info.getAuthName()).toString();
+	private int sendAuthenticateMessage(SecureDirectory info) throws ServerException {
+		String headerMessage = createBasicHeaderMessage(ResponseTable.UNAUTHORIZED)
+				.buildAuthentication(info.getAuthType(), info.getAuthName()).toString();
 		writeHeaderMessage(headerMessage);
 		return ResponseTable.UNAUTHORIZED;
 	}
@@ -165,8 +160,8 @@ public class Response {
 			int headerStringLen = cin.getHeaderStringSize();
 			byte[] content = cin.readBodyContent();
 			int contentLength = content.length - headerStringLen;
-			String headerMessage = createBasicHeaderMessage(ResponseTable.OK)
-					.buildContentLength(contentLength).toString();
+			String headerMessage = createBasicHeaderMessage(ResponseTable.OK).buildContentLength(
+					contentLength).toString();
 
 			BufferedOutputStream out = new BufferedOutputStream(outStream);
 			out.write(headerMessage.getBytes());
@@ -188,26 +183,23 @@ public class Response {
 	 * @return
 	 * @throws ServerException
 	 */
-	private int retrieveStaticDocument(boolean allowCache)
-			throws ServerException {
+	private int retrieveStaticDocument(boolean allowCache) throws ServerException {
 
 		if (request.getMethod().equals(Request.HEAD)) {
-			String headerMessage = createBasicHeaderMessage(ResponseTable.OK)
-					.toString();
+			String headerMessage = createBasicHeaderMessage(ResponseTable.OK).toString();
 			writeHeaderMessage(headerMessage);
 			return ResponseTable.OK;
 		}
 
 		File document = new File(request.getURI());
 		if (!isModified(document)) {
-			String headerMessage = createBasicHeaderMessage(
-					ResponseTable.NOT_MODIFIED).toString();
+			String headerMessage = createBasicHeaderMessage(ResponseTable.NOT_MODIFIED).toString();
 			writeHeaderMessage(headerMessage);
 			return ResponseTable.NOT_MODIFIED;
 		}
 
-		String headerMessage = createSimpleHeaderMessage(ResponseTable.OK,
-				document, allowCache).toString();
+		String headerMessage = createSimpleHeaderMessage(ResponseTable.OK, document, allowCache)
+				.toString();
 
 		writeHeaderMessage(headerMessage);
 		serveFile(document);
@@ -215,8 +207,7 @@ public class Response {
 	}
 
 	private boolean isModified(File file) {
-		String dateFromClient = request.getHeaderField().get(
-				HeaderFields.IF_MODIFIED_SINCE);
+		String dateFromClient = request.getHeaderField().get(HeaderFields.IF_MODIFIED_SINCE);
 		if (dateFromClient == null)
 			return true;
 		// Remove last three significant digits, because convert date from
@@ -245,8 +236,8 @@ public class Response {
 		try {
 			synchronized (this) {
 				if (!document.exists()) {
-					BufferedOutputStream out = new BufferedOutputStream(
-							new FileOutputStream(document));
+					BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(
+							document));
 					out.write(request.getParameterByteArray());
 					statusCode = ResponseTable.CREATED;
 					out.close();
@@ -254,8 +245,7 @@ public class Response {
 					statusCode = ResponseTable.NO_CONTENT;
 				}
 			}
-			String headerMessage = createBasicHeaderMessage(statusCode)
-					.toString();
+			String headerMessage = createBasicHeaderMessage(statusCode).toString();
 			writeHeaderMessage(headerMessage);
 			return statusCode;
 		} catch (IOException ioe) {
@@ -270,14 +260,14 @@ public class Response {
 
 	private HeaderBuilder createBasicHeaderMessage(int statusCode) {
 		HeaderBuilder builder = new HeaderBuilder();
-		return builder.buildHeaderBegin(statusCode, request.getHttpVersion())
-				.buildConnection("close");
+		return builder.buildHeaderBegin(statusCode, request.getHttpVersion()).buildConnection(
+				"close");
 	}
 
-	private HeaderBuilder createSimpleHeaderMessage(int statusCode,
-			File document, boolean allowCache) {
-		HeaderBuilder builder = createBasicHeaderMessage(statusCode)
-				.buildContentTypeAndLength(document);
+	private HeaderBuilder createSimpleHeaderMessage(int statusCode, File document,
+			boolean allowCache) {
+		HeaderBuilder builder = createBasicHeaderMessage(statusCode).buildContentTypeAndLength(
+				document);
 		if (allowCache && HttpdConf.CACHE_ENABLE)
 			builder.buildLastModified(document).buildCacheControl("public");
 		return builder;
@@ -297,8 +287,7 @@ public class Response {
 
 		try {
 			byte[] buf = new byte[BUFFER_SIZE];
-			BufferedInputStream in = new BufferedInputStream(
-					new FileInputStream(document));
+			BufferedInputStream in = new BufferedInputStream(new FileInputStream(document));
 			BufferedOutputStream out = new BufferedOutputStream(outStream);
 			int read = -1;
 			while ((read = in.read(buf)) > -1) {
@@ -308,28 +297,25 @@ public class Response {
 			out.flush();
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
-			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR,
-					"Response: WriteFile");
+			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR, "Response: WriteFile");
 		}
 	}
 
 	public void sendErrorMessage(int statusCode) {
 
-		String httpVersion = HttpdConf.HTTP_VERSION;
+		String httpVersion = HttpdConf.DEFAULT_HTTP_VERSION;
 		if (request != null && request.getHttpVersion() != null)
 			httpVersion = request.getHttpVersion();
 
 		try {
 
-			File errorFile = new File(ERROR_FILE_PATH
-					+ Integer.toString(statusCode) + ".html");
+			File errorFile = new File(ERROR_FILE_PATH + Integer.toString(statusCode) + ".html");
 			HeaderBuilder builder = new HeaderBuilder();
-			String headerMessage = builder
-					.buildHeaderBegin(statusCode, httpVersion)
+			String headerMessage = builder.buildHeaderBegin(statusCode, httpVersion)
 					.buildContentTypeAndLength(errorFile).toString();
 			writeHeaderMessage(headerMessage);
 			serveFile(errorFile);
-			
+
 		} catch (ServerException se) {
 			se.printStackTrace();
 		}

@@ -27,8 +27,8 @@ public final class Request {
 	protected Request() {
 	}
 
-	protected Request(String[] parameters, byte[] parameterByteArray,
-			Map<String, String> requestFields, String remoteUser, String IP) {
+	protected Request(String[] parameters, byte[] parameterByteArray, Map<String, String> requestFields,
+			String remoteUser, String IP) {
 		this.method = parameters[0];
 		this.URI = parameters[1];
 		this.httpVersion = parameters[2];
@@ -81,8 +81,8 @@ public final class Request {
 	public byte[] getParameterByteArray() {
 		return parameterByteArray;
 	}
-	
-	public String getRemoteUser(){
+
+	public String getRemoteUser() {
 		return remoteUser;
 	}
 }

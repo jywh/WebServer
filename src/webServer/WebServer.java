@@ -32,8 +32,7 @@ public class WebServer {
 	 *            The path to web server configuration directory.
 	 * 
 	 */
-	public WebServer(String confDiretory) throws IOException,
-			ConfigurationException {
+	public WebServer(String confDiretory) throws IOException, ConfigurationException {
 
 		this.prepareMIMETypes(confDiretory);
 		this.configure(confDiretory);
@@ -43,13 +42,11 @@ public class WebServer {
 
 	}
 
-	protected void configure(String confDirectory) throws IOException,
-			ConfigurationException {
+	protected void configure(String confDirectory) throws IOException, ConfigurationException {
 
 		File confFile = new File(confDirectory, HTTPD_CONF_FILE);
 		if (!confFile.exists())
-			throw new IOException("File not found: "
-					+ confFile.getAbsolutePath());
+			throw new IOException("File not found: " + confFile.getAbsolutePath());
 		new HttpdConfReader(confFile).readHttpdConfFile();
 
 	}
@@ -58,8 +55,7 @@ public class WebServer {
 
 		File mimeFile = new File(confDirectory, MIME_TYPES_FILE);
 		if (!mimeFile.exists())
-			throw new IOException("File not found: "
-					+ mimeFile.getAbsolutePath());
+			throw new IOException("File not found: " + mimeFile.getAbsolutePath());
 		new MIME(mimeFile).readMIMEType();
 
 	}
@@ -101,14 +97,13 @@ public class WebServer {
 			}
 
 			if (moreThreadAllowed()) {
-				ClientThread.instantiate(client.getInputStream(),
-						client.getOutputStream(),
+				ClientThread.instantiate(client.getInputStream(), client.getOutputStream(),
 						client.getInetAddress().getHostAddress()).start();
 				addThread();
 			} else {
 				System.out.println("Reach maximum thread capacity.");
 			}
-			
+
 			client = null;
 		}
 
@@ -119,8 +114,7 @@ public class WebServer {
 		WebServer webServer = null;
 		try {
 			if (args.length != 1) {
-				System.out
-						.println("Need one arg, which is the directory to httpd.conf file");
+				System.out.println("Need one arg, which is the directory to httpd.conf file");
 				System.out
 						.println("Usage (for jar file): java -jar <path of WebServer.jar> <directory to httpd.conf>");
 				return;

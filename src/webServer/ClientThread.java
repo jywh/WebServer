@@ -27,8 +27,7 @@ public class ClientThread extends Thread {
 		this.IP = IP;
 	}
 
-	public static ClientThread instantiate(InputStream in, OutputStream out,
-			String IP) {
+	public static ClientThread instantiate(InputStream in, OutputStream out, String IP) {
 		return new ClientThread(in, out, IP);
 	}
 

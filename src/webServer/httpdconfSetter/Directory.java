@@ -28,8 +28,7 @@ public class Directory extends HttpdConfSetter {
 		@SuppressWarnings("unchecked")
 		List<String> lines = (ArrayList<String>) line;
 		String[] tokens;
-		String secureDirectory = lines.get(0).substring(1,
-				lines.get(0).length() - 1);
+		String secureDirectory = lines.get(0).substring(1, lines.get(0).length() - 1);
 		String authName = null, authType = null, userType = null, authFile = null, user = null;
 		for (int i = 1; i < lines.size(); i++) {
 			tokens = lines.get(i).split(" ", 2);
@@ -44,22 +43,19 @@ public class Directory extends HttpdConfSetter {
 				tokens = tokens[1].split(" ");
 				user = (tokens.length > 1) ? tokens[1] : null;
 			} else {
-				throw new ConfigurationException(
-						"Directory contains  unknown element");
+				throw new ConfigurationException("Directory contains  unknown element");
 			}
 		}
 
-		if (authName == null || authType == null || userType == null
-				|| authFile == null)
-			throw new ConfigurationException(
-					"Configuration: Fail to read directory tag");
+		if (authName == null || authType == null || userType == null || authFile == null)
+			throw new ConfigurationException("Configuration: Fail to read directory tag");
 		List<String> users = retrieveAuthUser(userType, user, authFile);
-		HttpdConf.secureUsers.put(secureDirectory, new SecureDirectory(
-				secureDirectory, authName, authType, userType, users));
+		HttpdConf.secureUsers.put(secureDirectory, new SecureDirectory(secureDirectory, authName, authType,
+				userType, users));
 	}
 
-	private List<String> retrieveAuthUser(String userType, String user,
-			String path) throws ConfigurationException {
+	private List<String> retrieveAuthUser(String userType, String user, String path)
+			throws ConfigurationException {
 		if (userType.equals("valid-user")) {
 			return readAuthUserFileForValidUser(path);
 		} else {
@@ -75,8 +71,7 @@ public class Directory extends HttpdConfSetter {
 	 * @return
 	 * @throws ConfigurationException
 	 */
-	private List<String> readAuthUserFileForValidUser(String path)
-			throws ConfigurationException {
+	private List<String> readAuthUserFileForValidUser(String path) throws ConfigurationException {
 		File file = new File(path);
 		if (!file.exists())
 			throw new ConfigurationException("File not found: " + path);
@@ -106,8 +101,7 @@ public class Directory extends HttpdConfSetter {
 	 * @return
 	 * @throws ConfigurationException
 	 */
-	private List<String> readAuthFileForUser(String path, String user)
-			throws ConfigurationException {
+	private List<String> readAuthFileForUser(String path, String user) throws ConfigurationException {
 
 		File file = new File(path);
 		if (!file.exists())
@@ -150,8 +144,8 @@ public class Directory extends HttpdConfSetter {
 		private int userType;
 		private List<String> validUsers;
 
-		public SecureDirectory(String path, String authName, String authType,
-				String userType, List<String> validUsers) {
+		public SecureDirectory(String path, String authName, String authType, String userType,
+				List<String> validUsers) {
 			this.path = path;
 			this.authName = authName;
 			this.authType = authType;

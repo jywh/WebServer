@@ -44,7 +44,7 @@ public final class HttpdConf {
 
 	public static String DEFAULT_TYPE = "text/plain";
 
-	public static String HTTP_VERSION = "HTTP/1.1";
+	public static String DEFAULT_HTTP_VERSION = "HTTP/1.1";
 
 	/*************************************************************
 	 * Private Constructor

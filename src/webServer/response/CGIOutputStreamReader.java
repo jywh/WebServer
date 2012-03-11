@@ -43,7 +43,7 @@ public class CGIOutputStreamReader {
 		in.mark(200);
 		int count = 0;
 		char c;
-		while ( in.available() > 0 ) {
+		while (in.available() > 0) {
 			count++;
 			c = (char) in.read();
 			if (c == '\n' || c == '\r') {

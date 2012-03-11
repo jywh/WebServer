@@ -25,17 +25,14 @@ public class CGIHandler {
 	 * @return
 	 * @throws ServerException
 	 */
-	public CGIOutputStreamReader execute(Request request)
-			throws ServerException {
+	public CGIOutputStreamReader execute(Request request) throws ServerException {
 		try {
 			String scriptPath = getScriptPath(request.getURI());
 			ProcessBuilder pb = new ProcessBuilder(scriptPath, request.getURI());
 			addEnvironmentVariables(pb.environment(), request);
 			Process process;
-			if (request.getMethod().equals(Request.GET)
-					|| request.equals(Request.HEAD)) {
-				pb.environment().put(EnvVarTable.QUERY_STRING,
-						request.getParameterString());
+			if (request.getMethod().equals(Request.GET) || request.equals(Request.HEAD)) {
+				pb.environment().put(EnvVarTable.QUERY_STRING, request.getParameterString());
 				process = pb.start();
 			} else {
 				process = pb.start();
@@ -46,8 +43,7 @@ public class CGIHandler {
 
 		} catch (IOException e) {
 			e.printStackTrace();
-			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR,
-					"Fail to execute script");
+			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR, "Fail to execute script");
 		}
 
 	}
@@ -58,8 +54,7 @@ public class CGIHandler {
 	}
 
 	@SuppressWarnings("unused")
-	private String extractScriptPath(String script) throws IOException,
-			ServerException {
+	private String extractScriptPath(String script) throws IOException, ServerException {
 		BufferedReader reader = new BufferedReader(new FileReader(script));
 		String scriptPath = reader.readLine();
 		if (scriptPath.isEmpty())
@@ -67,14 +62,12 @@ public class CGIHandler {
 		return scriptPath.replace("#!", "");
 	}
 
-	private void addEnvironmentVariables(Map<String, String> env,
-			Request request) {
+	private void addEnvironmentVariables(Map<String, String> env, Request request) {
 		addNonHeaderFieldEnvVar(env, request);
 		addHeaderFieldsEnvVar(env, request.getHeaderField());
 	}
 
-	private void addNonHeaderFieldEnvVar(Map<String, String> env,
-			Request request) {
+	private void addNonHeaderFieldEnvVar(Map<String, String> env, Request request) {
 		env.put(EnvVarTable.SERVER_NAME, WebServer.SERVER_NAME);
 		env.put(EnvVarTable.SERVER_SOFTWARE, WebServer.SERVER_SOFTWARE);
 		env.put(EnvVarTable.GATEWAY_INTERFACE, WebServer.GATEWAY_INTERFACE);
@@ -85,12 +78,10 @@ public class CGIHandler {
 		env.put(EnvVarTable.REQUEST_METHOD, request.getMethod());
 		env.put(EnvVarTable.PATH_INFO, request.getPathInfo());
 		env.put(EnvVarTable.SCRIPT_NAME, request.getScriptName());
-		env.put(EnvVarTable.PATH_TRANSLATED,
-				(request.getPathInfo().isEmpty()) ? "" : request.getURI());
+		env.put(EnvVarTable.PATH_TRANSLATED, (request.getPathInfo().isEmpty()) ? "" : request.getURI());
 	}
 
-	private void addHeaderFieldsEnvVar(Map<String, String> env,
-			Map<String, String> headers) {
+	private void addHeaderFieldsEnvVar(Map<String, String> env, Map<String, String> headers) {
 		Set<String> keySet = headers.keySet();
 		for (String key : keySet) {
 			if (EnvVarTable.containKey(key))
@@ -98,10 +89,8 @@ public class CGIHandler {
 		}
 	}
 
-	private void servePostParameters(Process p, Request request)
-			throws IOException {
-		BufferedOutputStream args = new BufferedOutputStream(
-				p.getOutputStream());
+	private void servePostParameters(Process p, Request request) throws IOException {
+		BufferedOutputStream args = new BufferedOutputStream(p.getOutputStream());
 		args.write(request.getParameterByteArray());
 		args.close();
 	}

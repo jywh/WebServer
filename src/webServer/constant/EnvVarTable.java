@@ -4,8 +4,9 @@ import java.util.HashMap;
 
 /**
  * 
- * This class maps http request header field to corresponding Environment variables.  
- *
+ * This class maps http request header field to corresponding Environment
+ * variables.
+ * 
  */
 public final class EnvVarTable {
 
@@ -28,9 +29,9 @@ public final class EnvVarTable {
 	public static final String HTTP_USER_AGENT = "HTTP_USER_AGENT";
 	public static final String HTTP_COOKIE = "HTTP_COOKIE";
 	public static final String REMOTE_USER = "REMOTE_USER";
-	
+
 	private static HashMap<String, String> EnvTable = new HashMap<String, String>();
-	
+
 	static {
 		EnvTable.put(HeaderFields.ACCEPT, HTTP_ACCEPT);
 		EnvTable.put(HeaderFields.CONTENT_LENGTH, CONTENT_LENGTH);
@@ -39,17 +40,16 @@ public final class EnvVarTable {
 		EnvTable.put(HeaderFields.HOST, REMOTE_HOST);
 		EnvTable.put(HeaderFields.USER_AGENT, HTTP_USER_AGENT);
 	}
-	
-	public static boolean containKey(String key){
+
+	public static boolean containKey(String key) {
 		return EnvTable.containsKey(key);
 	}
-	
-	public static String get(String key){
+
+	public static String get(String key) {
 		return EnvTable.get(key);
 	}
-	
-	private EnvVarTable(){}
-	
-	
-	
+
+	private EnvVarTable() {
+	}
+
 }

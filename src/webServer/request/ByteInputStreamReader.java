@@ -130,7 +130,8 @@ public class ByteInputStreamReader {
 	/**
 	 * Convert certain size of input stream to byte array.
 	 * 
-	 * @param size The size of the input stream
+	 * @param size
+	 *            The size of the input stream
 	 * @return
 	 * @throws IOException
 	 */
