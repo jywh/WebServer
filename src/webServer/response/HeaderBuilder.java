@@ -12,11 +12,11 @@ import webServer.ulti.Ulti;
  * <p>
  * Helper class for building header message for response.
  * </p>
- *
+ * 
  */
 public class HeaderBuilder {
 
-	private static final String NEWLINE = System.getProperty("line.separator");
+	private static final String CRLF = "\r\n";
 
 	private StringBuilder builder;
 
@@ -31,9 +31,9 @@ public class HeaderBuilder {
 
 	public HeaderBuilder buildHeaderBegin(int statusCode, String httpVersion) {
 		builder.append(httpVersion).append(" ").append(ResponseTable.getResponsePhrase(statusCode))
-				.append(NEWLINE).append(HeaderFields.DATE).append(": ")
-				.append(Ulti.getTimeFull(System.currentTimeMillis())).append(NEWLINE)
-				.append(HeaderFields.SERVER).append(": ").append(WebServer.SERVER_NAME).append(NEWLINE);
+				.append(CRLF).append(HeaderFields.DATE).append(": ")
+				.append(Ulti.getTimeFull(System.currentTimeMillis())).append(CRLF)
+				.append(HeaderFields.SERVER).append(": ").append(WebServer.SERVER_NAME).append(CRLF);
 		return this;
 	}
 
@@ -45,41 +45,41 @@ public class HeaderBuilder {
 	}
 
 	public HeaderBuilder buildContentType(String mime) {
-		builder.append(HeaderFields.CONTENT_TYPE).append(": ").append(mime).append(NEWLINE);
+		builder.append(HeaderFields.CONTENT_TYPE).append(": ").append(mime).append(CRLF);
 		return this;
 	}
 
 	public HeaderBuilder buildContentLength(int length) {
-		builder.append(HeaderFields.CONTENT_LENGTH).append(": ").append(length).append(NEWLINE);
+		builder.append(HeaderFields.CONTENT_LENGTH).append(": ").append(length).append(CRLF);
 		return this;
 	}
 
 	public HeaderBuilder buildLastModified(long date) {
 		builder.append(HeaderFields.LAST_MODIFIED).append(": ").append(Ulti.getTimeFull(date))
-				.append(NEWLINE);
+				.append(CRLF);
 		return this;
 
 	}
 
 	public HeaderBuilder buildCacheControl(String how) {
-		builder.append(HeaderFields.CACHE_CONTROL).append(": ").append(how).append(NEWLINE);
+		builder.append(HeaderFields.CACHE_CONTROL).append(": ").append(how).append(CRLF);
 		return this;
 	}
 
 	public HeaderBuilder buildConnection(String connection) {
-		builder.append(HeaderFields.CONNECTION).append(": ").append(connection).append(NEWLINE);
+		builder.append(HeaderFields.CONNECTION).append(": ").append(connection).append(CRLF);
 		return this;
 	}
 
 	public HeaderBuilder buildExpireTime(long millisFromNow) {
 		builder.append(HeaderFields.EXPIRE).append(": ")
-				.append(Ulti.getTimeFull(Ulti.currentTimeMillis() + millisFromNow)).append(NEWLINE);
+				.append(Ulti.getTimeFull(Ulti.currentTimeMillis() + millisFromNow)).append(CRLF);
 		return this;
 	}
 
 	public HeaderBuilder buildAuthentication(String authType, String realm) {
 		builder.append(HeaderFields.WWW_AUTHENTICATE).append(": ").append(authType).append(" realm=")
-				.append(realm).append(NEWLINE);
+				.append(realm).append(CRLF);
 		return this;
 	}
 

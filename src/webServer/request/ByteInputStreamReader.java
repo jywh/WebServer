@@ -28,25 +28,25 @@ public class ByteInputStreamReader {
 
 	/**
 	 * Reads a line of text. A line is considered to be terminated by any one of
-	 * a line feed ('\n'), a carriage return ('\r'), or a carriage return
-	 * followed immediately by a linefeed.
+	 * a line feed ('\n'), a carriage return ('\r'), or a Carriage Return
+	 * followed immediately by a LineFeed (CRLF).
 	 * 
 	 * @return A text line.
 	 **/
 	public String readLine() throws IOException {
 		if (!in.markSupported())
 			return null;
-		int count = 0;
+		int size = 0;
 		in.mark(200);
 		char c = (char)in.read();
 		while ( c != '\r' && c != '\n'){
-			count ++;
+			size ++;
 			c = (char)in.read();
 		}
 		in.reset();
-		byte[] buf = new byte[count];
-		in.read(buf, 0, buf.length);
-		// skip newline char, each char 2 bytes
+		byte[] buf = new byte[size];
+		in.read(buf, 0, size);
+		// skip CRLF
 		skip(2);
 		return new String(buf);
 	}
@@ -63,7 +63,7 @@ public class ByteInputStreamReader {
 		int s;
 		char c;
 		while (in.available() > 0) {
-			in.mark(1);
+			in.mark(2);
 			s = in.read();
 			c = (char) s;
 			if (s == -1 || (c != '\n' && c != '\r'))

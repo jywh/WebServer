@@ -28,13 +28,13 @@ import com.sun.org.apache.xml.internal.security.utils.Base64;
  * 
  * <p>
  * Reponse to client request.
- *</p> 
- *
+ * </p>
+ * 
  */
 public class Response {
 
-	public static final String TAG = "Response";
-	public static final String ERROR_FILE_PATH = HttpdConf.SERVER_ROOT + "/error/";
+	public final static String TAG = "Response";
+	public final static String ERROR_FILE_PATH = HttpdConf.SERVER_ROOT + "/error/";
 	private final static Pattern SCRIPT_PATTERN = Pattern.compile("([^\\s]+(\\.(?i)(py|pl)))");
 
 	private final static int NOT_SECURE_DIR = 1;
@@ -49,18 +49,17 @@ public class Response {
 		this.outStream = outStream;
 	}
 
-	public Response(OutputStream outStream){
+	public Response(OutputStream outStream) {
 		this.outStream = outStream;
 	}
-	
+
 	/**
 	 * Process request, produce appropriate response. Check if the URI contains secure directory.
 	 * 
 	 * options:
 	 * 
-	 * 1. NOT_SECURE_DIR: contains no secure directory. 
-	 * 2. NEED_AUTHENTICATE: contains secure directory, need authentication. 
-	 * 3. AUTHENTICATED: pass authentication.
+	 * 1. NOT_SECURE_DIR: contains no secure directory. 2. NEED_AUTHENTICATE: contains secure directory, need
+	 * authentication. 3. AUTHENTICATED: pass authentication.
 	 * 
 	 * @param request
 	 *            A request object created by RequestParser
@@ -72,7 +71,7 @@ public class Response {
 		int statusCode;
 
 		SecureDirectory secureDirectory = getSecureDirectory(request.getURI());
-		switch (authenticate(secureDirectory)) {
+		switch (checkAuthentication(secureDirectory)) {
 		case NOT_SECURE_DIR:
 			statusCode = processNormalRequest(true);
 			break;
@@ -100,7 +99,7 @@ public class Response {
 	 * @return Authentication Code.
 	 * @throws ServerException
 	 */
-	private int authenticate(SecureDirectory secureDirectory) throws ServerException {
+	private int checkAuthentication(SecureDirectory secureDirectory) throws ServerException {
 
 		if (secureDirectory == null)
 			return NOT_SECURE_DIR;
@@ -124,10 +123,10 @@ public class Response {
 	}
 
 	/**
-	 * Get secure directory if it exists, return null otherwise.
+	 * Check if the URI contain any secure directory that is defined in httpd.conf file.
 	 * 
 	 * @param uri
-	 * @return
+	 * @return The secure directory if it exists, null otherwise.
 	 */
 	private SecureDirectory getSecureDirectory(String uri) {
 		Set<String> secureDirectories = HttpdConf.secureUsers.keySet();
@@ -157,7 +156,7 @@ public class Response {
 	 *************************************************************/
 
 	private int processNormalRequest(boolean allowCache) throws ServerException {
-		
+
 		if (request.getMethod().equals(Request.PUT)) {
 			return processPUT();
 		} else if (isScript(request.getURI())) {
@@ -165,7 +164,6 @@ public class Response {
 		} else {
 			return retrieveStaticDocument(allowCache);
 		}
-
 	}
 
 	/**
@@ -179,6 +177,13 @@ public class Response {
 		return SCRIPT_PATTERN.matcher(file.getName()).matches();
 	}
 
+	/**
+	 * 
+	 * Send the script to CGIHandler, then capture the output of script execution and send back to client.
+	 * 
+	 * @return The status code
+	 * @throws ServerException
+	 */
 	private int executeScript() throws ServerException {
 		CGIOutputStreamReader cin = new CGIHandler().sendScript(request);
 		try {
@@ -195,7 +200,7 @@ public class Response {
 			out.flush();
 
 			return ResponseTable.OK;
-			
+
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
@@ -253,9 +258,10 @@ public class Response {
 	}
 
 	/**
-	 * Since all the files will be uploaded to the same directory, synchronized block will ensure that there
-	 * is only on thread allow to write the file to UPLOAD directory at once. It also ensure there won't be
-	 * multiple threads uploading files with the same name that the previous one gets overwritten.
+	 * Response to PUT method. Since all the files will be uploaded to the same directory, synchronized block
+	 * will ensure that there is only on thread allow to write the file to UPLOAD directory at once. It also
+	 * ensure there won't be multiple threads uploading files with the same name that the previous one gets
+	 * overwritten.
 	 * 
 	 */
 	private int processPUT() throws ServerException {
@@ -286,7 +292,7 @@ public class Response {
 	 *************************************************************/
 
 	/**
-	 * Build header message for basic response.
+	 * Build header message for basic response with header field connection.
 	 * 
 	 */
 	private HeaderBuilder createBasicHeaderMessage(int statusCode) {
