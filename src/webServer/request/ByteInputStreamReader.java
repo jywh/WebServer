@@ -36,14 +36,13 @@ public class ByteInputStreamReader {
 		if (!in.markSupported())
 			return null;
 		int count = 0;
-		in.mark(0);
-		char c = (char) in.read();
+		in.mark(200);
+		char c;
 		while (in.available() > 0) {
 			c = (char) in.read();
-			count++;
 			if (c == '\r' || c == '\n')
 				break;
-
+			count++;
 		}
 		in.reset();
 		byte[] buf = new byte[count];
@@ -66,7 +65,7 @@ public class ByteInputStreamReader {
 		int s;
 		char c;
 		while (in.available() > 0) {
-			in.mark(3);
+			in.mark(1);
 			s = in.read();
 			c = (char) s;
 			if (s == -1 || (c != '\n' && c != '\r'))

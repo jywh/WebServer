@@ -35,19 +35,22 @@ public class ClientThread extends Thread {
 	@Override
 	public void run() {
 
+		Response response = null;
 		try {
 
 			Request request = new RequestParser().parse(inputStream, IP);
-			new Response(request, outStream).processRequest();
-
+			response = new Response(request, outStream);
+			response.processRequest();
 		} catch (ServerException e) {
-			e.printMessage();
 			e.printStackTrace();
-			new Response(outStream).sendErrorMessage(e.getStatusCode());
+			if (response == null)
+				response = new Response(null, outStream);
+			response.sendErrorMessage(e.getStatusCode());
 		} catch (Exception e) {
 			e.printStackTrace();
-			new Response(outStream)
-					.sendErrorMessage(ResponseTable.INTERNAL_SERVER_ERROR);
+			if (response == null)
+				response = new Response(null, outStream);
+			response.sendErrorMessage(ResponseTable.INTERNAL_SERVER_ERROR);
 		} finally {
 			try {
 				inputStream.close();

@@ -25,9 +25,9 @@ import com.sun.org.apache.xml.internal.security.utils.Base64;
  */
 public class RequestParser {
 
-	public static String TAG = "RequestParser";
+	public static final String TAG = "RequestParser";
 	public static final String URI_SEPARATOR = "/";
-	private final static Pattern PATTERN = Pattern
+	private static final Pattern SCRIPT_PATTERN = Pattern
 			.compile("/([^\\s]+(\\.(?i)(py|pl)))/");
 
 	private ByteInputStreamReader requestStream;
@@ -40,7 +40,6 @@ public class RequestParser {
 		requestStream = new ByteInputStreamReader(inputStream);
 		try {
 
-			// Parse first line of request message
 			String[] parameters = parseFirstLine(requestStream.readLine());
 			Map<String, String> headerFields = extractHeaderFields();
 			// Read body if it is POST or PUT, otherwise it is an empty array
@@ -179,7 +178,7 @@ public class RequestParser {
 	 */
 	public String[] extractPathInfo(String URI) {
 
-		String[] tokens = PATTERN.split(URI);
+		String[] tokens = SCRIPT_PATTERN.split(URI);
 		if (tokens.length < 2)
 			return new String[] { URI, "" };
 

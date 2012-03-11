@@ -38,15 +38,11 @@ public class Response {
 	private final static int NEED_AUTHENTICATE = 2;
 	private final static int AUTHENTICATED = 3;
 
-	private Request request;
-	private OutputStream outStream;
+	private Request request = null ;
+	private OutputStream outStream = null;
 
 	public Response(Request request, OutputStream outStream) {
 		this.request = request;
-		this.outStream = outStream;
-	}
-
-	public Response(OutputStream outStream) {
 		this.outStream = outStream;
 	}
 
@@ -92,7 +88,6 @@ public class Response {
 	/**
 	 * Check if contains secure directory.
 	 * 
-	 * 
 	 * @param request
 	 * @return Authentication Code.
 	 * @throws ServerException
@@ -110,7 +105,6 @@ public class Response {
 		String[] tokens = auth.split(" ", 2);
 		if (tokens[0].equals("Basic")) {
 			printSecureKey(secureDirectory);
-			// System.out.println("key: "+tokens[1]);
 			try {
 				String decodedText = new String(Base64.decode(tokens[1]));
 				if (secureDirectory.getUser().contains(decodedText))
@@ -163,20 +157,23 @@ public class Response {
 
 	}
 
+	/**
+	 * Check if the URI is the path to script file.
+	 * 
+	 * @param URI
+	 * @return
+	 */
 	protected boolean isScript(String URI) {
 		File file = new File(URI);
 		return SCRIPT_PATTERN.matcher(file.getName()).matches();
 	}
 
 	protected int executeScript() throws ServerException {
-		CGIOutputStreamReader cin = new CGI().execute(request);
+		CGIOutputStreamReader cin = new CGIHandler().execute(request);
 		try {
 			int headerStringLen = cin.getHeaderStringSize();
 			byte[] content = cin.readBodyContent();
-			int contentLength = content.length - headerStringLen - 1; // 1 byte
-																		// for
-																		// newline
-																		// char
+			int contentLength = content.length - headerStringLen;
 			String headerMessage = createBasicHeaderMessage(ResponseTable.OK)
 					.buildContentLength(contentLength).toString();
 
@@ -193,6 +190,13 @@ public class Response {
 		}
 	}
 
+	/**
+	 * Retrieve static file from server.
+	 * 
+	 * @param allowCache
+	 * @return
+	 * @throws ServerException
+	 */
 	protected int retrieveStaticDocument(boolean allowCache)
 			throws ServerException {
 
@@ -224,7 +228,9 @@ public class Response {
 				HeaderFields.IF_MODIFIED_SINCE);
 		if (dateFromClient == null)
 			return true;
-		// remove last three significant digits
+		// Remove last three significant digits, because convert date from
+		// String to long lose
+		// last three significant digits.
 		long lastModified = (file.lastModified() / 1000L) * 1000L;
 		try {
 			Date clientDate = (Date) Ulti.DATE_FORMATE.parse(dateFromClient);
@@ -237,9 +243,10 @@ public class Response {
 
 	/**
 	 * Since all the files will be uploaded to the same directory, synchronized
-	 * block will ensure there is only on thread can write file to UPLOAD
-	 * directory at once. It also ensure there won't be multiple threads
-	 * uploading files with the same name that the forth one gets overwritten.
+	 * block will ensure that there is only on thread allow to write the file to
+	 * UPLOAD directory at once. It also ensure there won't be multiple threads
+	 * uploading files with the same name that the previous one gets
+	 * overwritten.
 	 * 
 	 */
 	protected int processPUT() throws ServerException {
@@ -327,15 +334,21 @@ public class Response {
 
 	public void sendErrorMessage(int statusCode) {
 
+		String httpVersion = HttpdConf.HTTP_VERSION;
+		if (request != null && request.getHttpVersion() != null)
+			httpVersion = request.getHttpVersion();
+
 		try {
+
 			File errorFile = new File(ERROR_FILE_PATH
 					+ Integer.toString(statusCode) + ".html");
 			HeaderBuilder builder = new HeaderBuilder();
 			String headerMessage = builder
-					.buildHeaderBegin(statusCode, HttpdConf.HTTP_VERSION)
+					.buildHeaderBegin(statusCode, httpVersion)
 					.buildContentTypeAndLength(errorFile).toString();
 			writeHeaderMessage(headerMessage);
 			serveFile(errorFile);
+			
 		} catch (ServerException se) {
 			se.printStackTrace();
 		}

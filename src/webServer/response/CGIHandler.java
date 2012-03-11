@@ -16,7 +16,7 @@ import webServer.request.Request;
 import webServer.ulti.ServerException;
 import webServer.ulti.Ulti;
 
-public class CGI {
+public class CGIHandler {
 
 	/**
 	 * Execute script
