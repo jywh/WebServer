@@ -30,7 +30,7 @@ public class CGIOutputStreamReader {
 	 * Check for the offset of consecutive line terminators, where is the break
 	 * of header string and body.
 	 * 
-	 * A line terminator consistes each a linefeed ('\n'), or a carriage return
+	 * A line terminator consistes either a linefeed ('\n'), or a carriage return
 	 * ('\r') or a carriage return followed inmediately by a linefeed.
 	 * 
 	 * @return The size of header string in bytes.
@@ -94,6 +94,7 @@ public class CGIOutputStreamReader {
 			bos.write(buf, 0, len);
 		buf = bos.toByteArray();
 		return buf;
+		
 	}
 
 }

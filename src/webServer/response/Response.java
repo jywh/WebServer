@@ -49,6 +49,10 @@ public class Response {
 		this.outStream = outStream;
 	}
 
+	public Response(OutputStream outStream){
+		this.outStream = outStream;
+	}
+	
 	/**
 	 * Process request, produce appropriate response. Check if the URI contains secure directory.
 	 * 
@@ -176,7 +180,7 @@ public class Response {
 	}
 
 	private int executeScript() throws ServerException {
-		CGIOutputStreamReader cin = new CGIHandler().execute(request);
+		CGIOutputStreamReader cin = new CGIHandler().sendScript(request);
 		try {
 			int headerStringLen = cin.getHeaderStringSize();
 			byte[] content = cin.readBodyContent();
@@ -301,7 +305,7 @@ public class Response {
 	private HeaderBuilder createSimpleHeaderMessage(int statusCode, File document, boolean allowCache) {
 		HeaderBuilder builder = createBasicHeaderMessage(statusCode).buildContentTypeAndLength(document);
 		if (allowCache && HttpdConf.CACHE_ENABLE)
-			builder.buildLastModified(document).buildCacheControl("public");
+			builder.buildLastModified(document.lastModified()).buildCacheControl("public");
 		return builder;
 
 	}

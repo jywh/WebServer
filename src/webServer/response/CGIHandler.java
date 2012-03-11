@@ -19,13 +19,13 @@ import webServer.ulti.Ulti;
 public class CGIHandler {
 
 	/**
-	 * Execute script
+	 * Send script to external intepretere for execution, and read in execution result.
 	 * 
 	 * @param request
 	 * @return
 	 * @throws ServerException
 	 */
-	public CGIOutputStreamReader execute(Request request) throws ServerException {
+	public CGIOutputStreamReader sendScript(Request request) throws ServerException {
 		try {
 			String scriptPath = getScriptPath(request.getURI());
 			ProcessBuilder pb = new ProcessBuilder(scriptPath, request.getURI());
@@ -48,12 +48,14 @@ public class CGIHandler {
 
 	}
 
-	private String getScriptPath(String URI) {
+	private String getScriptPath(String URI) throws IOException, ServerException {
 		String ext = Ulti.getFileExtension(new File(URI));
-		return HttpdConf.CGI_HANDLER.get(ext);
+		String scriptPath = HttpdConf.CGI_HANDLER.get(ext);
+		if ( scriptPath == null )
+			return extractScriptPath(URI);
+		return scriptPath;
 	}
 
-	@SuppressWarnings("unused")
 	private String extractScriptPath(String script) throws IOException, ServerException {
 		BufferedReader reader = new BufferedReader(new FileReader(script));
 		String scriptPath = reader.readLine();

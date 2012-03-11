@@ -43,12 +43,12 @@ public class ClientThread extends Thread {
 		} catch (ServerException e) {
 			e.printStackTrace();
 			if (response == null)
-				response = new Response(null, outStream);
+				response = new Response(outStream);
 			response.sendErrorMessage(e.getStatusCode());
 		} catch (Exception e) {
 			e.printStackTrace();
 			if (response == null)
-				response = new Response(null, outStream);
+				response = new Response(outStream);
 			response.sendErrorMessage(ResponseTable.INTERNAL_SERVER_ERROR);
 		} finally {
 			try {

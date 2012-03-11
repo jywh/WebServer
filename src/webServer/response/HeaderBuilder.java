@@ -8,9 +8,15 @@ import webServer.constant.HeaderFields;
 import webServer.constant.ResponseTable;
 import webServer.ulti.Ulti;
 
+/**
+ * <p>
+ * Helper class for building header message for response.
+ * </p>
+ *
+ */
 public class HeaderBuilder {
 
-	public static final String NEWLINE = System.getProperty("line.separator");
+	private static final String NEWLINE = System.getProperty("line.separator");
 
 	private StringBuilder builder;
 
@@ -48,9 +54,8 @@ public class HeaderBuilder {
 		return this;
 	}
 
-	public HeaderBuilder buildLastModified(File file) {
-		long lastModified = file.lastModified();
-		builder.append(HeaderFields.LAST_MODIFIED).append(": ").append(Ulti.getTimeFull(lastModified))
+	public HeaderBuilder buildLastModified(long date) {
+		builder.append(HeaderFields.LAST_MODIFIED).append(": ").append(Ulti.getTimeFull(date))
 				.append(NEWLINE);
 		return this;
 
