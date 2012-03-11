@@ -18,7 +18,6 @@ import webServer.constant.ResponseTable;
 import webServer.httpdconfSetter.Directory.SecureDirectory;
 import webServer.request.Request;
 import webServer.ulti.AccessLog;
-import webServer.ulti.Log;
 import webServer.ulti.ServerException;
 import webServer.ulti.Ulti;
 
@@ -98,13 +97,12 @@ public class Response {
 		if (secureDirectory == null)
 			return NOT_SECURE_DIR;
 
-		if (!request.getRequestField().containsKey(HeaderFields.AUTHORIZATION))
+		if (!request.getHeaderField().containsKey(HeaderFields.AUTHORIZATION))
 			return NEED_AUTHENTICATE;
 
-		String auth = request.getRequestField().get(HeaderFields.AUTHORIZATION);
+		String auth = request.getHeaderField().get(HeaderFields.AUTHORIZATION);
 		String[] tokens = auth.split(" ", 2);
 		if (tokens[0].equals("Basic")) {
-			printSecureKey(secureDirectory);
 			try {
 				String decodedText = new String(Base64.decode(tokens[1]));
 				if (secureDirectory.getUser().contains(decodedText))
@@ -126,14 +124,7 @@ public class Response {
 		return null;
 	}
 
-	private void printSecureKey(SecureDirectory sd) {
-		System.out.println("Secure keys for " + sd.getPath());
-		for (String str : sd.getUser()) {
-			System.out.println(str);
-		}
-	}
-
-	protected int sendAuthenticateMessage(SecureDirectory info)
+	private int sendAuthenticateMessage(SecureDirectory info)
 			throws ServerException {
 		String headerMessage = createBasicHeaderMessage(
 				ResponseTable.UNAUTHORIZED).buildAuthentication(
@@ -146,7 +137,7 @@ public class Response {
 	 * Process normal request
 	 *************************************************************/
 
-	protected int processNormalRequest(boolean cached) throws ServerException {
+	private int processNormalRequest(boolean cached) throws ServerException {
 		if (request.getMethod().equals(Request.PUT)) {
 			return processPUT();
 		} else if (isScript(request.getURI())) {
@@ -163,12 +154,12 @@ public class Response {
 	 * @param URI
 	 * @return
 	 */
-	protected boolean isScript(String URI) {
+	private boolean isScript(String URI) {
 		File file = new File(URI);
 		return SCRIPT_PATTERN.matcher(file.getName()).matches();
 	}
 
-	protected int executeScript() throws ServerException {
+	private int executeScript() throws ServerException {
 		CGIOutputStreamReader cin = new CGIHandler().execute(request);
 		try {
 			int headerStringLen = cin.getHeaderStringSize();
@@ -197,7 +188,7 @@ public class Response {
 	 * @return
 	 * @throws ServerException
 	 */
-	protected int retrieveStaticDocument(boolean allowCache)
+	private int retrieveStaticDocument(boolean allowCache)
 			throws ServerException {
 
 		if (request.getMethod().equals(Request.HEAD)) {
@@ -223,14 +214,13 @@ public class Response {
 		return ResponseTable.OK;
 	}
 
-	protected boolean isModified(File file) {
-		String dateFromClient = request.getRequestField().get(
+	private boolean isModified(File file) {
+		String dateFromClient = request.getHeaderField().get(
 				HeaderFields.IF_MODIFIED_SINCE);
 		if (dateFromClient == null)
 			return true;
 		// Remove last three significant digits, because convert date from
-		// String to long lose
-		// last three significant digits.
+		// String to long lose last three significant digits.
 		long lastModified = (file.lastModified() / 1000L) * 1000L;
 		try {
 			Date clientDate = (Date) Ulti.DATE_FORMATE.parse(dateFromClient);
@@ -249,7 +239,7 @@ public class Response {
 	 * overwritten.
 	 * 
 	 */
-	protected int processPUT() throws ServerException {
+	private int processPUT() throws ServerException {
 		int statusCode;
 		File document = new File(request.getURI());
 		try {
@@ -278,26 +268,19 @@ public class Response {
 	 * Build Header String
 	 *************************************************************/
 
-	protected HeaderBuilder createBasicHeaderMessage(int statusCode) {
+	private HeaderBuilder createBasicHeaderMessage(int statusCode) {
 		HeaderBuilder builder = new HeaderBuilder();
 		return builder.buildHeaderBegin(statusCode, request.getHttpVersion())
 				.buildConnection("close");
 	}
 
-	protected HeaderBuilder createSimpleHeaderMessage(int statusCode,
+	private HeaderBuilder createSimpleHeaderMessage(int statusCode,
 			File document, boolean allowCache) {
 		HeaderBuilder builder = createBasicHeaderMessage(statusCode)
 				.buildContentTypeAndLength(document);
 		if (allowCache && HttpdConf.CACHE_ENABLE)
 			builder.buildLastModified(document).buildCacheControl("public");
 		return builder;
-
-	}
-
-	protected String checkPersistentConnection() {
-		String connection = request.getRequestField().get(
-				HeaderFields.CONNECTION);
-		return (connection != null) ? connection : "close";
 
 	}
 
@@ -311,8 +294,6 @@ public class Response {
 	}
 
 	protected void serveFile(File document) throws ServerException {
-
-		Log.debug(TAG, "document path:" + document.getAbsolutePath());
 
 		try {
 			byte[] buf = new byte[BUFFER_SIZE];

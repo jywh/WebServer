@@ -2,10 +2,9 @@ package webServer.ulti;
 
 
 /**
+ * <p>
  * Fatal exception, server should stop when this exception is caught. 
- * It is used in HttpdSetter, and HttpdConfReader
- * 
- *
+ * </p>
  */
 @SuppressWarnings("serial")
 public class ConfigurationException extends Exception {

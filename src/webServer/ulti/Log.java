@@ -2,18 +2,14 @@ package webServer.ulti;
 
 
 /**
- * 
- * This class is used for log server access informatipon and for debugging.
- * 
+ * <p>
+ * This class is used for debugging.
+ * </p>
  *
  */
 public class Log {
 
 	private static boolean DEBUG = false;
-	
-	/*************************************************************
-	 * Debug log
-	 *************************************************************/
 	
 	public static void debug(String tag, String message){
 		if( DEBUG )

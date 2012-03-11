@@ -70,7 +70,7 @@ public class CGIHandler {
 	private void addEnvironmentVariables(Map<String, String> env,
 			Request request) {
 		addNonHeaderFieldEnvVar(env, request);
-		addHeaderFieldsEnvVar(env, request.getRequestField());
+		addHeaderFieldsEnvVar(env, request.getHeaderField());
 	}
 
 	private void addNonHeaderFieldEnvVar(Map<String, String> env,

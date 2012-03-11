@@ -7,8 +7,6 @@ package webServer.ulti;
  * 
  * statusCode refers to http error code.
  * 
- * @author Wenhui
- *
  */
 @SuppressWarnings("serial")
 public class ServerException extends Exception{

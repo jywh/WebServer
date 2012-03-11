@@ -19,7 +19,7 @@ import java.io.InputStream;
  */
 public class CGIOutputStreamReader {
 
-	private InputStream in;
+	private BufferedInputStream in;
 	private String headerString;
 
 	public CGIOutputStreamReader(InputStream in) {

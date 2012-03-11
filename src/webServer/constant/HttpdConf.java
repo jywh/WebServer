@@ -8,8 +8,6 @@ import webServer.httpdconfSetter.Directory;
 /**
  * Constant class
  * 
- * @author Wenhui
- * 
  */
 public final class HttpdConf {
 

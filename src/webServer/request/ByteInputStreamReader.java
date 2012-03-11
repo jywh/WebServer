@@ -16,7 +16,7 @@ import java.io.InputStream;
  */
 public class ByteInputStreamReader {
 
-	private InputStream in;
+	private BufferedInputStream in;
 
 	public ByteInputStreamReader(InputStream in) {
 		this.in = new BufferedInputStream(in);
@@ -31,6 +31,7 @@ public class ByteInputStreamReader {
 	 * a line feed ('\n'), a carriage return ('\r'), or a carriage return
 	 * followed immediately by a linefeed.
 	 * 
+	 * @return A text line.
 	 **/
 	public String readLine() throws IOException {
 		if (!in.markSupported())
@@ -49,7 +50,6 @@ public class ByteInputStreamReader {
 		in.read(buf, 0, buf.length);
 		// skip newline char, each char 2 bytes
 		skip(2);
-		// System.out.println(new String(buf));
 		return new String(buf);
 	}
 

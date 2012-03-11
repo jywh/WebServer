@@ -4,14 +4,14 @@ import java.util.Map;
 
 import webServer.constant.HttpdConf;
 
-public class Request {
+public final class Request {
 
 	public static final String GET = "GET";
 	public static final String POST = "POST";
 	public static final String HEAD = "HEAD";
 	public static final String PUT = "PUT";
 
-	private Map<String, String> requestFields;
+	private Map<String, String> headerFields;
 	private String httpVersion, URI, parameterString;
 	private String method;
 	private String IP;
@@ -38,7 +38,7 @@ public class Request {
 		this.parameterByteArray = parameterByteArray;
 		this.remoteUser = remoteUser;
 		this.IP = IP;
-		this.requestFields = requestFields;
+		this.headerFields = requestFields;
 
 	}
 
@@ -58,8 +58,8 @@ public class Request {
 		return httpVersion;
 	}
 
-	public Map<String, String> getRequestField() {
-		return requestFields;
+	public Map<String, String> getHeaderField() {
+		return headerFields;
 	}
 
 	public String replaceWithDocumentRoot(String URI) {
