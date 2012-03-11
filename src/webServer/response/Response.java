@@ -24,10 +24,16 @@ import webServer.ulti.Ulti;
 import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 
+/**
+ * 
+ * <p>
+ * Reponse to client request.
+ *</p> 
+ *
+ */
 public class Response {
 
 	public static final String TAG = "Response";
-	public static final int BUFFER_SIZE = 2048;
 	public static final String ERROR_FILE_PATH = HttpdConf.SERVER_ROOT + "/error/";
 	private final static Pattern SCRIPT_PATTERN = Pattern.compile("([^\\s]+(\\.(?i)(py|pl)))");
 
@@ -44,12 +50,13 @@ public class Response {
 	}
 
 	/**
-	 * Process request, produce appropriate response. Check if the URI contain secure directory, return three
+	 * Process request, produce appropriate response. Check if the URI contains secure directory.
+	 * 
 	 * options:
 	 * 
 	 * 1. NOT_SECURE_DIR: contains no secure directory. 
-	 * 2. NEED_AUTHENTICATE: contains secure directory, needauthentication. 
-	 * 3. AUTHENTICATED: contains secure directory, and has correct password/username.
+	 * 2. NEED_AUTHENTICATE: contains secure directory, need authentication. 
+	 * 3. AUTHENTICATED: pass authentication.
 	 * 
 	 * @param request
 	 *            A request object created by RequestParser
@@ -112,6 +119,12 @@ public class Response {
 		throw new ServerException(ResponseTable.FORBIDDEN);
 	}
 
+	/**
+	 * Get secure directory if it exists, return null otherwise.
+	 * 
+	 * @param uri
+	 * @return
+	 */
 	private SecureDirectory getSecureDirectory(String uri) {
 		Set<String> secureDirectories = HttpdConf.secureUsers.keySet();
 		for (String directory : secureDirectories) {
@@ -121,6 +134,13 @@ public class Response {
 		return null;
 	}
 
+	/**
+	 * Send authentication request to client.
+	 * 
+	 * @param info
+	 * @return
+	 * @throws ServerException
+	 */
 	private int sendAuthenticateMessage(SecureDirectory info) throws ServerException {
 		String headerMessage = createBasicHeaderMessage(ResponseTable.UNAUTHORIZED).buildAuthentication(
 				info.getAuthType(), info.getAuthName()).toString();
@@ -133,6 +153,7 @@ public class Response {
 	 *************************************************************/
 
 	private int processNormalRequest(boolean allowCache) throws ServerException {
+		
 		if (request.getMethod().equals(Request.PUT)) {
 			return processPUT();
 		} else if (isScript(request.getURI())) {
@@ -144,7 +165,7 @@ public class Response {
 	}
 
 	/**
-	 * Check if the URI is the path to script file.
+	 * Check if the URI is a path to a script file.
 	 * 
 	 * @param URI
 	 * @return
@@ -170,6 +191,7 @@ public class Response {
 			out.flush();
 
 			return ResponseTable.OK;
+			
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
@@ -204,6 +226,12 @@ public class Response {
 		return ResponseTable.OK;
 	}
 
+	/**
+	 * Check if file is modified since IF_MODIFIED_SINCE date that sent from client.
+	 * 
+	 * @param file
+	 * @return Ture if it is modified, false otherwise.
+	 */
 	private boolean isModified(File file) {
 		String dateFromClient = request.getHeaderField().get(HeaderFields.IF_MODIFIED_SINCE);
 		if (dateFromClient == null)
@@ -253,11 +281,23 @@ public class Response {
 	 * Build Header String
 	 *************************************************************/
 
+	/**
+	 * Build header message for basic response.
+	 * 
+	 */
 	private HeaderBuilder createBasicHeaderMessage(int statusCode) {
 		HeaderBuilder builder = new HeaderBuilder();
 		return builder.buildHeaderBegin(statusCode, request.getHttpVersion()).buildConnection("close");
 	}
 
+	/**
+	 * Build header message for reponse that requires content type, content lenght and cache control.
+	 * 
+	 * @param statusCode
+	 * @param document
+	 * @param allowCache
+	 * @return
+	 */
 	private HeaderBuilder createSimpleHeaderMessage(int statusCode, File document, boolean allowCache) {
 		HeaderBuilder builder = createBasicHeaderMessage(statusCode).buildContentTypeAndLength(document);
 		if (allowCache && HttpdConf.CACHE_ENABLE)
@@ -278,7 +318,7 @@ public class Response {
 	protected void serveFile(File document) throws ServerException {
 
 		try {
-			byte[] buf = new byte[BUFFER_SIZE];
+			byte[] buf = new byte[1024];
 			BufferedInputStream in = new BufferedInputStream(new FileInputStream(document));
 			BufferedOutputStream out = new BufferedOutputStream(outStream);
 			int read = -1;
@@ -289,10 +329,15 @@ public class Response {
 			out.flush();
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
-			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR, "Response: ServeFile");
+			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR, "ServeFile");
 		}
 	}
 
+	/**
+	 * Send error message when ServerException is caught.
+	 * 
+	 * @param statusCode
+	 */
 	public void sendErrorMessage(int statusCode) {
 
 		String httpVersion = HttpdConf.DEFAULT_HTTP_VERSION;

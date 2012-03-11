@@ -37,7 +37,7 @@ public class ByteInputStreamReader {
 		if (!in.markSupported())
 			return null;
 		int count = 0;
-		in.mark(100);
+		in.mark(200);
 		char c = (char)in.read();
 		while ( c != '\r' && c != '\n'){
 			count ++;
@@ -48,7 +48,6 @@ public class ByteInputStreamReader {
 		in.read(buf, 0, buf.length);
 		// skip newline char, each char 2 bytes
 		skip(2);
-		System.out.println(new String(buf));
 		return new String(buf);
 	}
 
@@ -85,7 +84,7 @@ public class ByteInputStreamReader {
 	}
 
 	/**
-	 * Refer to BufferedInputStream read(byte[] b, int off, int len) method.
+	 * Refer to BufferedInputStream read(byte[] b, int off, int len).
 	 * 
 	 * @param b
 	 * @param off
@@ -98,7 +97,7 @@ public class ByteInputStreamReader {
 	}
 
 	/**
-	 * Refer to BufferedInputStream skip(long n) method.
+	 * Refer to BufferedInputStream skip(long n).
 	 * 
 	 * @param n
 	 * @return
@@ -109,7 +108,7 @@ public class ByteInputStreamReader {
 	}
 
 	/**
-	 * Convert the available input stream to byte array
+	 * Convert the available input stream to byte array.
 	 * 
 	 * @return
 	 * @throws IOException

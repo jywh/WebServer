@@ -36,17 +36,15 @@ public class AccessLog {
 		time = LOG_DATE_FORMAT.format(Ulti.currentTimeMillis());
 		String content = String.format("%s %s %s [%s] \"%s\" %d", IP, rfc1413, userId, time, requestLine,
 				statusCode);
-		writeFile(content, HttpdConf.LOG_FILE);
+		writeLog(content, HttpdConf.LOG_FILE);
 
 	}
 
-	public void writeFile(String content, String path) {
+	private synchronized void writeLog(String content, String path) {
 
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(path, true));
-			synchronized (this) {
-				out.write(content);
-			}
+			out.write(content);
 			out.newLine();
 			out.close();
 		} catch (IOException ioe) {
