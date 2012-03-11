@@ -44,12 +44,12 @@ public class Response {
 	}
 
 	/**
-	 * Process request, produce appropriate response. Check if the URI contain
-	 * secure directory, return three options:
+	 * Process request, produce appropriate response. Check if the URI contain secure directory, return three
+	 * options:
 	 * 
-	 * 1. NOT_SECURE_DIR: contains no secure directory. 2. NEED_AUTHENTICATE:
-	 * contains secure directory, need authentication. 3. AUTHENTICATED:
-	 * contains secure directory, and has correct password/username.
+	 * 1. NOT_SECURE_DIR: contains no secure directory. 
+	 * 2. NEED_AUTHENTICATE: contains secure directory, needauthentication. 
+	 * 3. AUTHENTICATED: contains secure directory, and has correct password/username.
 	 * 
 	 * @param request
 	 *            A request object created by RequestParser
@@ -122,8 +122,8 @@ public class Response {
 	}
 
 	private int sendAuthenticateMessage(SecureDirectory info) throws ServerException {
-		String headerMessage = createBasicHeaderMessage(ResponseTable.UNAUTHORIZED)
-				.buildAuthentication(info.getAuthType(), info.getAuthName()).toString();
+		String headerMessage = createBasicHeaderMessage(ResponseTable.UNAUTHORIZED).buildAuthentication(
+				info.getAuthType(), info.getAuthName()).toString();
 		writeHeaderMessage(headerMessage);
 		return ResponseTable.UNAUTHORIZED;
 	}
@@ -132,13 +132,13 @@ public class Response {
 	 * Process normal request
 	 *************************************************************/
 
-	private int processNormalRequest(boolean cached) throws ServerException {
+	private int processNormalRequest(boolean allowCache) throws ServerException {
 		if (request.getMethod().equals(Request.PUT)) {
 			return processPUT();
 		} else if (isScript(request.getURI())) {
 			return executeScript();
 		} else {
-			return retrieveStaticDocument(cached);
+			return retrieveStaticDocument(allowCache);
 		}
 
 	}
@@ -198,9 +198,7 @@ public class Response {
 			return ResponseTable.NOT_MODIFIED;
 		}
 
-		String headerMessage = createSimpleHeaderMessage(ResponseTable.OK, document, allowCache)
-				.toString();
-
+		String headerMessage = createSimpleHeaderMessage(ResponseTable.OK, document, allowCache).toString();
 		writeHeaderMessage(headerMessage);
 		serveFile(document);
 		return ResponseTable.OK;
@@ -223,11 +221,9 @@ public class Response {
 	}
 
 	/**
-	 * Since all the files will be uploaded to the same directory, synchronized
-	 * block will ensure that there is only on thread allow to write the file to
-	 * UPLOAD directory at once. It also ensure there won't be multiple threads
-	 * uploading files with the same name that the previous one gets
-	 * overwritten.
+	 * Since all the files will be uploaded to the same directory, synchronized block will ensure that there
+	 * is only on thread allow to write the file to UPLOAD directory at once. It also ensure there won't be
+	 * multiple threads uploading files with the same name that the previous one gets overwritten.
 	 * 
 	 */
 	private int processPUT() throws ServerException {
@@ -236,8 +232,7 @@ public class Response {
 		try {
 			synchronized (this) {
 				if (!document.exists()) {
-					BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(
-							document));
+					BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(document));
 					out.write(request.getParameterByteArray());
 					statusCode = ResponseTable.CREATED;
 					out.close();
@@ -260,14 +255,11 @@ public class Response {
 
 	private HeaderBuilder createBasicHeaderMessage(int statusCode) {
 		HeaderBuilder builder = new HeaderBuilder();
-		return builder.buildHeaderBegin(statusCode, request.getHttpVersion()).buildConnection(
-				"close");
+		return builder.buildHeaderBegin(statusCode, request.getHttpVersion()).buildConnection("close");
 	}
 
-	private HeaderBuilder createSimpleHeaderMessage(int statusCode, File document,
-			boolean allowCache) {
-		HeaderBuilder builder = createBasicHeaderMessage(statusCode).buildContentTypeAndLength(
-				document);
+	private HeaderBuilder createSimpleHeaderMessage(int statusCode, File document, boolean allowCache) {
+		HeaderBuilder builder = createBasicHeaderMessage(statusCode).buildContentTypeAndLength(document);
 		if (allowCache && HttpdConf.CACHE_ENABLE)
 			builder.buildLastModified(document).buildCacheControl("public");
 		return builder;
@@ -297,7 +289,7 @@ public class Response {
 			out.flush();
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
-			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR, "Response: WriteFile");
+			throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR, "Response: ServeFile");
 		}
 	}
 

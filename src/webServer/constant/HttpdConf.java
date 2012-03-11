@@ -3,7 +3,7 @@ package webServer.constant;
 import java.util.HashMap;
 import java.util.Map;
 
-import webServer.httpdconfSetter.Directory;
+import webServer.httpdconfSetter.Directory.SecureDirectory;
 
 /**
  * Constant class
@@ -40,7 +40,7 @@ public final class HttpdConf {
 
 	public static Map<String, String> CGI_HANDLER = new HashMap<String, String>();
 
-	public static Map<String, Directory.SecureDirectory> secureUsers = new HashMap<String, Directory.SecureDirectory>();
+	public static Map<String, SecureDirectory> secureUsers = new HashMap<String, SecureDirectory>();
 
 	public static String DEFAULT_TYPE = "text/plain";
 

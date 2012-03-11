@@ -38,7 +38,7 @@ public class MIME {
 			if (line.trim().length() == 0 || line.charAt(0) == '#') {
 				continue;
 			}
-
+			// replace all the white space and tab with '#'
 			line = line.trim().replaceAll("[ \t]+", "#");
 			tokens = line.split("#");
 			if (tokens.length > 1) {
@@ -70,8 +70,7 @@ public class MIME {
 		System.out.println("\n\nEnd of MIME");
 	}
 
-	@SuppressWarnings("unused")
-	private int length() {
+	public int length() {
 		return MIMETable.size();
 	}
 

@@ -37,19 +37,18 @@ public class ByteInputStreamReader {
 		if (!in.markSupported())
 			return null;
 		int count = 0;
-		in.mark(200);
-		char c;
-		while (in.available() > 0) {
-			c = (char) in.read();
-			if (c == '\r' || c == '\n')
-				break;
-			count++;
+		in.mark(100);
+		char c = (char)in.read();
+		while ( c != '\r' && c != '\n'){
+			count ++;
+			c = (char)in.read();
 		}
 		in.reset();
 		byte[] buf = new byte[count];
 		in.read(buf, 0, buf.length);
 		// skip newline char, each char 2 bytes
 		skip(2);
+		System.out.println(new String(buf));
 		return new String(buf);
 	}
 

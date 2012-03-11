@@ -37,7 +37,7 @@ public class ClientThread extends Thread {
 		Response response = null;
 		try {
 
-			Request request = new RequestParser().parse(inputStream, IP);
+			Request request = new RequestParser(inputStream).parse(IP);
 			response = new Response(request, outStream);
 			response.processRequest();
 		} catch (ServerException e) {
@@ -54,7 +54,7 @@ public class ClientThread extends Thread {
 			try {
 				inputStream.close();
 				outStream.close();
-			} catch (Exception ie) {
+			} catch (Exception e) {
 
 			}
 			WebServer.removeThread();

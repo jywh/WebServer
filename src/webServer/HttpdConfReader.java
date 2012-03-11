@@ -13,8 +13,8 @@ import webServer.ulti.ConfigurationException;
 /**
  * 
  * <p>
- * A HttpdConfReader parse httpd.conf and call appropriate HttpdConfSetter
- * classes to handle corresponding line or tag.
+ * A HttpdConfReader parses httpd.conf and call appropriate HttpdConfSetter to handle corresponding lines or
+ * tags.
  * </p>
  * 
  */
@@ -24,7 +24,6 @@ public class HttpdConfReader {
 
 	public HttpdConfReader(String path) throws IOException {
 		reader = new BufferedReader(new FileReader(path));
-
 	}
 
 	public HttpdConfReader(File confFile) throws IOException {
@@ -44,7 +43,7 @@ public class HttpdConfReader {
 			if (isCommentOrEmptyLine(currentLine))
 				continue;
 
-			// Check tag which starts with <>
+			// Check tag ('<>') which starts with '<'
 			if (currentLine.charAt(0) == '<')
 				parseTag(currentLine);
 			else
@@ -77,10 +76,9 @@ public class HttpdConfReader {
 	 *****************************************************************/
 
 	/**
-	 * Processing lines between <> and </>
+	 * Processing lines between open tag ('<>') and close tag ('</>')
 	 * 
 	 * @throws ConfigurationException
-	 * 
 	 * @throws IOException
 	 */
 	private void parseTag(String currentLine) throws IOException, ConfigurationException {
@@ -106,7 +104,7 @@ public class HttpdConfReader {
 	}
 
 	/**
-	 * Check the open tag. It should be HTML/XML style.
+	 * Check the open tag.
 	 * 
 	 * @param line
 	 * @return
@@ -123,7 +121,7 @@ public class HttpdConfReader {
 	}
 
 	/**
-	 * Check close tag. It should be HTML/XML style
+	 * Check close tag.
 	 * 
 	 * @param tag
 	 * @param line
@@ -147,10 +145,9 @@ public class HttpdConfReader {
 
 	/**
 	 * 
-	 * 
 	 * @param list
 	 *            The list to store each tag content
-	 * @return The last line being read
+	 * @return The line with close tag.
 	 */
 	private String readTagContent(List<String> list) throws IOException {
 

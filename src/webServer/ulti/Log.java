@@ -8,7 +8,7 @@ package webServer.ulti;
  */
 public class Log {
 
-	private static boolean DEBUG = false;
+	private static boolean DEBUG = true;
 
 	public static void debug(String tag, String message) {
 		if (DEBUG)

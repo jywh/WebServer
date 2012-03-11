@@ -18,9 +18,7 @@ import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 /**
  * <p>
- * RequestParser is responsiable to parse the incomming request message, and
- * create a request object. All the incomming message must go through
- * RequestParser.
+ * RequestParser is responsiable for parsing the incomming request stream, and create a Request object.
  * </p>
  */
 public class RequestParser {
@@ -31,24 +29,38 @@ public class RequestParser {
 
 	private ByteInputStreamReader requestStream;
 
-	public Request parse(InputStream inputStream, String IP) throws ServerException {
+	public RequestParser(InputStream inputStream) throws ServerException {
 		if (inputStream == null)
 			throw new ServerException(ResponseTable.BAD_REQUEST);
 
-		requestStream = new ByteInputStreamReader(inputStream);
+		this.requestStream = new ByteInputStreamReader(inputStream);
+	}
+
+	/**
+	 * Parse request stream.
+	 * 
+	 * @param IP
+	 *            Client IP address.
+	 * @return A Request object.
+	 * @throws ServerException
+	 */
+	public Request parse(String IP) throws ServerException {
 		try {
 
 			String[] parameters = parseFirstLine(requestStream.readLine());
 			Map<String, String> headerFields = extractHeaderFields();
-			// Read body if it is POST or PUT, otherwise it is an empty array
-			byte[] parameterByteArray = extractBodyContent(headerFields.get(HeaderFields.CONTENT_LENGTH));
+
+			byte[] parameterByteArray = null;
+			if (parameters[0].equals(Request.POST) || parameters[0].equals(Request.PUT))
+				parameterByteArray = extractBodyContent(headerFields.get(HeaderFields.CONTENT_LENGTH));
+
 			String remoteUser = getRemoteUser(headerFields);
 
 			return new Request(parameters, parameterByteArray, headerFields, remoteUser, IP);
 
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
-			throw new ServerException(ResponseTable.BAD_REQUEST, "RequestParser: parseRequest");
+			throw new ServerException(ResponseTable.BAD_REQUEST, "RequestParser: parse()");
 		}
 
 	}
@@ -60,8 +72,8 @@ public class RequestParser {
 	/**
 	 * Parse the first line of http request.
 	 * 
-	 * @return String array with elements: {method, resolvedURI, httpversion,
-	 *         parameterString, pathInfo, scriptName }
+	 * @return String array with elements: {method, resolvedURI, httpversion, parameterString, pathInfo,
+	 *         scriptName }
 	 */
 	protected String[] parseFirstLine(String firstLine) throws ServerException {
 
@@ -107,16 +119,16 @@ public class RequestParser {
 		if (URI.equals(newURI)) // there is no alias
 			newURI = addDocumentRoot(URI);
 
-		if (!(new File(newURI)).exists() && !method.equals(Request.PUT))
-			throw new ServerException(ResponseTable.NOT_FOUND, "RequestParser: addDocumentRoot");
+		Log.debug(TAG, "URI: " + newURI);
 
-		Log.debug(TAG, "URI: " + URI);
+		if (!(new File(newURI)).exists() && !method.equals(Request.PUT))
+			throw new ServerException(ResponseTable.NOT_FOUND, "resolveURI");
+
 		return newURI;
 	}
 
 	/**
-	 * Resolve alias that contain in the URI, if URI contains no alias, return
-	 * the original URI.
+	 * Resolve alias that contain in the URI, if URI contains no alias, return the original URI.
 	 * 
 	 * @throws ServerException
 	 */
@@ -124,16 +136,21 @@ public class RequestParser {
 
 		String[] tokens = URI.split(URI_SEPARATOR);
 
-		if (tokens.length < 1)
+		if (tokens.length < 2)
 			return URI;
 
 		String alias = URI_SEPARATOR + tokens[1];
 
 		if (HttpdConf.SCRIPT_ALIAS.containsKey(alias)) {
+
 			URI = URI.replace(alias, HttpdConf.SCRIPT_ALIAS.get(alias));
+
 		} else if (HttpdConf.ALIAS.containsKey(alias)) {
+
 			URI = URI.replace(alias, HttpdConf.ALIAS.get(alias));
+
 		}
+
 		return URI;
 	}
 
@@ -146,22 +163,21 @@ public class RequestParser {
 	 */
 	protected String addDocumentRoot(String URI) throws ServerException {
 
-		Log.debug(TAG, "document root: " + HttpdConf.DOCUMENT_ROOT);
 		URI = HttpdConf.DOCUMENT_ROOT + URI;
 		File path = new File(URI);
 
+		// If URI is the path to a file and the file exist, no need to look for index file
 		if (!path.isDirectory() && path.exists())
 			return URI;
 
 		URI = path.getAbsolutePath() + File.separator;
-
 		for (String indexFile : HttpdConf.DIRECTORY_INDEX) {
 			indexFile = URI + indexFile;
 			if (new File(indexFile).exists())
 				return indexFile;
 		}
 
-		throw new ServerException(ResponseTable.NOT_FOUND, "RequestParse: addDocumentRoot");
+		throw new ServerException(ResponseTable.NOT_FOUND, "addDocumentRoot");
 
 	}
 
@@ -171,14 +187,15 @@ public class RequestParser {
 	 * @param URI
 	 * @return Script path info, empty if there is no path info.
 	 */
-	public String[] extractPathInfo(String URI) {
+	private String[] extractPathInfo(String URI) {
 
+		// Use script file name as delimiter to separate URI.
 		String[] tokens = SCRIPT_PATTERN.split(URI);
-		if (tokens.length < 2)
+		if (tokens.length < 2) // Contain no script
 			return new String[] { URI, "" };
 
 		tokens[1] = URI_SEPARATOR + tokens[1];
-		// Add file name to URI.
+		// Add file name back URI.
 		tokens[0] = URI.replace(tokens[1], "");
 		return tokens;
 	}
@@ -219,13 +236,12 @@ public class RequestParser {
 
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
-			throw new ServerException(ResponseTable.BAD_REQUEST, "Request: getRequestFields");
+			throw new ServerException(ResponseTable.BAD_REQUEST, "getHeaderFields");
 		}
 	}
 
 	/**
-	 * Get REMOTE_USER from AUTHORIZATION fiels. REMOTE_USER is used by CGI
-	 * script.
+	 * Get REMOTE_USER from AUTHORIZATION fiels. REMOTE_USER is used by CGI script.
 	 * 
 	 * @param headerFields
 	 * @return
@@ -256,9 +272,8 @@ public class RequestParser {
 	 *************************************************************/
 
 	/**
-	 * Extract request body, if request comes with content-length, then extract
-	 * exactly the size of content-length, otherwise, extract all the avaiable
-	 * bytes.
+	 * Extract request body, if request comes with content-length, then extract exactly the size of
+	 * content-length, otherwise, extract all the avaiable bytes.
 	 * 
 	 * @param contentLength
 	 *            The size of request body.

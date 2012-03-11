@@ -15,7 +15,6 @@ public class WebServer {
 	public static final String SERVER_SOFTWARE = "MyJava02";
 	public static final String GATEWAY_INTERFACE = "CGI/1.0";
 
-	public static final String HTTPDD_CONF_PATH = "C:/MyWebServer/conf/";
 	public static final String HTTPD_CONF_FILE = "httpd.conf";
 	public static final String MIME_TYPES_FILE = "mime.types";
 
@@ -24,9 +23,8 @@ public class WebServer {
 
 	/**
 	 * 
-	 * Web server needs to be configured before start running, so user must
-	 * provide path to configuration directory, where web server will look for
-	 * httpd.conf and mime.types files.
+	 * Web server needs to be configured before start running, so user must provide path to configuration
+	 * directory, where web server will look for httpd.conf and mime.types files.
 	 * 
 	 * @param confDiretory
 	 *            The path to web server configuration directory.
@@ -79,8 +77,7 @@ public class WebServer {
 
 	/**
 	 * 
-	 * Start the server. This will be infinite loop for listening to client's
-	 * request.
+	 * Start the server. This will be infinite loop for listening to client's request.
 	 * 
 	 */
 	public void start() throws IOException {
@@ -114,9 +111,9 @@ public class WebServer {
 		WebServer webServer = null;
 		try {
 			if (args.length != 1) {
-				System.out.println("Need one arg, which is the directory to httpd.conf file");
+				System.out.println("\nError: Need one arg, the directory to httpd.conf file");
 				System.out
-						.println("Usage (for jar file): java -jar <path of WebServer.jar> <directory to httpd.conf>");
+						.println("Usage: java -jar /home/student/667.02/WebServer.jar /home/student/667.02/conf/\n");
 				return;
 			}
 			webServer = new WebServer(args[0]);

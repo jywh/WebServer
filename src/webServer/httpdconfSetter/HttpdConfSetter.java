@@ -12,7 +12,6 @@ public abstract class HttpdConfSetter {
 	 * 
 	 * @param line
 	 * @throws ConfigurationException
-	 *             if the Object is not
 	 */
 	public abstract void process(Object line) throws ConfigurationException;
 
@@ -20,8 +19,7 @@ public abstract class HttpdConfSetter {
 	 * Instaniate subclass object of HttpdConfSetter, the tag name must match
 	 * class name.
 	 * 
-	 * @param className
-	 *            The class to be instaniated
+	 * @param className The class to be instaniated
 	 * @return
 	 */
 	public static HttpdConfSetter getInstance(String className) {
