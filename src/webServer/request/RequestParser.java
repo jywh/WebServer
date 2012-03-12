@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import webServer.constant.HeaderFields;
 import webServer.constant.HttpdConf;
 import webServer.constant.ResponseTable;
+import webServer.httpdconfSetter.Directory.SecureDirectory;
 import webServer.ulti.Log;
 import webServer.ulti.ServerException;
 
@@ -251,18 +252,23 @@ public class RequestParser {
 		if (encodedText == null)
 			return "";
 
-		String[] tokens = encodedText.split(" +", 2);
-		if (!tokens[0].equals("Basic"))
-			// Right now, this web server only supports Basic encryption
-			return "";
-
-		try {
-			String decodedText = new String(Base64.decode(tokens[1]));
-			tokens = decodedText.split(":", 2);
-			String remoteUser = (tokens[0] != null) ? tokens[0] : "";
+		String[] tokens = encodedText.split(" ", 2);
+		if (tokens[0].equals(SecureDirectory.AUTH_TYPE_BASIC)) {
+			try {
+				String decodedText = new String(Base64.decode(tokens[1]));
+				tokens = decodedText.split(":", 2);
+				String remoteUser = (tokens[0] != null) ? tokens[0] : "";
+				System.out.println(remoteUser);
+				return remoteUser;
+			} catch (Base64DecodingException e) {
+				e.printStackTrace();
+			}
+		} else if ( tokens[0].equals(SecureDirectory.AUTH_TYPE_DIGEST)){
+			String[] newTokens = tokens[1].split(", ", 2);
+			tokens = newTokens[0].split("=", 2);
+			String remoteUser = (tokens[1] != null )? tokens[1].substring(1, tokens[1].length()-1) :"";
+			System.out.println(remoteUser);
 			return remoteUser;
-		} catch (Base64DecodingException e) {
-			e.printStackTrace();
 		}
 		return "";
 	}

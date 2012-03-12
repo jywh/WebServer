@@ -136,14 +136,12 @@ public class Response {
 
 	private boolean authenticate(SecureDirectory sd, String authType, String authInfo) throws ServerException {
 
-		System.out.println(authInfo);
 		if (!sd.getAuthType().equals(authType))
 			return false;
 
 		if (authType.equals(SecureDirectory.AUTH_TYPE_BASIC)) {
-			String decodedText;
 			try {
-				decodedText = new String(Base64.decode(authInfo));
+				String decodedText = new String(Base64.decode(authInfo));
 				String[] tokens = decodedText.split(":", 2);
 				String passwd = sd.getValidUsers().get(tokens[0]);
 				if (passwd == null || !passwd.equals(tokens[1]))
@@ -176,7 +174,7 @@ public class Response {
 				String digest = HttpDigest.createDigest(username, pwd , uri, realm, nonce, method, algorithm);
 				return tags.get("response").equals(digest);
 			} catch (NoSuchAlgorithmException e) {
-				throw new ServerException(ResponseTable.NOT_IMPLEMENTED);
+				throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
 			}
 		}
 		

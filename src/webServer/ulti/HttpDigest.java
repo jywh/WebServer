@@ -25,13 +25,14 @@ import java.security.NoSuchAlgorithmException;
 /**
  * <p>
  * HttpDigest is a miniature version of Digest algorithm which does not support qop tag, and some other
- * options. The implementation is borrowed from followed reference:
+ * options, but it works for simple case. The implementation is borrowed from followed website:
  * 
  * http://hc.apache.org/httpclient-3.x/xref/org/apache/commons/httpclient/util/EncodingUtil.html
  * 
  * http://bethecoder.com/open-source/commons-httpclient/commons-httpclient-3.1/org/apache/commons/httpclient/util/EncodingUtil.java.html
  * 
- * Both references is licensed under Apache Software Foundation, so it is open source for everyone to use, so as to this program.
+ * Both references are licensed under Apache Software Foundation license agreement, so it is open source for
+ * everyone to use, so as to this program.
  * </p>
  */
 public class HttpDigest {
@@ -51,8 +52,6 @@ public class HttpDigest {
 	 *            Username
 	 * @param pwd
 	 *            Password
-	 * @param charset
-	 *            The credential charset
 	 * 
 	 * @return The created digest as string. This will be the response tag's value in the Authentication HTTP
 	 *         header.
@@ -148,8 +147,7 @@ public class HttpDigest {
 		} catch (Exception e) {
 			return null;
 		}
-		
-		
+
 	}
 
 	/***
