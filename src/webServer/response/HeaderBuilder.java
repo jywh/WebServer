@@ -1,11 +1,13 @@
 package webServer.response;
 
 import java.io.File;
+import java.util.Random;
 
 import webServer.MIME;
 import webServer.WebServer;
 import webServer.constant.HeaderFields;
 import webServer.constant.ResponseTable;
+import webServer.httpdconfSetter.Directory.SecureDirectory;
 import webServer.ulti.Ulti;
 
 /**
@@ -79,7 +81,13 @@ public class HeaderBuilder {
 
 	public HeaderBuilder buildAuthentication(String authType, String realm) {
 		builder.append(HeaderFields.WWW_AUTHENTICATE).append(": ").append(authType).append(" realm=")
-				.append(realm).append(CRLF);
+				.append(realm);
+		if ( authType.equals(SecureDirectory.AUTH_TYPE_DIGEST)){
+			Random random = new Random(Ulti.currentTimeMillis());
+			String nonce = Integer.toString(random.nextInt());
+			builder.append(" nonce=").append(nonce);
+		}
+		builder.append(CRLF);
 		return this;
 	}
 

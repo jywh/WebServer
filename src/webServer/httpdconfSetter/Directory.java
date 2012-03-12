@@ -6,15 +6,17 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import webServer.constant.HttpdConf;
 import webServer.ulti.ConfigurationException;
 
 /**
  * <p>
- * Directory handles the Directory tag of httpd.conf file. It parses the body of
- * the tag and store the information to a SecureDirectory Object
+ * Directory handles the Directory tag of httpd.conf file. It parses the body of the tag and store the
+ * information to a SecureDirectory Object
  * </p>
  */
 public class Directory extends HttpdConfSetter {
@@ -49,39 +51,41 @@ public class Directory extends HttpdConfSetter {
 
 		if (authName == null || authType == null || userType == null || authFile == null)
 			throw new ConfigurationException("Configuration: Fail to read directory tag");
-		List<String> users = retrieveAuthUser(userType, user, authFile);
+		Map<String,String> users = retrieveAuthUser(userType, user, authFile, authType);
 		HttpdConf.secureUsers.put(secureDirectory, new SecureDirectory(secureDirectory, authName, authType,
 				userType, users));
 	}
 
-	private List<String> retrieveAuthUser(String userType, String user, String path)
+	private Map<String,String> retrieveAuthUser(String userType, String user, String path, String authType)
 			throws ConfigurationException {
 		if (userType.equals("valid-user")) {
-			return readAuthUserFileForValidUser(path);
+			return readAuthUserFileForValidUser(path, authType);
 		} else {
-			return readAuthFileForUser(path, user);
+			return readAuthFileForUser(path, user, authType);
 		}
 	}
 
 	/**
-	 * All the users in sercure file are allowed to access this directory and
-	 * its subdirectories.
+	 * All the users in sercure file are allowed to access this directory and its subdirectories.
 	 * 
 	 * @param path
 	 * @return
 	 * @throws ConfigurationException
 	 */
-	private List<String> readAuthUserFileForValidUser(String path) throws ConfigurationException {
+	private Map<String,String> readAuthUserFileForValidUser(String path, String authType)
+			throws ConfigurationException {
 		File file = new File(path);
 		if (!file.exists())
 			throw new ConfigurationException("File not found: " + path);
 
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(file));
-			List<String> result = new ArrayList<String>();
+			Map<String,String> result = new HashMap<String,String>();
 			String line;
+			String[] tokens;
 			while ((line = reader.readLine()) != null) {
-				result.add(line);
+				tokens = getUsrnamePassword(line);
+				result.put(tokens[0], tokens[1]);
 			}
 
 			reader.close();
@@ -93,15 +97,14 @@ public class Directory extends HttpdConfSetter {
 	}
 
 	/**
-	 * Only the users that is listed are allowed to access this directory and
-	 * its subdirectories.
+	 * Only the users that is listed are allowed to access this directory and its subdirectories.
 	 * 
 	 * @param path
 	 * @param user
 	 * @return
 	 * @throws ConfigurationException
 	 */
-	private List<String> readAuthFileForUser(String path, String user) throws ConfigurationException {
+	private Map<String,String> readAuthFileForUser(String path, String user, String authType) throws ConfigurationException {
 
 		File file = new File(path);
 		if (!file.exists())
@@ -109,13 +112,14 @@ public class Directory extends HttpdConfSetter {
 		List<String> users = Arrays.asList(user.split(","));
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(file));
-			List<String> result = new ArrayList<String>();
+			Map<String,String> result = new HashMap<String,String>();
 			String line;
 			String[] tokens;
 			while ((line = reader.readLine()) != null) {
 				tokens = line.split(":", 2);
-				if (users.contains(tokens[0]))
-					result.add(line);
+				if (users.contains(tokens[0])){
+					result.put(tokens[0], tokens[1]);
+				}
 			}
 
 			reader.close();
@@ -126,6 +130,39 @@ public class Directory extends HttpdConfSetter {
 		}
 
 	}
+	
+	private String[] getUsrnamePassword(String line){
+		String[] tokens = line.split(":",2);
+		if( tokens[0] == null )
+			return null;
+		if(tokens[1] == null )
+			tokens[1]="";
+		return tokens;
+	}
+	
+	/**
+	 * Encrypt string with appropriate authType.
+	 * 
+	 * @param strToBeEncrypted
+	 * @param authType The method of encryption.
+	 * @return
+	 * @throws ConfigurationException
+	 * @throws UnsupportedEncodingException
+	 */
+//	private String encrypt(String strToBeEncrypted, String authType) throws ConfigurationException,
+//			UnsupportedEncodingException {
+//		if (authType.equals("Basic"))
+//			return Base64.encode(strToBeEncrypted.getBytes("UTF-8"));
+//		else if (authType.equals("Digest")) {
+//			String[] tokens = strToBeEncrypted.split(":",2); 
+			// Encrypt password only
+//			String encryptedKey =(tokens[1]!=null)? MD5.digest(tokens[1]):"";
+//			System.out.println(tokens[0]+":"+encryptedKey);
+//			return tokens[0]+":"+encryptedKey;
+//		}
+//		else
+//			throw new ConfigurationException("Encrypted method not supported");
+//	}
 
 	/**
 	 * <p>
@@ -134,6 +171,9 @@ public class Directory extends HttpdConfSetter {
 	 */
 	public class SecureDirectory {
 
+		public static final String AUTH_TYPE_BASIC = "Basic";
+		public static final String AUTH_TYPE_DIGEST = "Digest";
+		
 		public static final int USER = 1;
 		public static final int GROUP = 2;
 		public static final int VALID_USER = 3;
@@ -142,10 +182,10 @@ public class Directory extends HttpdConfSetter {
 		private String authName;
 		private String authType;
 		private int userType;
-		private List<String> validUsers;
+		private Map<String, String> validUsers;
 
 		public SecureDirectory(String path, String authName, String authType, String userType,
-				List<String> validUsers) {
+				Map<String, String> validUsers) {
 			this.path = path;
 			this.authName = authName;
 			this.authType = authType;
@@ -178,7 +218,12 @@ public class Directory extends HttpdConfSetter {
 			return userType;
 		}
 
-		public List<String> getUser() {
+		/**
+		 * Get the list of encrypted valid username:key
+		 * 
+		 * @return
+		 */
+		public Map<String,String> getValidUsers() {
 			return validUsers;
 		}
 	}

@@ -8,7 +8,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -18,6 +20,7 @@ import webServer.constant.ResponseTable;
 import webServer.httpdconfSetter.Directory.SecureDirectory;
 import webServer.request.Request;
 import webServer.ulti.AccessLog;
+import webServer.ulti.HttpDigest;
 import webServer.ulti.ServerException;
 import webServer.ulti.Ulti;
 
@@ -93,6 +96,21 @@ public class Response {
 	 *************************************************************/
 
 	/**
+	 * Check if the URI contain any secure directory that is defined in httpd.conf file.
+	 * 
+	 * @param uri
+	 * @return The secure directory if it exists, null otherwise.
+	 */
+	private SecureDirectory getSecureDirectory(String uri) {
+		Set<String> secureDirectories = HttpdConf.secureUsers.keySet();
+		for (String directory : secureDirectories) {
+			if (uri.contains(directory))
+				return HttpdConf.secureUsers.get(directory);
+		}
+		return null;
+	}
+
+	/**
 	 * Check if contains secure directory.
 	 * 
 	 * @param request
@@ -109,32 +127,60 @@ public class Response {
 
 		String auth = request.getHeaderField().get(HeaderFields.AUTHORIZATION);
 		String[] tokens = auth.split(" ", 2);
-		if (tokens[0].equals("Basic")) {
-			try {
-				String decodedText = new String(Base64.decode(tokens[1]));
-				if (secureDirectory.getUser().contains(decodedText))
-					return AUTHENTICATED;
-			} catch (Base64DecodingException e) {
-				e.printStackTrace();
-			}
-		}
+		if (authenticate(secureDirectory, tokens[0], tokens[1]))
+			return AUTHENTICATED;
+
 		// Password or username not correct
 		throw new ServerException(ResponseTable.FORBIDDEN);
 	}
 
-	/**
-	 * Check if the URI contain any secure directory that is defined in httpd.conf file.
-	 * 
-	 * @param uri
-	 * @return The secure directory if it exists, null otherwise.
-	 */
-	private SecureDirectory getSecureDirectory(String uri) {
-		Set<String> secureDirectories = HttpdConf.secureUsers.keySet();
-		for (String directory : secureDirectories) {
-			if (uri.contains(directory))
-				return HttpdConf.secureUsers.get(directory);
+	private boolean authenticate(SecureDirectory sd, String authType, String authInfo) throws ServerException {
+
+		System.out.println(authInfo);
+		if (!sd.getAuthType().equals(authType))
+			return false;
+
+		if (authType.equals(SecureDirectory.AUTH_TYPE_BASIC)) {
+			String decodedText;
+			try {
+				decodedText = new String(Base64.decode(authInfo));
+				String[] tokens = decodedText.split(":", 2);
+				String passwd = sd.getValidUsers().get(tokens[0]);
+				if (passwd == null || !passwd.equals(tokens[1]))
+					return false;
+				return true;
+			} catch (Base64DecodingException e) {
+				throw new ServerException(ResponseTable.INTERNAL_SERVER_ERROR);
+			}
 		}
-		return null;
+
+		if (authType.equals(SecureDirectory.AUTH_TYPE_DIGEST)) {
+			String[] tokens = authInfo.split(", ");
+			String[] elements;
+			HashMap<String,String> tags = new HashMap<String,String>();
+			for (String s : tokens) {
+				elements = s.split("=", 2);
+				tags.put(elements[0], elements[1].substring(1, elements[1].length()-1));
+			}
+			String username = tags.get("username");
+			String pwd = sd.getValidUsers().get(username);
+			
+			if ( pwd == null ) return false;
+			
+			String uri = tags.get("uri");
+			String realm = tags.get("realm");
+			String nonce = tags.get("nonce");
+			String method = request.getMethod();
+			String algorithm = "MD5";
+			try {
+				String digest = HttpDigest.createDigest(username, pwd , uri, realm, nonce, method, algorithm);
+				return tags.get("response").equals(digest);
+			} catch (NoSuchAlgorithmException e) {
+				throw new ServerException(ResponseTable.NOT_IMPLEMENTED);
+			}
+		}
+		
+		return false;
 	}
 
 	/**
@@ -194,7 +240,7 @@ public class Response {
 					contentLength).toString();
 
 			BufferedOutputStream out = new BufferedOutputStream(outStream);
-			out.write(headerMessage.getBytes());
+			out.write(headerMessage.getBytes("UTF-8"));
 			out.write(content);
 			cin.close();
 			out.flush();
