@@ -13,8 +13,8 @@ import webServer.ulti.ConfigurationException;
 /**
  * 
  * <p>
- * A HttpdConfReader parses httpd.conf and call appropriate HttpdConfSetter to handle corresponding lines or
- * tags.
+ * A HttpdConfReader parses httpd.conf and call appropriate HttpdConfSetter to
+ * handle corresponding lines or tags.
  * </p>
  * 
  */
@@ -22,38 +22,38 @@ public class HttpdConfReader {
 
 	private BufferedReader reader;
 
-	public HttpdConfReader(String path) throws IOException {
-		reader = new BufferedReader(new FileReader(path));
+	public HttpdConfReader( String path ) throws IOException {
+		reader = new BufferedReader( new FileReader( path ) );
 	}
 
-	public HttpdConfReader(File confFile) throws IOException {
-		reader = new BufferedReader(new FileReader(confFile));
+	public HttpdConfReader( File confFile ) throws IOException {
+		reader = new BufferedReader( new FileReader( confFile ) );
 	}
 
 	public void readHttpdConfFile() throws IOException, ConfigurationException {
 
 		String currentLine;
 
-		while ((currentLine = reader.readLine()) != null) {
+		while ( ( currentLine = reader.readLine() ) != null ) {
 
 			// trim white space at the beginning, the middle and the end
-			currentLine = currentLine.trim().replaceAll(" +", " ");
+			currentLine = currentLine.trim().replaceAll( " +", " " );
 
 			// skip comment and blink line
-			if (isCommentOrEmptyLine(currentLine))
+			if ( isCommentOrEmptyLine( currentLine ) )
 				continue;
 
 			// Check tag ('<>') which starts with '<'
-			if (currentLine.charAt(0) == '<')
-				parseTag(currentLine);
+			if ( currentLine.charAt( 0 ) == '<' )
+				parseTag( currentLine );
 			else
-				parseLine(currentLine);
+				parseLine( currentLine );
 
 		}
 	}
 
-	private boolean isCommentOrEmptyLine(String line) {
-		if (line.length() == 0 || line.charAt(0) == '#') {
+	private boolean isCommentOrEmptyLine( String line ) {
+		if ( line.length() == 0 || line.charAt( 0 ) == '#' ) {
 			return true;
 		}
 		return false;
@@ -63,12 +63,12 @@ public class HttpdConfReader {
 	 * Parsing single line
 	 *****************************************************************/
 
-	private void parseLine(String currentLine) throws ConfigurationException {
-		String[] tokens = currentLine.split(" ", 2);
-		HttpdConfSetter httpdConfSetter = HttpdConfSetter.getInstance(tokens[0]);
+	private void parseLine( String currentLine ) throws ConfigurationException {
+		String[] tokens = currentLine.split( " ", 2 );
+		HttpdConfSetter httpdConfSetter = HttpdConfSetter.getInstance( tokens[0] );
 
-		if (httpdConfSetter != null)
-			httpdConfSetter.process(tokens[1]);
+		if ( httpdConfSetter != null )
+			httpdConfSetter.process( tokens[1] );
 	}
 
 	/*****************************************************************
@@ -81,26 +81,26 @@ public class HttpdConfReader {
 	 * @throws ConfigurationException
 	 * @throws IOException
 	 */
-	private void parseTag(String currentLine) throws IOException, ConfigurationException {
+	private void parseTag( String currentLine ) throws IOException, ConfigurationException {
 
-		if (!checkOpenTag(currentLine))
-			throw new ConfigurationException("Illegal open tag: " + currentLine);
+		if ( !checkOpenTag( currentLine ) )
+			throw new ConfigurationException( "Illegal open tag: " + currentLine );
 
-		String[] tokens = parseOpenTag(currentLine);
+		String[] tokens = parseOpenTag( currentLine );
 
-		HttpdConfSetter httpdConfSetter = HttpdConfSetter.getInstance(tokens[0]);
+		HttpdConfSetter httpdConfSetter = HttpdConfSetter.getInstance( tokens[0] );
 
-		if (httpdConfSetter == null)
+		if ( httpdConfSetter == null )
 			return;
 
-		List<String> lines = new ArrayList<String>();
-		lines.add(tokens[1]);
-		currentLine = readTagContent(lines);
+		List< String > lines = new ArrayList< String >();
+		lines.add( tokens[1] );
+		currentLine = readTagContent( lines );
 
-		if (!checkCloseTag(tokens[0], currentLine))
-			throw new ConfigurationException("Illegal close tag: " + currentLine);
+		if ( !checkCloseTag( tokens[0], currentLine ) )
+			throw new ConfigurationException( "Illegal close tag: " + currentLine );
 
-		httpdConfSetter.process(lines);
+		httpdConfSetter.process( lines );
 	}
 
 	/**
@@ -109,11 +109,11 @@ public class HttpdConfReader {
 	 * @param line
 	 * @return
 	 */
-	private boolean checkOpenTag(String line) {
+	private boolean checkOpenTag( String line ) {
 
 		String regex = "^<[a-zA-Z][a-zA-Z1-9]* .+>$";
 
-		if (line != null && line.trim().matches(regex))
+		if ( line != null && line.trim().matches( regex ) )
 			return true;
 
 		return false;
@@ -127,20 +127,20 @@ public class HttpdConfReader {
 	 * @param line
 	 * @return
 	 */
-	private boolean checkCloseTag(String tag, String line) {
+	private boolean checkCloseTag( String tag, String line ) {
 
 		String regex = "^</" + tag + " *>$";
 
-		if (line != null && line.trim().matches(regex))
+		if ( line != null && line.trim().matches( regex ) )
 			return true;
 
 		return false;
 	}
 
-	private String[] parseOpenTag(String line) {
+	private String[] parseOpenTag( String line ) {
 		// Eliminate <>
-		line = line.substring(1, line.length() - 1).trim();
-		return line.split(" ", 2);
+		line = line.substring( 1, line.length() - 1 ).trim();
+		return line.split( " ", 2 );
 	}
 
 	/**
@@ -149,19 +149,19 @@ public class HttpdConfReader {
 	 *            The list to store each tag content
 	 * @return The line with close tag.
 	 */
-	private String readTagContent(List<String> list) throws IOException {
+	private String readTagContent( List< String > list ) throws IOException {
 
 		String currentLine = null;
 
-		while ((currentLine = reader.readLine().trim()) != null) {
+		while ( ( currentLine = reader.readLine().trim() ) != null ) {
 
-			if (isCommentOrEmptyLine(currentLine))
+			if ( isCommentOrEmptyLine( currentLine ) )
 				continue;
 
-			if (currentLine.charAt(0) == '<') // reach close tag
+			if ( currentLine.charAt( 0 ) == '<' ) // reach close tag
 				break;
 
-			list.add(currentLine);
+			list.add( currentLine );
 		}
 
 		return currentLine;

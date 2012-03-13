@@ -19,9 +19,9 @@ public final class HttpdConf {
 
 	public static String LOG_FILE;
 
-	public static Map<String, String> SCRIPT_ALIAS = new HashMap<String, String>();
+	public static Map< String, String > SCRIPT_ALIAS = new HashMap< String, String >();
 
-	public static Map<String, String> ALIAS = new HashMap<String, String>();
+	public static Map< String, String > ALIAS = new HashMap< String, String >();
 
 	public static String SERVER_ADMIN;
 
@@ -35,12 +35,11 @@ public final class HttpdConf {
 
 	public static boolean PERSISTENT_CONNECTION = false;
 
-	public static String[] DIRECTORY_INDEX = { "index.html", "index.htm",
-			"default.html", "default.htm" };
+	public static String[] DIRECTORY_INDEX = { "index.html", "index.htm", "default.html", "default.htm" };
 
-	public static Map<String, String> CGI_HANDLER = new HashMap<String, String>();
+	public static Map< String, String > CGI_HANDLER = new HashMap< String, String >();
 
-	public static Map<String, SecureDirectory> secureUsers = new HashMap<String, SecureDirectory>();
+	public static Map< String, SecureDirectory > secureUsers = new HashMap< String, SecureDirectory >();
 
 	public static String DEFAULT_TYPE = "text/plain";
 

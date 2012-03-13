@@ -23,38 +23,39 @@ public class WebServer {
 
 	/**
 	 * 
-	 * Web server needs to be configured before start running, so user must provide path to configuration
-	 * directory, where web server will look for httpd.conf and mime.types files.
+	 * Web server needs to be configured before start running, so user must
+	 * provide path to configuration directory, where web server will look for
+	 * httpd.conf and mime.types files.
 	 * 
 	 * @param confDiretory
 	 *            The path to web server configuration directory.
 	 * 
 	 */
-	public WebServer(String confDiretory) throws IOException, ConfigurationException {
+	public WebServer( String confDiretory ) throws IOException, ConfigurationException {
 
-		this.prepareMIMETypes(confDiretory);
-		this.configure(confDiretory);
+		this.prepareMIMETypes( confDiretory );
+		this.configure( confDiretory );
 		AccessLog.initialize();
-		server = new ServerSocket(HttpdConf.LISTEN);
-		System.out.println("Opened socket " + HttpdConf.LISTEN);
+		server = new ServerSocket( HttpdConf.LISTEN );
+		System.out.println( "Opened socket " + HttpdConf.LISTEN );
 
 	}
 
-	protected void configure(String confDirectory) throws IOException, ConfigurationException {
+	protected void configure( String confDirectory ) throws IOException, ConfigurationException {
 
-		File confFile = new File(confDirectory, HTTPD_CONF_FILE);
-		if (!confFile.exists())
-			throw new IOException("File not found: " + confFile.getAbsolutePath());
-		new HttpdConfReader(confFile).readHttpdConfFile();
+		File confFile = new File( confDirectory, HTTPD_CONF_FILE );
+		if ( !confFile.exists() )
+			throw new IOException( "File not found: " + confFile.getAbsolutePath() );
+		new HttpdConfReader( confFile ).readHttpdConfFile();
 
 	}
 
-	protected void prepareMIMETypes(String confDirectory) throws IOException {
+	protected void prepareMIMETypes( String confDirectory ) throws IOException {
 
-		File mimeFile = new File(confDirectory, MIME_TYPES_FILE);
-		if (!mimeFile.exists())
-			throw new IOException("File not found: " + mimeFile.getAbsolutePath());
-		new MIME(mimeFile).readMIMEType();
+		File mimeFile = new File( confDirectory, MIME_TYPES_FILE );
+		if ( !mimeFile.exists() )
+			throw new IOException( "File not found: " + mimeFile.getAbsolutePath() );
+		new MIME( mimeFile ).readMIMEType();
 
 	}
 
@@ -71,34 +72,35 @@ public class WebServer {
 	}
 
 	public void stop() throws IOException {
-		if (server != null)
+		if ( server != null )
 			server.close();
 	}
 
 	/**
 	 * 
-	 * Start the server. This will be infinite loop for listening to client's request.
+	 * Start the server. This will be infinite loop for listening to client's
+	 * request.
 	 * 
 	 */
 	public void start() throws IOException {
 
 		Socket client = null;
 
-		while (true) {
+		while ( true ) {
 			try {
 				// keeps listening for new clients, one at a time
 				client = server.accept(); // waits for client here
-			} catch (IOException ioe) {
+			} catch ( IOException ioe ) {
 				ioe.printStackTrace();
 				continue;
 			}
 
-			if (moreThreadAllowed()) {
-				ClientThread.instantiate(client.getInputStream(), client.getOutputStream(),
-						client.getInetAddress().getHostAddress()).start();
+			if ( moreThreadAllowed() ) {
+				ClientThread.instantiate( client.getInputStream(), client.getOutputStream(),
+						client.getInetAddress().getHostAddress() ).start();
 				addThread();
 			} else {
-				System.out.println("Reach maximum thread capacity.");
+				System.out.println( "Reach maximum thread capacity." );
 			}
 
 			client = null;
@@ -106,34 +108,34 @@ public class WebServer {
 
 	}
 
-	public static void main(String[] args) {
+	public static void main( String[] args ) {
 
 		WebServer webServer = null;
 		try {
-			if (args.length != 1) {
-				System.out.println("\nError: Need one arg, the directory to httpd.conf file");
+			if ( args.length != 1 ) {
+				System.out.println( "\nError: Need one arg, the directory to httpd.conf file" );
 				System.out
-						.println("Usage: java -jar /home/student/667.02/WebServer.jar /home/student/667.02/conf/\n");
+						.println( "Usage: java -jar /home/student/667.02/WebServer.jar /home/student/667.02/conf/\n" );
 				return;
 			}
-			webServer = new WebServer(args[0]);
+			webServer = new WebServer( args[0] );
 			webServer.start();
 
-		} catch (ConfigurationException ce) {
+		} catch ( ConfigurationException ce ) {
 
-			System.out.println(ce.getMessage());
-			System.exit(1);
+			System.out.println( ce.getMessage() );
+			System.exit( 1 );
 
-		} catch (IOException e) {
+		} catch ( IOException e ) {
 
 			e.printStackTrace();
-			System.exit(1);
+			System.exit( 1 );
 
 		} finally {
 			try {
-				if (webServer != null)
+				if ( webServer != null )
 					webServer.stop();
-			} catch (IOException ioe) {
+			} catch ( IOException ioe ) {
 
 			}
 		}

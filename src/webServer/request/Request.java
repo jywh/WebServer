@@ -11,7 +11,7 @@ public final class Request {
 	public static final String HEAD = "HEAD";
 	public static final String PUT = "PUT";
 
-	private Map<String, String> headerFields;
+	private Map< String, String > headerFields;
 	private String httpVersion, URI, parameterString;
 	private String method;
 	private String IP;
@@ -27,8 +27,8 @@ public final class Request {
 	protected Request() {
 	}
 
-	protected Request(String[] parameters, byte[] parameterByteArray, Map<String, String> requestFields,
-			String remoteUser, String IP) {
+	protected Request( String[] parameters, byte[] parameterByteArray, Map< String, String > requestFields,
+			String remoteUser, String IP ) {
 		this.method = parameters[0];
 		this.URI = parameters[1];
 		this.httpVersion = parameters[2];
@@ -58,11 +58,11 @@ public final class Request {
 		return httpVersion;
 	}
 
-	public Map<String, String> getHeaderField() {
+	public Map< String, String > getHeaderField() {
 		return headerFields;
 	}
 
-	public String replaceWithDocumentRoot(String URI) {
+	public String replaceWithDocumentRoot( String URI ) {
 		return HttpdConf.DOCUMENT_ROOT + URI;
 	}
 

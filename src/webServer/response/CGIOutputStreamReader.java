@@ -22,34 +22,34 @@ public class CGIOutputStreamReader {
 	private BufferedInputStream in;
 	private String headerString;
 
-	public CGIOutputStreamReader(InputStream in) {
-		this.in = new BufferedInputStream(in);
+	public CGIOutputStreamReader( InputStream in ) {
+		this.in = new BufferedInputStream( in );
 	}
 
 	/**
 	 * Check for the offset of consecutive line terminators, where is the break
 	 * of header string and body.
 	 * 
-	 * A line terminator consistes either a linefeed ('\n'), or a carriage return
-	 * ('\r') or a carriage return followed inmediately by a linefeed.
+	 * A line terminator consistes either a linefeed ('\n'), or a carriage
+	 * return ('\r') or a carriage return followed inmediately by a linefeed.
 	 * 
 	 * @return The size of header string in bytes.
 	 * @throws IOException
 	 */
 	public int getHeaderStringSize() throws IOException {
 
-		if (!in.markSupported())
+		if ( !in.markSupported() )
 			return -1;
-		in.mark(200);
+		in.mark( 200 );
 		int count = 0;
 		char c;
-		while (in.available() > 0) {
+		while ( in.available() > 0 ) {
 			count++;
-			c = (char) in.read();
-			if (c == '\n' || c == '\r') {
-				if (in.available() > 0) {
-					c = (char) in.read();
-					if (c == '\n' || c == '\r')
+			c = ( char ) in.read();
+			if ( c == '\n' || c == '\r' ) {
+				if ( in.available() > 0 ) {
+					c = ( char ) in.read();
+					if ( c == '\n' || c == '\r' )
 						break;
 				}
 				count++;
@@ -66,11 +66,11 @@ public class CGIOutputStreamReader {
 	 * @throws IOException
 	 */
 	public String readHeaderString() throws IOException {
-		if (headerString == null) {
+		if ( headerString == null ) {
 			int offset = getHeaderStringSize();
 			byte[] buf = new byte[offset];
-			in.read(buf, 0, buf.length);
-			headerString = new String(buf);
+			in.read( buf, 0, buf.length );
+			headerString = new String( buf );
 		}
 		return headerString;
 	}
@@ -90,11 +90,11 @@ public class CGIOutputStreamReader {
 		int len, size = 1024;
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		byte[] buf = new byte[size];
-		while ((len = in.read(buf, 0, size)) > -1)
-			bos.write(buf, 0, len);
+		while ( ( len = in.read( buf, 0, size ) ) > -1 )
+			bos.write( buf, 0, len );
 		buf = bos.toByteArray();
 		return buf;
-		
+
 	}
 
 }

@@ -16,28 +16,28 @@ public final class ResponseTable {
 	public static final int INTERNAL_SERVER_ERROR = 500;
 	public static final int NOT_IMPLEMENTED = 501;
 
-	private static HashMap<Integer, String> responsePhrase = new HashMap<Integer, String>();
+	private static HashMap< Integer, String > responsePhrase = new HashMap< Integer, String >();
 
 	static {
-		responsePhrase.put(OK, "200 OK");
-		responsePhrase.put(CREATED, "201 Created");
-		responsePhrase.put(NO_CONTENT, "204 No Content");
-		responsePhrase.put(FOUND, "302 Found");
-		responsePhrase.put(NOT_MODIFIED, "304 Not Modified");
-		responsePhrase.put(BAD_REQUEST, "400 Bad Request");
-		responsePhrase.put(UNAUTHORIZED, "401 Unauthorized");
-		responsePhrase.put(FORBIDDEN, "403 Fobidden");
-		responsePhrase.put(NOT_FOUND, "404 Not Found");
-		responsePhrase.put(INTERNAL_SERVER_ERROR, "500 Internal Server Error");
-		responsePhrase.put(NOT_IMPLEMENTED, "501 Not Implemented");
+		responsePhrase.put( OK, "200 OK" );
+		responsePhrase.put( CREATED, "201 Created" );
+		responsePhrase.put( NO_CONTENT, "204 No Content" );
+		responsePhrase.put( FOUND, "302 Found" );
+		responsePhrase.put( NOT_MODIFIED, "304 Not Modified" );
+		responsePhrase.put( BAD_REQUEST, "400 Bad Request" );
+		responsePhrase.put( UNAUTHORIZED, "401 Unauthorized" );
+		responsePhrase.put( FORBIDDEN, "403 Fobidden" );
+		responsePhrase.put( NOT_FOUND, "404 Not Found" );
+		responsePhrase.put( INTERNAL_SERVER_ERROR, "500 Internal Server Error" );
+		responsePhrase.put( NOT_IMPLEMENTED, "501 Not Implemented" );
 	}
 
-	public static String getResponsePhrase(Integer statusCode) {
-		String phrase = responsePhrase.get(statusCode);
-		if (phrase != null)
+	public static String getResponsePhrase( Integer statusCode ) {
+		String phrase = responsePhrase.get( statusCode );
+		if ( phrase != null )
 			return phrase;
 		else
-			return responsePhrase.get(OK);
+			return responsePhrase.get( OK );
 	}
 
 	private ResponseTable() {

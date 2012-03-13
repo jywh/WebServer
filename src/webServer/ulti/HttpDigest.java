@@ -24,21 +24,25 @@ import java.security.NoSuchAlgorithmException;
 
 /**
  * <p>
- * HttpDigest is a miniature version of Digest algorithm which does not support qop tag, and some other
- * options, but it works for simple case. The implementation is borrowed from followed website:
+ * HttpDigest is a miniature version of Digest algorithm which does not support
+ * qop tag, and some other options, but it works for simple case. The
+ * implementation is borrowed from followed website:
  * 
- * http://hc.apache.org/httpclient-3.x/xref/org/apache/commons/httpclient/util/EncodingUtil.html
+ * http://hc.apache.org/httpclient-3.x/xref/org/apache/commons/httpclient/util/
+ * EncodingUtil.html
  * 
- * http://bethecoder.com/open-source/commons-httpclient/commons-httpclient-3.1/org/apache/commons/httpclient/util/EncodingUtil.java.html
+ * http://bethecoder.com/open-source/commons-httpclient/commons-httpclient-3.1/
+ * org/apache/commons/httpclient/ util/EncodingUtil.java.html
  * 
- * Both references are licensed under Apache Software Foundation license agreement, so it is open source for
- * everyone to use, so as to this program.
+ * Both references are licensed under Apache Software Foundation license
+ * agreement.
  * </p>
  */
 public class HttpDigest {
 
 	/**
-	 * Hexa values used when creating 32 character long digest in HTTP DigestScheme in case of authentication.
+	 * Hexa values used when creating 32 character long digest in HTTP
+	 * DigestScheme in case of authentication.
 	 * 
 	 * @see #encode(byte[])
 	 */
@@ -53,16 +57,16 @@ public class HttpDigest {
 	 * @param pwd
 	 *            Password
 	 * 
-	 * @return The created digest as string. This will be the response tag's value in the Authentication HTTP
-	 *         header.
+	 * @return The created digest as string. This will be the response tag's
+	 *         value in the Authentication HTTP header.
 	 * @throws NoSuchAlgorithmException
 	 */
-	public static String createDigest(final String uname, final String pwd, final String uri,
-			final String realm, final String nonce, final String method, String algorithm)
+	public static String createDigest( final String uname, final String pwd, final String uri,
+			final String realm, final String nonce, final String method, String algorithm )
 			throws NoSuchAlgorithmException {
 
 		final String digAlg = "MD5";
-		if (algorithm == null) {
+		if ( algorithm == null ) {
 			algorithm = "MD5";
 		}
 		// If an charset is not specified, default to ISO-8859-1.
@@ -70,61 +74,61 @@ public class HttpDigest {
 
 		MessageDigest md5Helper;
 
-		md5Helper = MessageDigest.getInstance(digAlg);
+		md5Helper = MessageDigest.getInstance( digAlg );
 
 		// 3.2.2.2: Calculating digest
-		StringBuffer tmp = new StringBuffer(uname.length() + realm.length() + pwd.length() + 2);
-		tmp.append(uname);
-		tmp.append(':');
-		tmp.append(realm);
-		tmp.append(':');
-		tmp.append(pwd);
+		StringBuffer tmp = new StringBuffer( uname.length() + realm.length() + pwd.length() + 2 );
+		tmp.append( uname );
+		tmp.append( ':' );
+		tmp.append( realm );
+		tmp.append( ':' );
+		tmp.append( pwd );
 		// unq(username-value) ":" unq(realm-value) ":" passwd
 		String a1 = tmp.toString();
-		String md5a1 = encode(md5Helper.digest(getBytes(a1, charset)));
+		String md5a1 = encode( md5Helper.digest( getBytes( a1, charset ) ) );
 
 		String a2 = method + ":" + uri;
-		String md5a2 = encode(md5Helper.digest(getAsciiBytes(a2)));
+		String md5a2 = encode( md5Helper.digest( getAsciiBytes( a2 ) ) );
 
 		// 3.2.2.1
 		String serverDigestValue;
 		// null qop
-		StringBuffer tmp2 = new StringBuffer(md5a1.length() + nonce.length() + md5a2.length());
-		tmp2.append(md5a1);
-		tmp2.append(':');
-		tmp2.append(nonce);
-		tmp2.append(':');
-		tmp2.append(md5a2);
+		StringBuffer tmp2 = new StringBuffer( md5a1.length() + nonce.length() + md5a2.length() );
+		tmp2.append( md5a1 );
+		tmp2.append( ':' );
+		tmp2.append( nonce );
+		tmp2.append( ':' );
+		tmp2.append( md5a2 );
 		serverDigestValue = tmp2.toString();
 
-		String serverDigest = encode(md5Helper.digest(getAsciiBytes(serverDigestValue)));
+		String serverDigest = encode( md5Helper.digest( getAsciiBytes( serverDigestValue ) ) );
 
 		return serverDigest;
 	}
 
 	/**
-	 * Encodes the 128 bit (16 bytes) MD5 digest into a 32 characters long <CODE>String</CODE> according to
-	 * RFC 2617.
+	 * Encodes the 128 bit (16 bytes) MD5 digest into a 32 characters long
+	 * <CODE>String</CODE> according to RFC 2617.
 	 * 
 	 * @param binaryData
 	 *            array containing the digest
 	 * @return encoded MD5, or <CODE>null</CODE> if encoding failed
 	 */
-	private static String encode(byte[] binaryData) {
+	private static String encode( byte[] binaryData ) {
 
-		if (binaryData.length != 16) {
+		if ( binaryData.length != 16 ) {
 			return null;
 		}
 
 		char[] buffer = new char[32];
-		for (int i = 0; i < 16; i++) {
-			int low = (int) (binaryData[i] & 0x0f);
-			int high = (int) ((binaryData[i] & 0xf0) >> 4);
+		for ( int i = 0; i < 16; i++ ) {
+			int low = ( int ) ( binaryData[i] & 0x0f );
+			int high = ( int ) ( ( binaryData[i] & 0xf0 ) >> 4 );
 			buffer[i * 2] = HEXADECIMAL[high];
-			buffer[(i * 2) + 1] = HEXADECIMAL[low];
+			buffer[( i * 2 ) + 1] = HEXADECIMAL[low];
 		}
 
-		return new String(buffer);
+		return new String( buffer );
 	}
 
 	/***
@@ -136,23 +140,23 @@ public class HttpDigest {
 	 * 
 	 * @since 3.0
 	 */
-	public static byte[] getAsciiBytes(final String data) {
+	public static byte[] getAsciiBytes( final String data ) {
 
-		if (data == null) {
-			throw new IllegalArgumentException("Parameter may not be null");
+		if ( data == null ) {
+			throw new IllegalArgumentException( "Parameter may not be null" );
 		}
 
 		try {
-			return data.getBytes("US-ASCII");
-		} catch (Exception e) {
+			return data.getBytes( "US-ASCII" );
+		} catch ( Exception e ) {
 			return null;
 		}
 
 	}
 
 	/***
-	 * Converts the specified string to a byte array. If the charset is not supported the default system
-	 * charset is used.
+	 * Converts the specified string to a byte array. If the charset is not
+	 * supported the default system charset is used.
 	 * 
 	 * @param data
 	 *            the string to be encoded
@@ -162,19 +166,19 @@ public class HttpDigest {
 	 * 
 	 * @since 3.0
 	 */
-	public static byte[] getBytes(final String data, String charset) {
+	public static byte[] getBytes( final String data, String charset ) {
 
-		if (data == null) {
-			throw new IllegalArgumentException("data may not be null");
+		if ( data == null ) {
+			throw new IllegalArgumentException( "data may not be null" );
 		}
 
-		if (charset == null || charset.length() == 0) {
-			throw new IllegalArgumentException("charset may not be null or empty");
+		if ( charset == null || charset.length() == 0 ) {
+			throw new IllegalArgumentException( "charset may not be null or empty" );
 		}
 
 		try {
-			return data.getBytes(charset);
-		} catch (Exception e) {
+			return data.getBytes( charset );
+		} catch ( Exception e ) {
 			return data.getBytes();
 		}
 	}

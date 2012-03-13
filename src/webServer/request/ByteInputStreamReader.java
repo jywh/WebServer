@@ -18,8 +18,8 @@ public class ByteInputStreamReader {
 
 	private BufferedInputStream in;
 
-	public ByteInputStreamReader(InputStream in) {
-		this.in = new BufferedInputStream(in);
+	public ByteInputStreamReader( InputStream in ) {
+		this.in = new BufferedInputStream( in );
 	}
 
 	public int read() throws IOException {
@@ -34,21 +34,21 @@ public class ByteInputStreamReader {
 	 * @return A text line.
 	 **/
 	public String readLine() throws IOException {
-		if (!in.markSupported())
+		if ( !in.markSupported() )
 			return null;
 		int size = 0;
-		in.mark(200);
-		char c = (char)in.read();
-		while ( c != '\r' && c != '\n'){
-			size ++;
-			c = (char)in.read();
+		in.mark( 200 );
+		char c = ( char ) in.read();
+		while ( c != '\r' && c != '\n' ) {
+			size++;
+			c = ( char ) in.read();
 		}
 		in.reset();
 		byte[] buf = new byte[size];
-		in.read(buf, 0, size);
+		in.read( buf, 0, size );
 		// skip CRLF
-		skip(2);
-		return new String(buf);
+		skip( 2 );
+		return new String( buf );
 	}
 
 	/**
@@ -58,15 +58,15 @@ public class ByteInputStreamReader {
 	 * 
 	 **/
 	public void skipNewLineChar() throws IOException {
-		if (!in.markSupported())
+		if ( !in.markSupported() )
 			return;
 		int s;
 		char c;
-		while (in.available() > 0) {
-			in.mark(2);
+		while ( in.available() > 0 ) {
+			in.mark( 2 );
 			s = in.read();
-			c = (char) s;
-			if (s == -1 || (c != '\n' && c != '\r'))
+			c = ( char ) s;
+			if ( s == -1 || ( c != '\n' && c != '\r' ) )
 				break;
 		}
 
@@ -92,8 +92,8 @@ public class ByteInputStreamReader {
 	 * @return
 	 * @throws IOException
 	 */
-	public int read(byte[] b, int off, int len) throws IOException {
-		return in.read(b, off, len);
+	public int read( byte[] b, int off, int len ) throws IOException {
+		return in.read( b, off, len );
 	}
 
 	/**
@@ -103,8 +103,8 @@ public class ByteInputStreamReader {
 	 * @return
 	 * @throws IOException
 	 */
-	public long skip(long n) throws IOException {
-		return in.skip(n);
+	public long skip( long n ) throws IOException {
+		return in.skip( n );
 	}
 
 	/**
@@ -117,9 +117,9 @@ public class ByteInputStreamReader {
 		int len, size = 1024;
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		byte[] buf = new byte[size];
-		while (in.available() > 0) {
-			len = in.read(buf, 0, size);
-			bos.write(buf, 0, len);
+		while ( in.available() > 0 ) {
+			len = in.read( buf, 0, size );
+			bos.write( buf, 0, len );
 		}
 		buf = bos.toByteArray();
 		return buf;
@@ -133,11 +133,11 @@ public class ByteInputStreamReader {
 	 * @return
 	 * @throws IOException
 	 */
-	public byte[] toByteArray(int size) throws IOException {
+	public byte[] toByteArray( int size ) throws IOException {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		byte[] buf = new byte[size];
-		int len = in.read(buf, 0, size);
-		bos.write(buf, 0, len);
+		int len = in.read( buf, 0, size );
+		bos.write( buf, 0, len );
 		buf = bos.toByteArray();
 		return buf;
 	}
