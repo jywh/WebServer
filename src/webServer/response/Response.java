@@ -19,10 +19,10 @@ import webServer.constant.HttpdConf;
 import webServer.constant.ResponseTable;
 import webServer.httpdconfSetter.Directory.SecureDirectory;
 import webServer.request.Request;
-import webServer.ulti.AccessLog;
-import webServer.ulti.HttpDigest;
-import webServer.ulti.ServerException;
-import webServer.ulti.Ulti;
+import webServer.utils.AccessLog;
+import webServer.utils.HttpDigest;
+import webServer.utils.ServerException;
+import webServer.utils.Utils;
 
 import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
@@ -165,9 +165,9 @@ public class Response {
 				tags.put( elements[0], elements[1].substring( 1, elements[1].length() - 1 ) );
 			}
 			String username = tags.get( "username" );
-			String pwd = sd.getValidUsers().get( username );
+			String passwd = sd.getValidUsers().get( username );
 
-			if ( pwd == null )
+			if ( passwd == null )
 				return false;
 
 			String uri = tags.get( "uri" );
@@ -176,7 +176,7 @@ public class Response {
 			String method = request.getMethod();
 			String algorithm = "MD5";
 			try {
-				String digest = HttpDigest.createDigest( username, pwd, uri, realm, nonce, method, algorithm );
+				String digest = HttpDigest.createDigest( username, passwd, uri, realm, nonce, method, algorithm );
 				return tags.get( "response" ).equals( digest );
 			} catch ( NoSuchAlgorithmException e ) {
 				throw new ServerException( ResponseTable.INTERNAL_SERVER_ERROR );
@@ -189,13 +189,13 @@ public class Response {
 	/**
 	 * Send authentication request to client.
 	 * 
-	 * @param info
+	 * @param sd
 	 * @return
 	 * @throws ServerException
 	 */
-	private int sendAuthenticateMessage( SecureDirectory info ) throws ServerException {
+	private int sendAuthenticateMessage( SecureDirectory sd ) throws ServerException {
 		String headerMessage = createBasicHeaderMessage( ResponseTable.UNAUTHORIZED ).buildAuthentication(
-				info.getAuthType(), info.getAuthName() ).toString();
+				sd.getAuthType(), sd.getAuthName() ).toString();
 		writeHeaderMessage( headerMessage );
 		return ResponseTable.UNAUTHORIZED;
 	}
@@ -300,7 +300,7 @@ public class Response {
 		// String to long lose last three significant digits.
 		long lastModified = ( file.lastModified() / 1000L ) * 1000L;
 		try {
-			Date clientDate = ( Date ) Ulti.DATE_FORMATE.parse( dateFromClient );
+			Date clientDate = ( Date ) Utils.DATE_FORMATE.parse( dateFromClient );
 			return lastModified > clientDate.getTime();
 		} catch ( Exception e ) {
 			// If there is exception, assume file is modified

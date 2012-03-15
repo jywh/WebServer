@@ -1,4 +1,4 @@
-package webServer.ulti;
+package webServer.utils;
 
 import java.io.File;
 import java.text.DateFormat;
@@ -6,7 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
-public class Ulti {
+public class Utils {
 
 	public static final DateFormat DATE_FORMATE = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss z",
 			Locale.US);

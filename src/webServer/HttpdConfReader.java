@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import webServer.httpdconfSetter.HttpdConfSetter;
-import webServer.ulti.ConfigurationException;
+import webServer.utils.ConfigurationException;
 
 /**
  * 

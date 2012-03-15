@@ -1,7 +1,7 @@
 package webServer.httpdconfSetter;
 
 import webServer.constant.HttpdConf;
-import webServer.ulti.ConfigurationException;
+import webServer.utils.ConfigurationException;
 
 public class TempDirectory extends HttpdConfSetter {
 

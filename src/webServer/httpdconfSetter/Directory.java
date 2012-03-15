@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import webServer.constant.HttpdConf;
-import webServer.ulti.ConfigurationException;
+import webServer.utils.ConfigurationException;
 
 /**
  * <p>

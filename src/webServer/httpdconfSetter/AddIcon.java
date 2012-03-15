@@ -1,6 +1,6 @@
 package webServer.httpdconfSetter;
 
-import webServer.ulti.ConfigurationException;
+import webServer.utils.ConfigurationException;
 
 public class AddIcon extends HttpdConfSetter {
 

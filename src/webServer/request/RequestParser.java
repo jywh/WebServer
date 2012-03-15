@@ -11,8 +11,8 @@ import webServer.constant.HeaderFields;
 import webServer.constant.HttpdConf;
 import webServer.constant.ResponseTable;
 import webServer.httpdconfSetter.Directory.SecureDirectory;
-import webServer.ulti.Log;
-import webServer.ulti.ServerException;
+import webServer.utils.Log;
+import webServer.utils.ServerException;
 
 import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
@@ -262,7 +262,6 @@ public class RequestParser {
 				String decodedText = new String( Base64.decode( tokens[1] ) );
 				tokens = decodedText.split( ":", 2 );
 				String remoteUser = ( tokens[0] != null ) ? tokens[0] : "";
-				System.out.println( remoteUser );
 				return remoteUser;
 			} catch ( Base64DecodingException e ) {
 				e.printStackTrace();
@@ -271,7 +270,6 @@ public class RequestParser {
 			String[] newTokens = tokens[1].split( ", ", 2 );
 			tokens = newTokens[0].split( "=", 2 );
 			String remoteUser = ( tokens[1] != null ) ? tokens[1].substring( 1, tokens[1].length() - 1 ) : "";
-			System.out.println( remoteUser );
 			return remoteUser;
 		}
 		return "";

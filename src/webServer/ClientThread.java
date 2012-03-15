@@ -7,7 +7,7 @@ import webServer.constant.ResponseTable;
 import webServer.request.Request;
 import webServer.request.RequestParser;
 import webServer.response.Response;
-import webServer.ulti.ServerException;
+import webServer.utils.ServerException;
 
 /**
  * <p>

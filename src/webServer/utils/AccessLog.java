@@ -1,4 +1,4 @@
-package webServer.ulti;
+package webServer.utils;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -33,7 +33,7 @@ public class AccessLog {
 		requestLine = request.getScriptName();
 		userId = "-";
 		rfc1413 = "-";
-		time = LOG_DATE_FORMAT.format(Ulti.currentTimeMillis());
+		time = LOG_DATE_FORMAT.format(Utils.currentTimeMillis());
 		String content = String.format("%s %s %s [%s] \"%s\" %d", IP, rfc1413, userId, time, requestLine,
 				statusCode);
 		writeLog(content, HttpdConf.LOG_FILE);

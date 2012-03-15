@@ -6,8 +6,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import webServer.constant.HttpdConf;
-import webServer.ulti.AccessLog;
-import webServer.ulti.ConfigurationException;
+import webServer.utils.AccessLog;
+import webServer.utils.ConfigurationException;
 
 public class WebServer {
 

@@ -17,7 +17,7 @@
  *  limitations under the License.
  * ====================================================================
  */
-package webServer.ulti;
+package webServer.utils;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

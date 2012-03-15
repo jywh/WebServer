@@ -13,8 +13,8 @@ import webServer.constant.EnvVarTable;
 import webServer.constant.HttpdConf;
 import webServer.constant.ResponseTable;
 import webServer.request.Request;
-import webServer.ulti.ServerException;
-import webServer.ulti.Ulti;
+import webServer.utils.ServerException;
+import webServer.utils.Utils;
 
 public class CGIHandler {
 
@@ -50,7 +50,7 @@ public class CGIHandler {
 	}
 
 	private String getScriptPath( String URI ) throws IOException, ServerException {
-		String ext = Ulti.getFileExtension( new File( URI ) );
+		String ext = Utils.getFileExtension( new File( URI ) );
 		String scriptPath = HttpdConf.CGI_HANDLER.get( ext );
 		if ( scriptPath == null )
 			return extractScriptPath( URI );

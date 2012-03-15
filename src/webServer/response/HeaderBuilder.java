@@ -8,7 +8,7 @@ import webServer.WebServer;
 import webServer.constant.HeaderFields;
 import webServer.constant.ResponseTable;
 import webServer.httpdconfSetter.Directory.SecureDirectory;
-import webServer.ulti.Ulti;
+import webServer.utils.Utils;
 
 /**
  * <p>
@@ -34,13 +34,13 @@ public class HeaderBuilder {
 	public HeaderBuilder buildHeaderBegin( int statusCode, String httpVersion ) {
 		builder.append( httpVersion ).append( " " ).append( ResponseTable.getResponsePhrase( statusCode ) )
 				.append( CRLF ).append( HeaderFields.DATE ).append( ": " )
-				.append( Ulti.getTimeFull( System.currentTimeMillis() ) ).append( CRLF )
+				.append( Utils.getTimeFull( System.currentTimeMillis() ) ).append( CRLF )
 				.append( HeaderFields.SERVER ).append( ": " ).append( WebServer.SERVER_NAME ).append( CRLF );
 		return this;
 	}
 
 	public HeaderBuilder buildContentTypeAndLength( File file ) {
-		String mime = MIME.getMIMEType( Ulti.getFileExtension( file ) );
+		String mime = MIME.getMIMEType( Utils.getFileExtension( file ) );
 		long length = file.length();
 		buildContentLength( ( int ) length ).buildContentType( mime );
 		return this;
@@ -57,7 +57,7 @@ public class HeaderBuilder {
 	}
 
 	public HeaderBuilder buildLastModified( long date ) {
-		builder.append( HeaderFields.LAST_MODIFIED ).append( ": " ).append( Ulti.getTimeFull( date ) )
+		builder.append( HeaderFields.LAST_MODIFIED ).append( ": " ).append( Utils.getTimeFull( date ) )
 				.append( CRLF );
 		return this;
 
@@ -75,7 +75,7 @@ public class HeaderBuilder {
 
 	public HeaderBuilder buildExpireTime( long millisFromNow ) {
 		builder.append( HeaderFields.EXPIRE ).append( ": " )
-				.append( Ulti.getTimeFull( Ulti.currentTimeMillis() + millisFromNow ) ).append( CRLF );
+				.append( Utils.getTimeFull( Utils.currentTimeMillis() + millisFromNow ) ).append( CRLF );
 		return this;
 	}
 
@@ -83,7 +83,7 @@ public class HeaderBuilder {
 		builder.append( HeaderFields.WWW_AUTHENTICATE ).append( ": " ).append( authType ).append( " realm=" )
 				.append( realm );
 		if ( authType.equals( SecureDirectory.AUTH_TYPE_DIGEST ) ) {
-			Random random = new Random( Ulti.currentTimeMillis() );
+			Random random = new Random( Utils.currentTimeMillis() );
 			String nonce = Integer.toString( random.nextInt() );
 			builder.append( " nonce=" ).append( nonce );
 		}
