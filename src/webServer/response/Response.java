@@ -73,7 +73,7 @@ public class Response {
 	 * @throws ServerException
 	 */
 	public void processRequest() throws ServerException {
-		int statusCode;
+		int statusCode=0;
 
 		SecureDirectory secureDirectory = getSecureDirectory( request.getURI() );
 		switch ( checkAuthentication( secureDirectory ) ) {
@@ -176,7 +176,8 @@ public class Response {
 			String method = request.getMethod();
 			String algorithm = "MD5";
 			try {
-				String digest = HttpDigest.createDigest( username, passwd, uri, realm, nonce, method, algorithm );
+				String digest = HttpDigest.createDigest( username, passwd, uri, realm, nonce, method,
+						algorithm );
 				return tags.get( "response" ).equals( digest );
 			} catch ( NoSuchAlgorithmException e ) {
 				throw new ServerException( ResponseTable.INTERNAL_SERVER_ERROR );
@@ -216,6 +217,45 @@ public class Response {
 	}
 
 	/**
+	 * Response to PUT method. Since all the files will be uploaded to the same
+	 * directory, synchronized block will ensure that there is only on thread
+	 * allow to write the file to UPLOAD directory at once. It also ensure there
+	 * won't be multiple threads uploading files with the same name that the
+	 * previous one gets overwritten.
+	 * 
+	 */
+	private int processPUT() throws ServerException {
+		int statusCode;
+		File document = new File( request.getURI() );
+		synchronized ( this ) {
+			if ( !document.exists() ) {
+				BufferedOutputStream out = null;
+				try {
+					out = new BufferedOutputStream( new FileOutputStream( document ) );
+					out.write( request.getParameterByteArray() );
+					statusCode = ResponseTable.CREATED;
+				} catch ( IOException ioe ) {
+					ioe.printStackTrace();
+					throw new ServerException( ResponseTable.INTERNAL_SERVER_ERROR );
+				} finally {
+					try {
+						if ( out != null )
+							out.close();
+					} catch ( IOException e ) {
+
+					}
+				}
+			} else {
+				statusCode = ResponseTable.NO_CONTENT;
+			}
+		}
+		String headerMessage = createBasicHeaderMessage( statusCode ).toString();
+		writeHeaderMessage( headerMessage );
+		return statusCode;
+
+	}
+
+	/**
 	 * Check if the URI is a path to a script file.
 	 * 
 	 * @param URI
@@ -236,6 +276,7 @@ public class Response {
 	 */
 	private int executeScript() throws ServerException {
 		CGIOutputStreamReader cin = new CGIHandler().sendScript( request );
+		BufferedOutputStream out = null;
 		try {
 			int headerStringLen = cin.getHeaderStringSize();
 			byte[] content = cin.readBodyContent();
@@ -243,17 +284,22 @@ public class Response {
 			String headerMessage = createBasicHeaderMessage( ResponseTable.OK ).buildContentLength(
 					contentLength ).toString();
 
-			BufferedOutputStream out = new BufferedOutputStream( outStream );
+			out = new BufferedOutputStream( outStream );
 			out.write( headerMessage.getBytes( "UTF-8" ) );
 			out.write( content );
-			cin.close();
 			out.flush();
-
 			return ResponseTable.OK;
 
 		} catch ( IOException ioe ) {
 			ioe.printStackTrace();
 			throw new ServerException( ResponseTable.INTERNAL_SERVER_ERROR );
+		} finally {
+			try {
+				if ( cin != null )
+					cin.close();
+			} catch ( IOException ioe ) {
+
+			}
 		}
 	}
 
@@ -308,37 +354,6 @@ public class Response {
 		return true;
 	}
 
-	/**
-	 * Response to PUT method. Since all the files will be uploaded to the same
-	 * directory, synchronized block will ensure that there is only on thread
-	 * allow to write the file to UPLOAD directory at once. It also ensure there
-	 * won't be multiple threads uploading files with the same name that the
-	 * previous one gets overwritten.
-	 * 
-	 */
-	private int processPUT() throws ServerException {
-		int statusCode;
-		File document = new File( request.getURI() );
-		try {
-			synchronized ( this ) {
-				if ( !document.exists() ) {
-					BufferedOutputStream out = new BufferedOutputStream( new FileOutputStream( document ) );
-					out.write( request.getParameterByteArray() );
-					statusCode = ResponseTable.CREATED;
-					out.close();
-				} else {
-					statusCode = ResponseTable.NO_CONTENT;
-				}
-			}
-			String headerMessage = createBasicHeaderMessage( statusCode ).toString();
-			writeHeaderMessage( headerMessage );
-			return statusCode;
-		} catch ( IOException ioe ) {
-			ioe.printStackTrace();
-			throw new ServerException( ResponseTable.INTERNAL_SERVER_ERROR );
-		}
-	}
-
 	/*************************************************************
 	 * Build Header String
 	 *************************************************************/
@@ -380,19 +395,27 @@ public class Response {
 
 	protected void serveFile( File document ) throws ServerException {
 
+		BufferedInputStream in = null;
+		BufferedOutputStream out = null;
 		try {
 			byte[] buf = new byte[1024];
-			BufferedInputStream in = new BufferedInputStream( new FileInputStream( document ) );
-			BufferedOutputStream out = new BufferedOutputStream( outStream );
+			in = new BufferedInputStream( new FileInputStream( document ) );
+			out = new BufferedOutputStream( outStream );
 			int read = -1;
 			while ( ( read = in.read( buf ) ) > -1 ) {
 				out.write( buf, 0, read );
 			}
-			in.close();
 			out.flush();
 		} catch ( IOException ioe ) {
 			ioe.printStackTrace();
 			throw new ServerException( ResponseTable.INTERNAL_SERVER_ERROR, "ServeFile" );
+		} finally {
+			try {
+				if ( in != null )
+					in.close();
+			} catch ( IOException ioe ) {
+
+			}
 		}
 	}
 

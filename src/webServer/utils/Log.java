@@ -39,4 +39,5 @@ public class Log {
 		if (DEBUG)
 			System.out.printf("%-15s %d\n", field, d);
 	}
+	
 }

@@ -177,7 +177,7 @@ public class RequestParser {
 		URI = path.getAbsolutePath() + File.separator;
 		for ( String indexFile : HttpdConf.DIRECTORY_INDEX ) {
 			indexFile = URI + indexFile;
-			if ( new File( indexFile ).exists() )
+			if ( ( new File( indexFile ) ).exists() )
 				return indexFile;
 		}
 

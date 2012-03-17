@@ -8,7 +8,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
 
+
 import webServer.constant.HttpdConf;
+import webServer.utils.ConfigurationException;
 
 /**
  * <p>
@@ -28,24 +30,33 @@ public class MIME {
 		reader = new BufferedReader( new FileReader( mimeFile ) );
 	}
 
-	public void readMIMEType() throws IOException {
+	public void readMIMEType() throws ConfigurationException {
 		String line;
 		String[] tokens;
 		int size = 0;
-
-		while ( ( line = reader.readLine() ) != null ) {
-			// skip comment and blink line
-			if ( line.trim().length() == 0 || line.charAt( 0 ) == '#' ) {
-				continue;
-			}
-			// replace all the white space and tab with '#'
-			line = line.trim().replaceAll( "[ \t]+", "#" );
-			tokens = line.split( "#" );
-			if ( tokens.length > 1 ) {
-				size = tokens.length;
-				for ( int i = 1; i < size; i++ ) {
-					MIMETable.put( tokens[i], tokens[0] );
+		try {
+			while ( ( line = reader.readLine() ) != null ) {
+				// skip comment and blink line
+				if ( line.trim().length() == 0 || line.charAt( 0 ) == '#' ) {
+					continue;
 				}
+				// replace all the white space and tab with '#'
+				line = line.trim().replaceAll( "[ \t]+", "#" );
+				tokens = line.split( "#" );
+				if ( tokens.length > 1 ) {
+					size = tokens.length;
+					for ( int i = 1; i < size; i++ ) {
+						MIMETable.put( tokens[i], tokens[0] );
+					}
+				}
+			}
+		} catch ( IOException ioe ) {
+			throw new ConfigurationException( "Fail to read mime.types" );
+		} finally {
+			try {
+				reader.close();
+			} catch ( IOException ioe ) {
+
 			}
 		}
 

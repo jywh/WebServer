@@ -50,7 +50,7 @@ public class WebServer {
 
 	}
 
-	protected void prepareMIMETypes( String confDirectory ) throws IOException {
+	protected void prepareMIMETypes( String confDirectory ) throws IOException, ConfigurationException {
 
 		File mimeFile = new File( confDirectory, MIME_TYPES_FILE );
 		if ( !mimeFile.exists() )
@@ -71,7 +71,7 @@ public class WebServer {
 		return threadCount <= HttpdConf.MAX_THREAD;
 	}
 
-	public void stop() throws IOException {
+	public void close() throws IOException {
 		if ( server != null )
 			server.close();
 	}
@@ -114,8 +114,7 @@ public class WebServer {
 		try {
 			if ( args.length != 1 ) {
 				System.out.println( "\nError: Need one arg, the directory to httpd.conf file" );
-				System.out
-						.println( "Usage: java -jar /home/student/667.02/WebServer.jar /home/student/667.02/conf/\n" );
+				System.out.println( "Usage: java -jar /home/student/667.02/WebServer.jar /home/student/667.02/conf/\n" );
 				return;
 			}
 			webServer = new WebServer( args[0] );
@@ -134,7 +133,7 @@ public class WebServer {
 		} finally {
 			try {
 				if ( webServer != null )
-					webServer.stop();
+					webServer.close();
 			} catch ( IOException ioe ) {
 
 			}

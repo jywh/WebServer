@@ -30,25 +30,34 @@ public class HttpdConfReader {
 		reader = new BufferedReader( new FileReader( confFile ) );
 	}
 
-	public void readHttpdConfFile() throws IOException, ConfigurationException {
+	public void readHttpdConfFile() throws ConfigurationException {
 
 		String currentLine;
+		try {
+			while ( ( currentLine = reader.readLine() ) != null ) {
 
-		while ( ( currentLine = reader.readLine() ) != null ) {
+				// trim white space at the beginning, the middle and the end
+				currentLine = currentLine.trim().replaceAll( " +", " " );
 
-			// trim white space at the beginning, the middle and the end
-			currentLine = currentLine.trim().replaceAll( " +", " " );
+				// skip comment and blink line
+				if ( isCommentOrEmptyLine( currentLine ) )
+					continue;
 
-			// skip comment and blink line
-			if ( isCommentOrEmptyLine( currentLine ) )
-				continue;
+				// Check tag ('<>') which starts with '<'
+				if ( currentLine.charAt( 0 ) == '<' )
+					parseTag( currentLine );
+				else
+					parseLine( currentLine );
 
-			// Check tag ('<>') which starts with '<'
-			if ( currentLine.charAt( 0 ) == '<' )
-				parseTag( currentLine );
-			else
-				parseLine( currentLine );
+			}
+		} catch ( IOException ioe ) {
+			throw new ConfigurationException( "Fail to read httpdconf" );
+		} finally {
+			try {
+				reader.close();
+			} catch ( IOException ioe ) {
 
+			}
 		}
 	}
 
