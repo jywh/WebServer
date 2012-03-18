@@ -11,7 +11,7 @@ import webServer.constant.HeaderFields;
 import webServer.constant.HttpdConf;
 import webServer.constant.ResponseTable;
 import webServer.httpdconfSetter.Directory.SecureDirectory;
-import webServer.utils.Log;
+import webServer.log.Log;
 import webServer.utils.ServerException;
 
 import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
@@ -255,24 +255,22 @@ public class RequestParser {
 		String encodedText = headerFields.get( HeaderFields.AUTHORIZATION );
 		if ( encodedText == null )
 			return "";
-
+		String remoteUser="";
 		String[] tokens = encodedText.split( " ", 2 );
 		if ( tokens[0].equals( SecureDirectory.AUTH_TYPE_BASIC ) ) {
 			try {
 				String decodedText = new String( Base64.decode( tokens[1] ) );
 				tokens = decodedText.split( ":", 2 );
-				String remoteUser = ( tokens[0] != null ) ? tokens[0] : "";
-				return remoteUser;
+				remoteUser = ( tokens[0] != null ) ? tokens[0] : "";
 			} catch ( Base64DecodingException e ) {
 				e.printStackTrace();
 			}
 		} else if ( tokens[0].equals( SecureDirectory.AUTH_TYPE_DIGEST ) ) {
 			String[] newTokens = tokens[1].split( ", ", 2 );
 			tokens = newTokens[0].split( "=", 2 );
-			String remoteUser = ( tokens[1] != null ) ? tokens[1].substring( 1, tokens[1].length() - 1 ) : "";
-			return remoteUser;
+			remoteUser = ( tokens[1] != null ) ? tokens[1].substring( 1, tokens[1].length() - 1 ) : "";
 		}
-		return "";
+		return remoteUser;
 	}
 
 	// //////////////////////////////////////////////////////////////

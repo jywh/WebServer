@@ -29,4 +29,5 @@ public class ServerException extends Exception {
 	public void printMessage() {
 		System.out.println(statusCode + ": " + super.getMessage());
 	}
+	
 }

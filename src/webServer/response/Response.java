@@ -18,8 +18,8 @@ import webServer.constant.HeaderFields;
 import webServer.constant.HttpdConf;
 import webServer.constant.ResponseTable;
 import webServer.httpdconfSetter.Directory.SecureDirectory;
+import webServer.log.AccessLog;
 import webServer.request.Request;
-import webServer.utils.AccessLog;
 import webServer.utils.HttpDigest;
 import webServer.utils.ServerException;
 import webServer.utils.Utils;
@@ -57,14 +57,12 @@ public class Response {
 	}
 
 	/**
-	 * Process request, produce appropriate response. Check if the URI contains
-	 * secure directory.
+	 * Process request, produce appropriate response. Check if the URI contains secure directory.
 	 * 
 	 * options:
 	 * 
-	 * 1. NOT_SECURE_DIR: contains no secure directory. 2. NEED_AUTHENTICATE:
-	 * contains secure directory, need authentication. 3. AUTHENTICATED: pass
-	 * authentication.
+	 * 1. NOT_SECURE_DIR: contains no secure directory. 2. NEED_AUTHENTICATE: contains secure directory, need
+	 * authentication. 3. AUTHENTICATED: pass authentication.
 	 * 
 	 * @param request
 	 *            A request object created by RequestParser
@@ -98,8 +96,7 @@ public class Response {
 	// //////////////////////////////////////////////////////////////
 
 	/**
-	 * Check if the URI contain any secure directory that is defined in
-	 * httpd.conf file.
+	 * Check if the URI contain any secure directory that is defined in httpd.conf file.
 	 * 
 	 * @param uri
 	 * @return The secure directory if it exists, null otherwise.
@@ -217,11 +214,10 @@ public class Response {
 	}
 
 	/**
-	 * Response to PUT method. Since all the files will be uploaded to the same
-	 * directory, synchronized block will ensure that there is only on thread
-	 * allow to write the file to UPLOAD directory at once. It also ensure there
-	 * won't be multiple threads uploading files with the same name that the
-	 * previous one gets overwritten.
+	 * Response to PUT method. Since all the files will be uploaded to the same directory, synchronized block
+	 * will ensure that there is only on thread allow to write the file to UPLOAD directory at once. It also
+	 * ensure there won't be multiple threads uploading files with the same name that the previous one gets
+	 * overwritten.
 	 * 
 	 */
 	private int processPUT() throws ServerException {
@@ -268,8 +264,7 @@ public class Response {
 
 	/**
 	 * 
-	 * Send the script to CGIHandler, then capture the output of script
-	 * execution and send back to client.
+	 * Send the script to CGIHandler, then capture the output of script execution and send back to client.
 	 * 
 	 * @return The status code
 	 * @throws ServerException
@@ -295,10 +290,8 @@ public class Response {
 			throw new ServerException( ResponseTable.INTERNAL_SERVER_ERROR );
 		} finally {
 			try {
-				if ( cin != null )
-					cin.close();
-			} catch ( IOException ioe ) {
-
+				cin.close();
+			} catch ( Exception ioe ) {
 			}
 		}
 	}
@@ -332,8 +325,7 @@ public class Response {
 	}
 
 	/**
-	 * Check if file is modified since IF_MODIFIED_SINCE date that sent from
-	 * client.
+	 * Check if file is modified since IF_MODIFIED_SINCE date that sent from client.
 	 * 
 	 * @param file
 	 * @return Ture if it is modified, false otherwise.
@@ -368,8 +360,7 @@ public class Response {
 	}
 
 	/**
-	 * Build header message for reponse that requires content type, content
-	 * lenght and cache control.
+	 * Build header message for reponse that requires content type, content lenght and cache control.
 	 * 
 	 * @param statusCode
 	 * @param document
@@ -411,10 +402,8 @@ public class Response {
 			throw new ServerException( ResponseTable.INTERNAL_SERVER_ERROR, "ServeFile" );
 		} finally {
 			try {
-				if ( in != null )
-					in.close();
-			} catch ( IOException ioe ) {
-
+				in.close();
+			} catch ( Exception ioe ) {
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-package webServer.utils;
+package webServer.log;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 
 import webServer.constant.HttpdConf;
 import webServer.request.Request;
+import webServer.utils.Utils;
 
 public class AccessLog {
 
@@ -31,7 +32,7 @@ public class AccessLog {
 		String IP, requestLine, userId, rfc1413, time;
 		IP = request.getIPAddr();
 		requestLine = request.getScriptName();
-		userId = "-";
+		userId = ( request.getRemoteUser().isEmpty() ) ? "-" : request.getRemoteUser();
 		rfc1413 = "-";
 		time = LOG_DATE_FORMAT.format( Utils.currentTimeMillis() );
 		String content = String.format( "%s %s %s [%s] \"%s\" %d", IP, rfc1413, userId, time, requestLine,

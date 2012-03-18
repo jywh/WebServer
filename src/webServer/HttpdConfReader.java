@@ -13,8 +13,8 @@ import webServer.utils.ConfigurationException;
 /**
  * 
  * <p>
- * A HttpdConfReader parses httpd.conf and call appropriate HttpdConfSetter to
- * handle corresponding lines or tags.
+ * A HttpdConfReader parses httpd.conf and call appropriate HttpdConfSetter to handle corresponding lines or
+ * tags.
  * </p>
  * 
  */
@@ -55,8 +55,7 @@ public class HttpdConfReader {
 		} finally {
 			try {
 				reader.close();
-			} catch ( IOException ioe ) {
-
+			} catch ( Exception e ) {
 			}
 		}
 	}
@@ -68,9 +67,9 @@ public class HttpdConfReader {
 		return false;
 	}
 
-	// //////////////////////////////////////////////////////////////
-	// Parse Single Line
-	// //////////////////////////////////////////////////////////////
+	/*****************************************************************
+	 * Parsing single line
+	 *****************************************************************/
 
 	private void parseLine( String currentLine ) throws ConfigurationException {
 		String[] tokens = currentLine.split( " ", 2 );
@@ -80,9 +79,9 @@ public class HttpdConfReader {
 			httpdConfSetter.process( tokens[1] );
 	}
 
-	// //////////////////////////////////////////////////////////////
-	// Parse Tag
-	// //////////////////////////////////////////////////////////////
+	/*****************************************************************
+	 * Parsing tag <>
+	 *****************************************************************/
 
 	/**
 	 * Processing lines between open tag ('<>') and close tag ('</>')

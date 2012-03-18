@@ -56,7 +56,6 @@ public class ClientThread extends Thread {
 				inputStream.close();
 				outStream.close();
 			} catch ( Exception e ) {
-
 			}
 			WebServer.removeThread();
 		}

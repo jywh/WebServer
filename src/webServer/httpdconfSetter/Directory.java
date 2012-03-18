@@ -45,7 +45,7 @@ public class Directory extends HttpdConfSetter {
 				tokens = tokens[1].split( " " );
 				user = ( tokens.length > 1 ) ? tokens[1] : null;
 			} else {
-				throw new ConfigurationException( "Directory contains unknown element" );
+				throw new ConfigurationException( "Directory contains unknown element: " + tokens[0] );
 			}
 		}
 

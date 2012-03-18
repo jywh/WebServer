@@ -6,7 +6,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import webServer.constant.HttpdConf;
-import webServer.utils.AccessLog;
+import webServer.log.AccessLog;
+import webServer.log.ErrorLog;
 import webServer.utils.ConfigurationException;
 
 public class WebServer {
@@ -36,6 +37,7 @@ public class WebServer {
 		this.prepareMIMETypes( confDiretory );
 		this.configure( confDiretory );
 		AccessLog.initialize();
+		ErrorLog.setup();
 		server = new ServerSocket( HttpdConf.LISTEN );
 		System.out.println( "Opened socket " + HttpdConf.LISTEN );
 
@@ -74,6 +76,7 @@ public class WebServer {
 	public void close() throws IOException {
 		if ( server != null )
 			server.close();
+		ErrorLog.close();
 	}
 
 	/**
@@ -100,7 +103,7 @@ public class WebServer {
 						client.getInetAddress().getHostAddress() ).start();
 				addThread();
 			} else {
-				System.out.println( "Reach maximum thread capacity." );
+				System.err.println( "Reach maximum thread capacity." );
 			}
 
 			client = null;

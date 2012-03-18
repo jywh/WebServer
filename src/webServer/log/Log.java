@@ -1,4 +1,4 @@
-package webServer.utils;
+package webServer.log;
 
 /**
  * <p>
@@ -8,7 +8,10 @@ package webServer.utils;
  */
 public class Log {
 
-	private static boolean DEBUG = false;
+	/**
+	 * Use to control debug mode. This should be set to false when in real production.
+	 */
+	public static boolean DEBUG = false;
 
 	public static void debug( String tag, String message ) {
 		if ( DEBUG )

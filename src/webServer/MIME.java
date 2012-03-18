@@ -36,12 +36,13 @@ public class MIME {
 		int size = 0;
 		try {
 			while ( ( line = reader.readLine() ) != null ) {
+				line = line.trim();
 				// skip comment and blink line
-				if ( line.trim().length() == 0 || line.charAt( 0 ) == '#' ) {
+				if ( line.isEmpty() || line.charAt( 0 ) == '#' ) {
 					continue;
 				}
 				// replace all the white space and tab with '#'
-				line = line.trim().replaceAll( "[ \t]+", "#" );
+				line = line.replaceAll( "[ \t]+", "#" );
 				tokens = line.split( "#" );
 				if ( tokens.length > 1 ) {
 					size = tokens.length;
@@ -56,7 +57,6 @@ public class MIME {
 			try {
 				reader.close();
 			} catch ( IOException ioe ) {
-
 			}
 		}
 
