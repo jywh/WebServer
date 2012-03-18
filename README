@@ -1,6 +1,61 @@
-To run: please provide the path to web server configuration directory.
+Development Environment:
+Platform: Windows 7
+IDE: Eclipse 
+JDK: jdk1.6.0_23 (64bit) 
 
-Programming language: Java
+Features:
+1. Support Method: GET, PUT, POST, HEAD
+2. Support Alias/Script Alias
+3. Support Error Code: 400, 401, 403, 404, 500, 501
+4. Support Multithread
+5. Support Cache
+6. Support Access Log
+7. Support CGI script 
+8. Support Authentication: Basic, Digest/MD5( MD5 Works on Firefox )
+9. Support Script Alias with extra path info, remote user.
 
-General Description:
-This is a class project for my Internet Application at SFSU.If you happen to be a student from that class, please do not just copy, it should be a good source of reference.
+
+Code Style:
+
+* Java coding convention
+
+* Class variables are all UPPER_CASE.
+
+* Instant variables start with lowercase letter.
+
+* Try to add comment to complicate method.
+
+* Related methods are grouped together.
+
+* Methods are kept short to improve readability and maintainability.
+
+* Avoid hard-code common String value, instead,  using static variables represent String. For example, use public final static String GET = “GET”, to replace “GET” keyword.
+
+
+Packcage Info:
+
+* webServer: contains classes that use to sets up web server, and WebServer itself.
+
+* webServer.constants: contains all the constant classes.
+
+* webServer.httpdConfSetter: containts all the classes that is responsible for setting the appropriate value to web server configuration.
+
+* webServer.request: contains all the classes that dealing with client request stream.
+
+* webServer.response: contains all the classes that dealing with response to client request.
+
+* webServer.ulti: contains utility classes that is used through out the project.
+
+
+Implementation:
+
+* Main method is located in WebServer class.
+
+* I choose not to use BufferedReader or BufferedInputStream to read request input stream because either of them provide the functionality that I need. So I wrote a helper class, ByteInputStreamReader, 
+which provide readLine and read bytes functionality.
+
+* Request body is not stored as String, instread, it is store as byte array.
+
+* CGI script path is got from httpd.conf file, if httpd.conf not specific, it will get it from the to be executed script file.
+
+* Log class is used for debug, and it is turned off by default, to see log info, see DEBUG variable in Log class to true.
