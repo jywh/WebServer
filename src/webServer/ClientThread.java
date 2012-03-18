@@ -40,6 +40,7 @@ public class ClientThread extends Thread {
 			Request request = new RequestParser( inputStream ).parse( IP );
 			response = new Response( request, outStream );
 			response.processRequest();
+
 		} catch ( ServerException e ) {
 			e.printStackTrace();
 			if ( response == null )

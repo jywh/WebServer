@@ -68,9 +68,9 @@ public class HttpdConfReader {
 		return false;
 	}
 
-	/*****************************************************************
-	 * Parsing single line
-	 *****************************************************************/
+	// //////////////////////////////////////////////////////////////
+	// Parse Single Line
+	// //////////////////////////////////////////////////////////////
 
 	private void parseLine( String currentLine ) throws ConfigurationException {
 		String[] tokens = currentLine.split( " ", 2 );
@@ -80,9 +80,9 @@ public class HttpdConfReader {
 			httpdConfSetter.process( tokens[1] );
 	}
 
-	/*****************************************************************
-	 * Parsing tag <>
-	 *****************************************************************/
+	// //////////////////////////////////////////////////////////////
+	// Parse Tag
+	// //////////////////////////////////////////////////////////////
 
 	/**
 	 * Processing lines between open tag ('<>') and close tag ('</>')

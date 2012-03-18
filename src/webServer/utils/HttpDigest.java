@@ -24,25 +24,21 @@ import java.security.NoSuchAlgorithmException;
 
 /**
  * <p>
- * HttpDigest is a miniature version of Digest algorithm which does not support
- * qop tag, and some other options, but it works for simple case. The
- * implementation is borrowed from followed website:
+ * HttpDigest is a miniature version of Digest algorithm which does not support qop tag, and some other
+ * options, but it works for simple case. The implementation is borrowed from followed website:
  * 
- * http://hc.apache.org/httpclient-3.x/xref/org/apache/commons/httpclient/util/
- * EncodingUtil.html
+ * http://hc.apache.org/httpclient-3.x/xref/org/apache/commons/httpclient/util/ EncodingUtil.html
  * 
- * http://bethecoder.com/open-source/commons-httpclient/commons-httpclient-3.1/
- * org/apache/commons/httpclient/ util/EncodingUtil.java.html
+ * http://bethecoder.com/open-source/commons-httpclient/commons-httpclient-3.1/ org/apache/commons/httpclient/
+ * util/EncodingUtil.java.html
  * 
- * Both references are licensed under Apache Software Foundation license
- * agreement.
+ * Both references are licensed under Apache Software Foundation license agreement.
  * </p>
  */
 public class HttpDigest {
 
 	/**
-	 * Hexa values used when creating 32 character long digest in HTTP
-	 * DigestScheme in case of authentication.
+	 * Hexa values used when creating 32 character long digest in HTTP DigestScheme in case of authentication.
 	 * 
 	 * @see #encode(byte[])
 	 */
@@ -57,8 +53,8 @@ public class HttpDigest {
 	 * @param pwd
 	 *            Password
 	 * 
-	 * @return The created digest as string. This will be the response tag's
-	 *         value in the Authentication HTTP header.
+	 * @return The created digest as string. This will be the response tag's value in the Authentication HTTP
+	 *         header.
 	 * @throws NoSuchAlgorithmException
 	 */
 	public static String createDigest( final String uname, final String pwd, final String uri,
@@ -107,8 +103,8 @@ public class HttpDigest {
 	}
 
 	/**
-	 * Encodes the 128 bit (16 bytes) MD5 digest into a 32 characters long
-	 * <CODE>String</CODE> according to RFC 2617.
+	 * Encodes the 128 bit (16 bytes) MD5 digest into a 32 characters long <CODE>String</CODE> according to
+	 * RFC 2617.
 	 * 
 	 * @param binaryData
 	 *            array containing the digest
@@ -155,8 +151,8 @@ public class HttpDigest {
 	}
 
 	/***
-	 * Converts the specified string to a byte array. If the charset is not
-	 * supported the default system charset is used.
+	 * Converts the specified string to a byte array. If the charset is not supported the default system
+	 * charset is used.
 	 * 
 	 * @param data
 	 *            the string to be encoded

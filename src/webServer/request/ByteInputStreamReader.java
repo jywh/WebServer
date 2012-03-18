@@ -8,9 +8,8 @@ import java.io.InputStream;
 /**
  * 
  * <p>
- * A ByteInputStreamReader combines the functionality of BufferedReader and
- * BufferedInputStream. As the name suggest, a ByteInputStreamReader can both
- * read lines and read bytes.
+ * A ByteInputStreamReader combines the functionality of BufferedReader and BufferedInputStream. As the name
+ * suggest, a ByteInputStreamReader can both read lines and read bytes.
  * </p>
  * 
  */
@@ -27,9 +26,8 @@ public class ByteInputStreamReader {
 	}
 
 	/**
-	 * Reads a line of text. A line is considered to be terminated by any one of
-	 * a line feed ('\n'), a carriage return ('\r'), or a Carriage Return
-	 * followed immediately by a LineFeed (CRLF).
+	 * Reads a line of text. A line is considered to be terminated by any one of a line feed ('\n'), a
+	 * carriage return ('\r'), or a Carriage Return followed immediately by a LineFeed (CRLF).
 	 * 
 	 * @return A text line.
 	 **/
@@ -53,8 +51,8 @@ public class ByteInputStreamReader {
 
 	/**
 	 * 
-	 * A newline char is considered to be either a line feed ('\n'), a carriage
-	 * return ('\r'), or a carriage return followed immediately by a linefeed.
+	 * A newline char is considered to be either a line feed ('\n'), a carriage return ('\r'), or a carriage
+	 * return followed immediately by a linefeed.
 	 * 
 	 **/
 	public void skipNewLineChar() throws IOException {
@@ -114,15 +112,20 @@ public class ByteInputStreamReader {
 	 * @throws IOException
 	 */
 	public byte[] toByteArray() throws IOException {
+
 		int len, size = 1024;
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		byte[] buf = new byte[size];
-		while ( in.available() > 0 ) {
-			len = in.read( buf, 0, size );
-			bos.write( buf, 0, len );
+		try {
+			byte[] buf = new byte[size];
+			while ( in.available() > 0 ) {
+				len = in.read( buf, 0, size );
+				bos.write( buf, 0, len );
+			}
+			buf = bos.toByteArray();
+			return buf;
+		} finally {
+			bos.close();
 		}
-		buf = bos.toByteArray();
-		return buf;
 	}
 
 	/**
@@ -135,10 +138,14 @@ public class ByteInputStreamReader {
 	 */
 	public byte[] toByteArray( int size ) throws IOException {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		byte[] buf = new byte[size];
-		int len = in.read( buf, 0, size );
-		bos.write( buf, 0, len );
-		buf = bos.toByteArray();
-		return buf;
+		try {
+			byte[] buf = new byte[size];
+			int len = in.read( buf, 0, size );
+			bos.write( buf, 0, len );
+			buf = bos.toByteArray();
+			return buf;
+		} finally {
+			bos.close();
+		}
 	}
 }

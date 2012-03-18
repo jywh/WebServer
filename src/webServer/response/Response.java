@@ -73,7 +73,7 @@ public class Response {
 	 * @throws ServerException
 	 */
 	public void processRequest() throws ServerException {
-		int statusCode=0;
+		int statusCode = 0;
 
 		SecureDirectory secureDirectory = getSecureDirectory( request.getURI() );
 		switch ( checkAuthentication( secureDirectory ) ) {
@@ -93,9 +93,9 @@ public class Response {
 		new AccessLog().log( request, statusCode );
 	}
 
-	/*************************************************************
-	 * Check authentication
-	 *************************************************************/
+	// //////////////////////////////////////////////////////////////
+	// Check Authentication
+	// //////////////////////////////////////////////////////////////
 
 	/**
 	 * Check if the URI contain any secure directory that is defined in
@@ -105,10 +105,10 @@ public class Response {
 	 * @return The secure directory if it exists, null otherwise.
 	 */
 	private SecureDirectory getSecureDirectory( String uri ) {
-		Set< String > secureDirectories = HttpdConf.secureUsers.keySet();
+		Set< String > secureDirectories = HttpdConf.secureDirectories.keySet();
 		for ( String directory : secureDirectories ) {
 			if ( uri.contains( directory ) )
-				return HttpdConf.secureUsers.get( directory );
+				return HttpdConf.secureDirectories.get( directory );
 		}
 		return null;
 	}
@@ -125,10 +125,10 @@ public class Response {
 		if ( secureDirectory == null )
 			return NOT_SECURE_DIR;
 
-		if ( !request.getHeaderField().containsKey( HeaderFields.AUTHORIZATION ) )
+		if ( !request.getHeaderFields().containsKey( HeaderFields.AUTHORIZATION ) )
 			return NEED_AUTHENTICATE;
 
-		String auth = request.getHeaderField().get( HeaderFields.AUTHORIZATION );
+		String auth = request.getHeaderFields().get( HeaderFields.AUTHORIZATION );
 		String[] tokens = auth.split( " ", 2 );
 		if ( authenticate( secureDirectory, tokens[0], tokens[1] ) )
 			return AUTHENTICATED;
@@ -201,9 +201,9 @@ public class Response {
 		return ResponseTable.UNAUTHORIZED;
 	}
 
-	/*************************************************************
-	 * Process normal request
-	 *************************************************************/
+	// //////////////////////////////////////////////////////////////
+	// Process Normal Request
+	// //////////////////////////////////////////////////////////////
 
 	private int processNormalRequest( boolean allowCache ) throws ServerException {
 
@@ -339,7 +339,7 @@ public class Response {
 	 * @return Ture if it is modified, false otherwise.
 	 */
 	private boolean isModified( File file ) {
-		String dateFromClient = request.getHeaderField().get( HeaderFields.IF_MODIFIED_SINCE );
+		String dateFromClient = request.getHeaderFields().get( HeaderFields.IF_MODIFIED_SINCE );
 		if ( dateFromClient == null )
 			return true;
 		// Remove last three significant digits, because convert date from
@@ -354,9 +354,9 @@ public class Response {
 		return true;
 	}
 
-	/*************************************************************
-	 * Build Header String
-	 *************************************************************/
+	// //////////////////////////////////////////////////////////////
+	// Build Header String
+	// //////////////////////////////////////////////////////////////
 
 	/**
 	 * Build header message for basic response with header field connection.
@@ -384,9 +384,9 @@ public class Response {
 
 	}
 
-	/*************************************************************
-	 * Response to client
-	 *************************************************************/
+	// //////////////////////////////////////////////////////////////
+	// Response To Client
+	// //////////////////////////////////////////////////////////////
 
 	protected void writeHeaderMessage( String headerMessage ) {
 		PrintWriter writer = new PrintWriter( outStream, true );

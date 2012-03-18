@@ -58,7 +58,7 @@ public final class Request {
 		return httpVersion;
 	}
 
-	public Map< String, String > getHeaderField() {
+	public Map< String, String > getHeaderFields() {
 		return headerFields;
 	}
 

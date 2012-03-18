@@ -7,14 +7,13 @@ import java.io.InputStream;
 
 /**
  * 
- * A CGIOutputStreamReader is created specifically for handling CGI output
- * result.
+ * A CGIOutputStreamReader is created specifically for handling CGI output result.
  * 
  * <p>
  * Format of CGI output:</b></b>
  * 
- * Header Fields ( Directive ): which consists header field(s) that are needed
- * to be sent back to client </b> Blank line </b> Body </b>
+ * Header Fields ( Directive ): which consists header field(s) that are needed to be sent back to client </b>
+ * Blank line </b> Body </b>
  * </p>
  */
 public class CGIOutputStreamReader {
@@ -27,11 +26,10 @@ public class CGIOutputStreamReader {
 	}
 
 	/**
-	 * Check for the offset of consecutive line terminators, where is the break
-	 * of header string and body.
+	 * Check for the offset of consecutive line terminators, where is the break of header string and body.
 	 * 
-	 * A line terminator consistes either a linefeed ('\n'), or a carriage
-	 * return ('\r') or a carriage return followed inmediately by a linefeed.
+	 * A line terminator consistes either a linefeed ('\n'), or a carriage return ('\r') or a carriage return
+	 * followed inmediately by a linefeed.
 	 * 
 	 * @return The size of header string in bytes.
 	 * @throws IOException
@@ -86,14 +84,18 @@ public class CGIOutputStreamReader {
 	 * @throws IOException
 	 */
 	public byte[] readBodyContent() throws IOException {
-
-		int len, size = 1024;
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		byte[] buf = new byte[size];
-		while ( ( len = in.read( buf, 0, size ) ) > -1 )
-			bos.write( buf, 0, len );
-		buf = bos.toByteArray();
-		return buf;
+		ByteArrayOutputStream bos = null;
+		try {
+			int len, size = 1024;
+			bos = new ByteArrayOutputStream();
+			byte[] buf = new byte[size];
+			while ( ( len = in.read( buf, 0, size ) ) > -1 )
+				bos.write( buf, 0, len );
+			buf = bos.toByteArray();
+			return buf;
+		} finally {
+			bos.close();
+		}
 
 	}
 
