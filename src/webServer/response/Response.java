@@ -235,10 +235,8 @@ public class Response {
 					throw new ServerException( ResponseTable.INTERNAL_SERVER_ERROR );
 				} finally {
 					try {
-						if ( out != null )
-							out.close();
-					} catch ( IOException e ) {
-
+						out.close();
+					} catch ( Exception e ) {
 					}
 				}
 			} else {

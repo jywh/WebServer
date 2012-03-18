@@ -13,6 +13,7 @@ import webServer.constant.ResponseTable;
 import webServer.httpdconfSetter.Directory.SecureDirectory;
 import webServer.log.Log;
 import webServer.utils.ServerException;
+import webServer.utils.Utils;
 
 import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
@@ -246,7 +247,7 @@ public class RequestParser {
 
 	/**
 	 * Get REMOTE_USER from AUTHORIZATION fiels. REMOTE_USER is used by CGI
-	 * script.
+	 * script and access log
 	 * 
 	 * @param headerFields
 	 * @return
@@ -268,7 +269,7 @@ public class RequestParser {
 		} else if ( tokens[0].equals( SecureDirectory.AUTH_TYPE_DIGEST ) ) {
 			String[] newTokens = tokens[1].split( ", ", 2 );
 			tokens = newTokens[0].split( "=", 2 );
-			remoteUser = ( tokens[1] != null ) ? tokens[1].substring( 1, tokens[1].length() - 1 ) : "";
+			remoteUser = ( tokens[1] != null ) ? Utils.removeQuote( tokens[1] ) : "";
 		}
 		return remoteUser;
 	}

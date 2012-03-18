@@ -2,6 +2,7 @@ package webServer.httpdconfSetter;
 
 import webServer.constant.HttpdConf;
 import webServer.utils.ConfigurationException;
+import webServer.utils.Utils;
 
 public class Upload extends HttpdConfSetter {
 
@@ -11,7 +12,7 @@ public class Upload extends HttpdConfSetter {
 		if ( !( line instanceof String ) )
 			throw new ConfigurationException( "UploadDirectory: type String expected" );
 
-		HttpdConf.UPLOAD = ( ( String ) line ).substring( 1, ( ( String ) line ).length() - 1 );
+		HttpdConf.UPLOAD = Utils.removeQuote( ( ( String ) line ) );
 	}
 
 }

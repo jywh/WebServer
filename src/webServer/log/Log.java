@@ -11,7 +11,7 @@ public class Log {
 	/**
 	 * Use to control debug mode. This should be set to false when in real production.
 	 */
-	public static boolean DEBUG = false;
+	public static boolean DEBUG = true;
 
 	public static void debug( String tag, String message ) {
 		if ( DEBUG )

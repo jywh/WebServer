@@ -2,6 +2,7 @@ package webServer.httpdconfSetter;
 
 import webServer.constant.HttpdConf;
 import webServer.utils.ConfigurationException;
+import webServer.utils.Utils;
 
 public class TempDirectory extends HttpdConfSetter {
 
@@ -10,7 +11,7 @@ public class TempDirectory extends HttpdConfSetter {
 
 		if ( !( line instanceof String ) )
 			throw new ConfigurationException( "TempDirectory: type String expected" );
-		HttpdConf.TEMP_DIRECTORY = ( ( String ) line ).substring( 1, ( ( String ) line ).length() - 1 );
+		HttpdConf.TEMP_DIRECTORY = Utils.removeQuote( ( ( String ) line ) );
 	}
 
 }

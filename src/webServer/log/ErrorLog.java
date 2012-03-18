@@ -14,7 +14,7 @@ import webServer.utils.Utils;
  * Redirect error message to error log is it is not in debug mode.
  * 
  * @author Wenhui
- *
+ * 
  */
 public class ErrorLog {
 
@@ -44,7 +44,7 @@ public class ErrorLog {
 			err = new PrintStream( errorLog, "UTF-8" );
 			// Redirect err stream to error log file
 			System.setErr( err );
-			String initialMessage = "[" + Utils.currentTimeMillis() + "]:";
+			String initialMessage = "[" + Utils.getTimeFull( Utils.currentTimeMillis() ) + "]:";
 			System.err.println( initialMessage );
 		} catch ( Exception e ) {
 			e.printStackTrace();

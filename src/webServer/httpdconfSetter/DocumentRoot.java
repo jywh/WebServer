@@ -2,6 +2,7 @@ package webServer.httpdconfSetter;
 
 import webServer.constant.HttpdConf;
 import webServer.utils.ConfigurationException;
+import webServer.utils.Utils;
 
 public class DocumentRoot extends HttpdConfSetter{
 
@@ -11,7 +12,7 @@ public class DocumentRoot extends HttpdConfSetter{
 		if( !(line instanceof String ))
 			throw new ConfigurationException("DocumentRoot: type String expected");
 		
-		HttpdConf.DOCUMENT_ROOT = ((String)line).substring(1,((String)line).length()-1);
+		HttpdConf.DOCUMENT_ROOT = Utils.removeQuote( ((String)line) );
 	}
 
 }

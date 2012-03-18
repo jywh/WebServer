@@ -12,6 +12,7 @@ import java.util.Map;
 
 import webServer.constant.HttpdConf;
 import webServer.utils.ConfigurationException;
+import webServer.utils.Utils;
 
 /**
  * <p>
@@ -30,7 +31,7 @@ public class Directory extends HttpdConfSetter {
 		@SuppressWarnings("unchecked")
 		List< String > lines = ( ArrayList< String > ) line;
 		String[] tokens;
-		String secureDirectory = lines.get( 0 ).substring( 1, lines.get( 0 ).length() - 1 );
+		String secureDirectory = Utils.removeQuote( lines.get( 0 ) );
 		String authName = null, authType = null, userType = null, authFile = null, user = null;
 		for ( int i = 1; i < lines.size(); i++ ) {
 			tokens = lines.get( i ).split( " ", 2 );
@@ -127,7 +128,7 @@ public class Directory extends HttpdConfSetter {
 			return result;
 		} catch ( IOException e ) {
 			e.printStackTrace();
-			throw new ConfigurationException("Fail to read valid user for secure directories.");
+			throw new ConfigurationException( "Fail to read valid user for secure directories." );
 		}
 
 	}
